@@ -47,7 +47,10 @@ export default function RootLayout({
             <a href="/settings" className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
               <span>{tenantConfig.menuRegras}</span>
             </a>
-            <a href="#" className="flex items-center px-4 py-3 text-gray-400 hover:text-white transition-colors">
+            <a href="/skills" className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
+              <span>Skills da IA</span>
+            </a>
+            <a href="/saas" className="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
               <span>{tenantConfig.menuConfig}</span>
             </a>
           </nav>
