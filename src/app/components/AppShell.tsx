@@ -100,9 +100,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {config.logo_url ? (
             <img src={config.logo_url} alt="Logo" className="h-10 object-contain mb-2" />
           ) : (
-            <h1 className="text-xl font-bold text-white tracking-widest">
-              {config.company_name.split(" ")[0]}
-              <span style={{ color: config.primary_color }}> {config.company_name.split(" ").slice(1).join(" ") || "CRM"}</span>
+            <h1 className="text-xl font-bold tracking-widest" style={{ color: config.primary_color }}>
+              {config.company_name}
             </h1>
           )}
           <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">{config.company_subtitle}</p>
