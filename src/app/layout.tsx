@@ -3,63 +3,72 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Lino CRM - Grupo Permetal",
-  description: "Plataforma SaaS de Gestão de Leads",
+  description: "Plataforma de gestão de leads inteligente",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  // Simulação dos dados que virão do Supabase (SaaS)
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Simulação de configuração do Tenant (futuramente puxar do banco)
   const tenantConfig = {
-    nome: "Grupo Permetal",
-    logoTexto: "LINO CRM",
-    corPrimaria: "184 75% 35%", // Azul Petróleo (PSA)
+    nome: "LINO CRM",
+    subtitulo: "Grupo Permetal",
+    corPrimaria: "184 75% 35%",
     usarTexturaFundo: true,
     corFundo: "0 0% 5%",
-    // Textos do Menu Customizáveis
-    menuPipeline: "Pipeline de Leads",
-    menuRegras: "Regras Comerciais",
-    menuConfig: "Configurações SaaS"
   };
+
+  const menuItems = [
+    { href: "/dashboard", label: "📊 Dashboard" },
+    { href: "/", label: "📋 Pipeline de Leads" },
+    { href: "/settings", label: "⚙️ Regras Comerciais" },
+    { href: "/skills", label: "🧠 Skills da IA" },
+    { href: "/usuarios", label: "👥 Usuários" },
+    { href: "/saas", label: "🎨 Configurações SaaS" },
+  ];
 
   return (
     <html lang="pt-BR">
-      <body
-        className={`flex h-screen overflow-hidden ${tenantConfig.usarTexturaFundo ? 'bg-texture-permetal' : ''}`}
-        style={{
-          '--tenant-primary': tenantConfig.corPrimaria,
-          '--tenant-bg': tenantConfig.corFundo,
-        } as React.CSSProperties}
-      >
-        {/* Sidebar Dinâmica e Fixa em todas as telas */}
-        <aside className="w-64 bg-black/60 backdrop-blur-md border-r border-white/10 flex flex-col shadow-2xl">
-          <div className="p-6">
-            <h1 className="text-2xl font-bold text-white tracking-widest">{tenantConfig.logoTexto}</h1>
-            <p className="text-xs text-gray-400 mt-1 uppercase">{tenantConfig.nome}</p>
-          </div>
-          
-          <nav className="flex-1 px-4 mt-6 space-y-2">
-            <a href="/" className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
-              <span>{tenantConfig.menuPipeline}</span>
-            </a>
-            <a href="/settings" className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
-              <span>{tenantConfig.menuRegras}</span>
-            </a>
-            <a href="/skills" className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
-              <span>Skills da IA</span>
-            </a>
-            <a href="/saas" className="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
-              <span>{tenantConfig.menuConfig}</span>
-            </a>
-          </nav>
-        </aside>
+      <body>
+        <div
+          className="flex min-h-screen"
+          style={{
+            "--tenant-primary": tenantConfig.corPrimaria,
+            "--tenant-bg": tenantConfig.corFundo,
+          } as React.CSSProperties}
+        >
+          {/* Sidebar */}
+          <aside className="w-56 min-h-screen bg-[#0a0a0a] border-r border-gray-800 flex flex-col flex-shrink-0">
+            <div className="p-5 border-b border-gray-800">
+              <h1 className="text-xl font-bold text-white tracking-widest">
+                {tenantConfig.nome.split(" ")[0]}
+                <span className="text-[hsl(var(--tenant-primary))]"> {tenantConfig.nome.split(" ").slice(1).join(" ") || "CRM"}</span>
+              </h1>
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">{tenantConfig.subtitulo}</p>
+            </div>
 
-        {/* Conteúdo Dinâmico das Telas */}
-        <main className="flex-1 overflow-y-auto relative">
-          {children}
-        </main>
+            <nav className="flex-1 px-3 mt-4 space-y-1">
+              {menuItems.map((item) => (
+                <a key={item.href} href={item.href} className="flex items-center px-3 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-[hsl(var(--tenant-primary)/0.1)] rounded-md transition-colors">
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+
+            {/* Logout */}
+            <div className="p-3 border-t border-gray-800">
+              <a href="/api/logout" className="flex items-center px-3 py-2 text-xs text-gray-600 hover:text-red-400 transition-colors">
+                🚪 Sair do Sistema
+              </a>
+            </div>
+          </aside>
+
+          {/* Conteúdo Principal */}
+          <main className="flex-1 bg-[hsl(var(--tenant-bg))] relative overflow-hidden">
+            {tenantConfig.usarTexturaFundo && (
+              <div className="absolute inset-0 bg-texture opacity-20 pointer-events-none mix-blend-overlay"></div>
+            )}
+            <div className="relative z-10 h-full">{children}</div>
+          </main>
+        </div>
       </body>
     </html>
   );
