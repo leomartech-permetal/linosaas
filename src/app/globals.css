@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Valores Padrão (Fallback) - Serão sobrescritos dinamicamente pelo banco */
+    --tenant-bg: 0 0% 8%; 
+    --tenant-primary: 184 75% 35%; /* Azul PSA padrão */
+    
+    --content-bg: 0 0% 100%;
+    --content-border: 210 20% 90%;
+    
+    --foreground: 0 0% 10%;
+  }
+
+  body {
+    background-color: hsl(var(--tenant-bg));
+    color: hsl(var(--foreground));
+    antialiased: true;
+  }
+  
+  /* Classe opcional para a textura da chapa, ativada por configuração do Tenant */
+  .bg-texture-permetal {
+    /* Degrade escuro (transparência) por cima da textura para não atrapalhar a visão */
+    background-image: 
+      linear-gradient(to bottom right, rgba(0,0,0,0.5), rgba(0,0,0,0.85)),
+      radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 15px 15px;
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .card-clean {
+    @apply bg-white rounded-xl border border-[hsl(var(--content-border))] shadow-lg p-6;
+  }
+  
+  /* Os botões agora usam a variável dinâmica --tenant-primary */
+  .btn-dynamic {
+    @apply bg-[hsl(var(--tenant-primary))] hover:brightness-110 text-white font-medium py-2 px-6 rounded-md transition-all shadow-md;
+  }
+
+  .badge-dynamic {
+    @apply bg-[hsl(var(--tenant-primary)/0.1)] text-[hsl(var(--tenant-primary))] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+  }
+}
