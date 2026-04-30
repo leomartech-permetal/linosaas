@@ -5,6 +5,8 @@ import { routeLead } from '@/lib/router';
 import { handleClientReturnedToSDR } from '@/lib/support-monitor';
 import { sendTextMessage } from '@/lib/evolution-api';
 
+const WHITELIST_NUMBERS = ['5516991415319'];
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -13,7 +15,6 @@ export async function POST(request: Request) {
     console.log('[Webhook] Payload recebido:', JSON.stringify(body).substring(0, 500));
 
     if (body.event === 'messages.upsert') {
-      // Suporta tanto o formato de array (data.messages[0]) quanto o formato direto (data)
       const messageData = body.data?.messages?.[0] || body.data;
       
       if (!messageData || messageData.key?.fromMe) {
@@ -22,6 +23,11 @@ export async function POST(request: Request) {
 
       const remoteJid = messageData.key?.remoteJid;
       if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
+
+      const cleanNumber = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
+      if (!WHITELIST_NUMBERS.some(n => cleanNumber.includes(n))) {
+        return NextResponse.json({ status: 'ignored', reason: 'not_in_whitelist' });
+      }
 
       const messageContent = messageData.message?.conversation || 
                              messageData.message?.extendedTextMessage?.text || 
