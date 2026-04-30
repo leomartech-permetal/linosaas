@@ -100,16 +100,19 @@ FORMATO OBRIGATÓRIO (JSON):
   console.log(`[OpenAI Debug] Mensagens: ${messages.length}`);
 
   try {
+    console.log(`[OpenAI] Enviando requisição com ${messages.length} mensagens.`);
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: messages as any,
       response_format: { type: 'json_object' }
     });
-    
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+
+    const content = response.choices[0].message.content || '{}';
+    console.log('[OpenAI] Resposta bruta:', content);
+    const result = JSON.parse(content);
     return result;
-  } catch (error) {
-    console.error('[OpenAI Error]', error);
-    return null;
+  } catch (error: any) {
+    console.error('[OpenAI Error]', error.message || error);
+    return { erro_openai: error.message || 'Erro desconhecido na OpenAI' };
   }
 }

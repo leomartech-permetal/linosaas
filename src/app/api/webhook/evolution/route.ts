@@ -68,6 +68,14 @@ export async function POST(request: Request) {
 
         const aiResult = await processLeadWithSkills(history || []);
         
+        if (!aiResult || aiResult.erro_openai) {
+          const erroDetalhado = aiResult?.erro_openai || 'Falha na comunicação com a OpenAI. Verifique a chave da API no painel da Vercel.';
+          await supabase.from('interactions').insert([
+            { lead_id: lead.id, sender_type: 'sdr_ai', message_content: `[ERRO IA] ${erroDetalhado}` }
+          ]);
+          return NextResponse.json({ status: 'success', error: 'ai_failed' });
+        }
+        
         if (aiResult) {
           const { resposta_whatsapp, variaveis } = aiResult;
           const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
