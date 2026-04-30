@@ -52,67 +52,59 @@ export async function POST(request: Request) {
         { lead_id: lead.id, sender_type: 'lead', message_content: messageContent }
       ]);
 
-      // 3. PROCESSAMENTO ASSÍNCRONO (Não trava a resposta do webhook)
-      // Usamos uma IIFE para rodar em background
-      (async () => {
-        try {
-          if (lead.status === 'WAITING_SELLER') {
-            await handleClientReturnedToSDR(lead.id);
-            return;
-          }
+      // 3. PROCESSAMENTO DA IA
+      if (lead.status === 'WAITING_SELLER') {
+        await handleClientReturnedToSDR(lead.id);
+        return NextResponse.json({ status: 'success', action: 'support_notified' });
+      }
 
-          if (lead.status === 'SDR_QUALIFICATION') {
-            const { data: history } = await supabase
-              .from('interactions')
-              .select('sender_type, message_content')
-              .eq('lead_id', lead.id)
-              .order('created_at', { ascending: true })
-              .limit(10);
+      if (lead.status === 'SDR_QUALIFICATION') {
+        const { data: history } = await supabase
+          .from('interactions')
+          .select('sender_type, message_content')
+          .eq('lead_id', lead.id)
+          .order('created_at', { ascending: true })
+          .limit(10);
 
-            const aiResult = await processLeadWithSkills(history || []);
-            
-            if (aiResult) {
-              const { resposta_whatsapp, variaveis } = aiResult;
-              const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
+        const aiResult = await processLeadWithSkills(history || []);
+        
+        if (aiResult) {
+          const { resposta_whatsapp, variaveis } = aiResult;
+          const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
 
-              if (resposta_whatsapp) {
-                await supabase.from('interactions').insert([
-                  { lead_id: lead.id, sender_type: 'sdr_ai', message_content: resposta_whatsapp }
-                ]);
+          if (resposta_whatsapp) {
+            await supabase.from('interactions').insert([
+              { lead_id: lead.id, sender_type: 'sdr_ai', message_content: resposta_whatsapp }
+            ]);
 
-                if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-                  await sendTextMessage(
-                    globalConfig.evolution_instance_name,
-                    globalConfig.evolution_url,
-                    globalConfig.evolution_key,
-                    remoteJid,
-                    resposta_whatsapp
-                  );
-                }
-              }
-
-              const temProduto = !!variaveis?.produto;
-              const temDDD = variaveis?.ddd && variaveis.ddd.length >= 2;
-
-              if (temProduto && temDDD && globalConfig) {
-                const transicao = "Estou te transferindo para o especialista agora...";
-                await sendTextMessage(
-                  globalConfig.evolution_instance_name, 
-                  globalConfig.evolution_url, 
-                  globalConfig.evolution_key, 
-                  remoteJid, 
-                  transicao
-                );
-                await routeLead(lead.id, lead.tenant_id, variaveis);
-              }
+            if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
+              await sendTextMessage(
+                globalConfig.evolution_instance_name,
+                globalConfig.evolution_url,
+                globalConfig.evolution_key,
+                remoteJid,
+                resposta_whatsapp
+              );
             }
           }
-        } catch (err) {
-          console.error('[Async Webhook Error]', err);
-        }
-      })();
 
-      // Resposta imediata para a Evolution API
+          const temProduto = !!variaveis?.produto;
+          const temDDD = variaveis?.ddd && variaveis.ddd.length >= 2;
+
+          if (temProduto && temDDD && globalConfig) {
+            const transicao = "Estou te transferindo para o especialista agora...";
+            await sendTextMessage(
+              globalConfig.evolution_instance_name, 
+              globalConfig.evolution_url, 
+              globalConfig.evolution_key, 
+              remoteJid, 
+              transicao
+            );
+            await routeLead(lead.id, lead.tenant_id, variaveis);
+          }
+        }
+      }
+
       return NextResponse.json({ status: 'success', lead_id: lead?.id });
     }
 
