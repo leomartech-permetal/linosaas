@@ -9,6 +9,7 @@ const menuItems = [
   { href: "/", label: "📋 Pipeline de Leads" },
   { href: "/settings", label: "⚙️ Regras Comerciais" },
   { href: "/skills", label: "🧠 Skills da IA" },
+  { href: "/equipes", label: "🏢 Equipes" },
   { href: "/usuarios", label: "👥 Usuários" },
   { href: "/saas", label: "🎨 Configurações SaaS" },
 ];

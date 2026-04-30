@@ -1,98 +1,138 @@
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 
-export interface ExtractedVariables {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export interface LeadVariables {
   produto?: string;
-  quantidade?: 'baixa' | 'media' | 'alta';
-  instalacao?: boolean;
-  regiao?: string;
+  ddd?: string;
+  quantidade?: string;
+  quantidade_nivel?: 'baixa' | 'media' | 'alta';
+  aplicacao?: string;
+  precisa_desenho?: boolean;
+  precisa_prototipo?: boolean;
+  nome_cliente?: string;
+  email?: string;
+  empresa?: string;
+  cnpj?: string;
+  cidade?: string;
+  segmento_detectado?: string;
 }
 
-/**
- * Roteador Comercial: Cruza as variáveis da IA com as regras de negócio
- * e atribui o Lead a um Vendedor.
- */
-export async function routeLead(leadId: string, tenantId: string, variables: ExtractedVariables) {
-  let targetTeamName = 'Construção'; // Fallback padrão
-  let targetBrandName = 'Permetal';
-
-  const prod = variables.produto?.toLowerCase() || '';
-
-  // ---------------------------------------------------------
-  // 1. MOTOR DE EXCEÇÕES (LÓGICA DE NEGÓCIO)
-  // ---------------------------------------------------------
-  
-  // Exceção 1: Projetos/Instalação vão para a PSA
-  if (variables.instalacao === true || prod.includes('fachada') || prod.includes('forro')) {
-    targetTeamName = 'PSA PERMETAL';
-    targetBrandName = 'PSA PERMETAL';
-  } 
-  // Exceção 2: Pouca quantidade vai para Permetal Express
-  else if (variables.quantidade === 'baixa' && (prod.includes('perfurada') || prod.includes('expandida'))) {
-    targetTeamName = 'PERMETAL EXPRESS';
-    targetBrandName = 'PERMETAL EXPRESS';
+/** Resolve produto pelo nome ou sinônimo */
+export async function resolverProduto(texto: string) {
+  const { data: products } = await supabase.from('products').select('*, brands(name)');
+  if (!products) return null;
+  const lower = texto.toLowerCase();
+  for (const p of products) {
+    if (p.name.toLowerCase().includes(lower) || lower.includes(p.name.toLowerCase())) return p;
+    const syns: string[] = p.synonyms || [];
+    for (const s of syns) {
+      if (lower.includes(s.toLowerCase()) || s.toLowerCase().includes(lower)) return p;
+    }
   }
-  // Exceção 3: Revenda / Indústria / etc baseados no produto (Pode ser expandido depois)
+  return null;
+}
 
-  console.log(`[Roteador] Roteando para: Equipe ${targetTeamName} | Marca ${targetBrandName}`);
+/** Resolve região pelo DDD */
+export async function resolverRegiao(ddd: string) {
+  const { data: regions } = await supabase.from('regions').select('*');
+  if (!regions) return null;
+  for (const r of regions) {
+    const codes: string[] = r.ddd_codes || [];
+    if (codes.includes(ddd)) return r;
+  }
+  return null;
+}
 
-  // ---------------------------------------------------------
-  // 2. BUSCA DO VENDEDOR NO BANCO (REGRA)
-  // ---------------------------------------------------------
-  
-  // Como as tabelas usam UUID, primeiro buscamos os IDs da equipe
-  const { data: team } = await supabase
-    .from('teams')
-    .select('id')
-    .eq('tenant_id', tenantId)
-    .ilike('name', targetTeamName)
-    .single();
+/** Resolve segmento pela aplicação/keywords */
+export async function resolverSegmento(aplicacao: string) {
+  const { data: segments } = await supabase.from('segments').select('*');
+  if (!segments) return null;
+  const lower = aplicacao.toLowerCase();
+  for (const seg of segments) {
+    const kws: string[] = seg.keywords || [];
+    for (const kw of kws) {
+      if (lower.includes(kw.toLowerCase())) return seg;
+    }
+  }
+  return null;
+}
 
-  let assignedUserId = null;
+/** Verifica se é EXPRESS */
+export function isExpress(product: any, variables: LeadVariables): boolean {
+  if (!product?.is_express_eligible) return false;
+  if (variables.precisa_desenho || variables.precisa_prototipo) return false;
+  if (variables.quantidade_nivel === 'alta') return false;
+  return true;
+}
 
-  if (team) {
-    // Busca a regra de roteamento para esta equipe e região
-    const { data: rule } = await supabase
-      .from('routing_rules')
-      .select('assigned_user_id')
-      .eq('tenant_id', tenantId)
-      .eq('team_id', team.id)
-      .or(`region.ilike.%${variables.regiao || 'TODAS'}%,region.eq.*`) // Busca região exata ou regra coringa '*'
-      .order('priority', { ascending: true })
-      .limit(1)
-      .single();
+/** Determina tipo de coleta */
+export function tipoColeta(product: any, segment: any, variables: LeadVariables): 'short' | 'normal' {
+  if (isExpress(product, variables)) return 'short';
+  if (segment?.collection_type === 'short') return 'short';
+  return 'normal';
+}
 
-    if (rule?.assigned_user_id) {
-      assignedUserId = rule.assigned_user_id;
-    } else {
-      // Fallback: Pega qualquer vendedor daquela equipe se não houver regra de região específica
-      const { data: fallbackUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('team_id', team.id)
-        .limit(1)
-        .single();
-      
-      assignedUserId = fallbackUser?.id;
+/** Motor principal de roteamento */
+export async function routeLead(leadId: string, tenantId: string, variables: LeadVariables) {
+  console.log('[Roteador] Iniciando roteamento para lead:', leadId);
+
+  // 1. Resolver produto
+  const product = variables.produto ? await resolverProduto(variables.produto) : null;
+  const brandName = product?.brands?.name || null;
+  console.log(`[Roteador] Produto: ${product?.name || 'N/A'} | Marca: ${brandName || 'N/A'}`);
+
+  // 2. Resolver região
+  const region = variables.ddd ? await resolverRegiao(variables.ddd) : null;
+  console.log(`[Roteador] DDD: ${variables.ddd || 'N/A'} → Região: ${region?.name || 'N/A'}`);
+
+  // 3. Resolver segmento
+  const segment = variables.aplicacao ? await resolverSegmento(variables.aplicacao) : null;
+  console.log(`[Roteador] Segmento: ${segment?.name || 'N/A'}`);
+
+  // 4. Verificar EXPRESS
+  const express = isExpress(product, variables);
+  const finalBrand = express ? 'PERMETAL EXPRESS' : brandName;
+  const coleta = tipoColeta(product, segment, variables);
+  console.log(`[Roteador] Express: ${express} | Marca final: ${finalBrand} | Coleta: ${coleta}`);
+
+  // 5. Buscar equipe pela marca
+  const { data: brand } = await supabase.from('brands').select('id').ilike('name', finalBrand || 'PERMETAL').single();
+
+  // 6. Buscar regra de roteamento (cruzando região + produto + segmento)
+  let query = supabase.from('routing_rules').select('assigned_user_id').order('priority', { ascending: true }).limit(1);
+
+  if (region) query = query.or(`region.ilike.%${region.name}%,region.eq.*,region.is.null`);
+  if (product) query = query.or(`product_id.eq.${product.id},product_id.is.null`);
+  if (segment) query = query.or(`segment_id.eq.${segment.id},segment_id.is.null`);
+
+  const { data: rule } = await query.single();
+  let assignedUserId = rule?.assigned_user_id || null;
+
+  // 7. Fallback: buscar qualquer vendedor da equipe via team
+  if (!assignedUserId) {
+    const teamName = finalBrand || 'Construção';
+    const { data: team } = await supabase.from('teams').select('id').ilike('name', `%${teamName}%`).limit(1).single();
+    if (team) {
+      const { data: user } = await supabase.from('users').select('id').eq('team_id', team.id).limit(1).single();
+      assignedUserId = user?.id || null;
     }
   }
 
-  // ---------------------------------------------------------
-  // 3. ATUALIZAR O LEAD COM O VENDEDOR E STATUS
-  // ---------------------------------------------------------
+  // 8. Atualizar lead
   if (assignedUserId) {
-    await supabase
-      .from('leads')
-      .update({ 
-        current_owner_id: assignedUserId,
-        status: 'WAITING_SELLER' // Entrou na fila do vendedor (SLA conta a partir daqui)
-      })
-      .eq('id', leadId);
-
-    console.log(`[Roteador] Lead ${leadId} atribuído ao vendedor ${assignedUserId}`);
-    // TODO: Enviar notificação pelo webhook da Evolution API para o número do Vendedor
+    await supabase.from('leads').update({
+      current_owner_id: assignedUserId,
+      status: 'WAITING_SELLER',
+      updated_at: new Date().toISOString(),
+    }).eq('id', leadId);
+    console.log(`[Roteador] ✅ Lead ${leadId} atribuído ao vendedor ${assignedUserId}`);
   } else {
-    console.log(`[Roteador] Nenhum vendedor encontrado para a equipe ${targetTeamName}. Caiu no Limbo/Suporte.`);
+    console.log(`[Roteador] ⚠️ Nenhum vendedor encontrado. Lead no limbo.`);
   }
 
-  return assignedUserId;
+  return { assignedUserId, product, region, segment, express, coleta, finalBrand };
 }

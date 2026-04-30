@@ -23,9 +23,11 @@ export default function SaaSPage() {
   // API
   const [evolutionUrl, setEvolutionUrl] = useState("");
   const [evolutionKey, setEvolutionKey] = useState("");
+  const [evolutionInstanceName, setEvolutionInstanceName] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
 
   // Senha
+  const [passwordEmail, setPasswordEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
   // Instâncias
@@ -58,6 +60,7 @@ export default function SaaSPage() {
       setTextureUrl(d.texture_url || "");
       setEvolutionUrl(d.evolution_url || "");
       setEvolutionKey(d.evolution_key || "");
+      setEvolutionInstanceName(d.evolution_instance_name || "");
       setOpenaiKey(d.openai_key || "");
     }
     if (instRes.data) setInstances(instRes.data);
@@ -84,7 +87,7 @@ export default function SaaSPage() {
     e.preventDefault();
     if (!config) { flash("Erro: configuração não encontrada."); return; }
     const { error } = await supabase.from("tenant_config").update({
-      evolution_url: evolutionUrl, evolution_key: evolutionKey, openai_key: openaiKey,
+      evolution_url: evolutionUrl, evolution_key: evolutionKey, evolution_instance_name: evolutionInstanceName, openai_key: openaiKey,
     }).eq("id", config.id);
     if (error) { flash("Erro: " + error.message); return; }
     flash("✔ Credenciais salvas com sucesso!");
@@ -92,9 +95,11 @@ export default function SaaSPage() {
 
   async function savePassword(e: React.FormEvent) {
     e.preventDefault();
-    if (!newPassword || !config) return;
-    const { error } = await supabase.from("tenant_config").update({ admin_password: newPassword }).eq("id", config.id);
+    if (!passwordEmail || !newPassword) { flash("Preencha o e-mail e a nova senha."); return; }
+    const { data, error } = await supabase.from("admin_users").update({ password: newPassword }).eq("email", passwordEmail).select();
     if (error) { flash("Erro: " + error.message); return; }
+    if (!data || data.length === 0) { flash("Nenhum usuário encontrado com este e-mail."); return; }
+    setPasswordEmail("");
     setNewPassword("");
     flash("✔ Senha atualizada! Use a nova senha no próximo login.");
   }
@@ -215,6 +220,10 @@ export default function SaaSPage() {
                     <input type="password" value={evolutionKey} onChange={(e) => setEvolutionKey(e.target.value)} placeholder="Chave da Evolution" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
                   </div>
                   <div>
+                    <label className="block text-xs text-gray-400 mb-1">Evolution API — Nome da Instância</label>
+                    <input type="text" value={evolutionInstanceName} onChange={(e) => setEvolutionInstanceName(e.target.value)} placeholder="Ex: minha_instancia" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                  </div>
+                  <div>
                     <label className="block text-xs text-gray-400 mb-1">OpenAI API Key</label>
                     <input type="password" value={openaiKey} onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
                   </div>
@@ -226,6 +235,10 @@ export default function SaaSPage() {
               <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800">
                 <h3 className="text-lg font-bold mb-4 flex items-center"><span className="bg-red-500 w-2 h-5 mr-2 rounded-sm"></span>Senha de Acesso</h3>
                 <form onSubmit={savePassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">E-mail do Usuário</label>
+                    <input type="email" value={passwordEmail} onChange={(e) => setPasswordEmail(e.target.value)} placeholder="admin@lino.com" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+                  </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Nova Senha</label>
                     <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
