@@ -13,17 +13,19 @@ export async function POST(request: Request) {
     console.log('[Webhook] Payload recebido:', JSON.stringify(body).substring(0, 500));
 
     if (body.event === 'messages.upsert') {
-      const messageData = body.data?.messages?.[0];
+      // Suporta tanto o formato de array (data.messages[0]) quanto o formato direto (data)
+      const messageData = body.data?.messages?.[0] || body.data;
       
-      if (messageData?.key?.fromMe) {
-        return NextResponse.json({ status: 'ignored', reason: 'from_me' });
+      if (!messageData || messageData.key?.fromMe) {
+        return NextResponse.json({ status: 'ignored', reason: 'from_me_or_no_data' });
       }
 
-      const remoteJid = messageData?.key?.remoteJid;
+      const remoteJid = messageData.key?.remoteJid;
       if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
-      const messageContent = messageData?.message?.conversation || 
-                             messageData?.message?.extendedTextMessage?.text || '';
+      const messageContent = messageData.message?.conversation || 
+                             messageData.message?.extendedTextMessage?.text || 
+                             '';
 
       if (!messageContent.trim()) {
         return NextResponse.json({ status: 'ignored', reason: 'empty_message' });
