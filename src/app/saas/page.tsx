@@ -135,9 +135,29 @@ export default function SaaSPage() {
 
   return (
     <div className="p-6 md:p-10 w-full h-full text-white overflow-y-auto">
-      <header className="mb-8 border-b border-gray-800 pb-6">
-        <h2 className="text-3xl font-bold">Configurações SaaS</h2>
-        <p className="text-gray-400 mt-2">Personalize a marca, gerencie conexões e segurança.</p>
+      <header className="mb-8 border-b border-gray-800 pb-6 flex justify-between items-start">
+        <div>
+          <h2 className="text-3xl font-bold">Configurações SaaS</h2>
+          <p className="text-gray-400 mt-2">Personalize a marca, gerencie conexões e segurança.</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <button 
+            onClick={async () => {
+              if (confirm('Tem certeza que deseja apagar o histórico de testes do número 5516991415319?')) {
+                const res = await fetch('/api/test/clear-history', {
+                  method: 'POST',
+                  body: JSON.stringify({ phone: '5516991415319' }),
+                  headers: { 'Content-Type': 'application/json' }
+                });
+                if (res.ok) alert('Histórico apagado! O Lino vai iniciar uma nova conversa no próximo Oi.');
+                else alert('Erro ao apagar histórico.');
+              }
+            }}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow transition text-sm"
+          >
+            🗑️ Zerar Histórico de Testes (Meu Número)
+          </button>
+        </div>
       </header>
 
       {msg && <div className="bg-green-900/30 border border-green-800 text-green-400 px-4 py-2 rounded mb-6 text-sm font-bold">{msg}</div>}
