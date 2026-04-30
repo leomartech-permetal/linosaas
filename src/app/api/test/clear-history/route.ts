@@ -11,8 +11,8 @@ export async function POST(request: Request) {
     const { phone } = await request.json();
     if (!phone) return NextResponse.json({ error: 'Número de telefone obrigatório' }, { status: 400 });
 
-    // 1. Encontrar o Lead pelo telefone
-    const { data: lead } = await supabase.from('leads').select('id').eq('phone', phone).single();
+    // 1. Encontrar o Lead pelo whatsapp_number
+    const { data: lead } = await supabase.from('leads').select('id').eq('whatsapp_number', `${phone}@s.whatsapp.net`).single();
     if (!lead) return NextResponse.json({ error: 'Lead não encontrado' }, { status: 404 });
 
     // 2. Apagar interações
