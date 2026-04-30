@@ -123,15 +123,16 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
   }
 
   // 8. Atualizar lead
+  await supabase.from('leads').update({
+    current_owner_id: assignedUserId, // pode ser nulo se cair no limbo
+    status: 'WAITING_SELLER', // Força a saída do SDR para evitar loop infinito da IA
+    updated_at: new Date().toISOString(),
+  }).eq('id', leadId);
+
   if (assignedUserId) {
-    await supabase.from('leads').update({
-      current_owner_id: assignedUserId,
-      status: 'WAITING_SELLER',
-      updated_at: new Date().toISOString(),
-    }).eq('id', leadId);
     console.log(`[Roteador] ✅ Lead ${leadId} atribuído ao vendedor ${assignedUserId}`);
   } else {
-    console.log(`[Roteador] ⚠️ Nenhum vendedor encontrado. Lead no limbo.`);
+    console.log(`[Roteador] ⚠️ Nenhum vendedor encontrado. Lead no limbo (WAITING_SELLER sem dono).`);
   }
 
   return { assignedUserId, product, region, segment, express, coleta, finalBrand };
