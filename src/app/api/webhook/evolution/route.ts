@@ -72,6 +72,8 @@ export async function POST(request: Request) {
           .order('created_at', { ascending: true })
           .limit(10);
 
+        const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
+
         // Checagem se o bot está ligado globalmente
         if (globalConfig?.bot_active === false) {
           console.log('[Webhook] Robô desligado globalmente. Ignorando mensagem.');
@@ -90,7 +92,6 @@ export async function POST(request: Request) {
         
         if (aiResult) {
           const { resposta_whatsapp, variaveis } = aiResult;
-          const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
 
           if (resposta_whatsapp) {
             await supabase.from('interactions').insert([
