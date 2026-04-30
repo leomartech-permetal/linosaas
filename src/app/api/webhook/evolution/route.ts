@@ -73,13 +73,13 @@ export async function POST(request: Request) {
             
             if (aiResult) {
               const { resposta_whatsapp, variaveis } = aiResult;
+              const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
 
               if (resposta_whatsapp) {
                 await supabase.from('interactions').insert([
                   { lead_id: lead.id, sender_type: 'sdr_ai', message_content: resposta_whatsapp }
                 ]);
 
-                const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
                 if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
                   await sendTextMessage(
                     globalConfig.evolution_instance_name,
@@ -94,9 +94,15 @@ export async function POST(request: Request) {
               const temProduto = !!variaveis?.produto;
               const temDDD = variaveis?.ddd && variaveis.ddd.length >= 2;
 
-              if (temProduto && temDDD) {
+              if (temProduto && temDDD && globalConfig) {
                 const transicao = "Estou te transferindo para o especialista agora...";
-                await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, transicao);
+                await sendTextMessage(
+                  globalConfig.evolution_instance_name, 
+                  globalConfig.evolution_url, 
+                  globalConfig.evolution_key, 
+                  remoteJid, 
+                  transicao
+                );
                 await routeLead(lead.id, lead.tenant_id, variaveis);
               }
             }
