@@ -25,6 +25,7 @@ export default function SaaSPage() {
   const [evolutionKey, setEvolutionKey] = useState("");
   const [evolutionInstanceName, setEvolutionInstanceName] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
+  const [botActive, setBotActive] = useState(true);
 
   // Senha
   const [passwordEmail, setPasswordEmail] = useState("");
@@ -62,6 +63,7 @@ export default function SaaSPage() {
       setEvolutionKey(d.evolution_key || "");
       setEvolutionInstanceName(d.evolution_instance_name || "");
       setOpenaiKey(d.openai_key || "");
+      setBotActive(d.bot_active !== false); // Default to true if undefined
     }
     if (instRes.data) setInstances(instRes.data);
     if (usersRes.data) setUsers(usersRes.data);
@@ -141,6 +143,17 @@ export default function SaaSPage() {
           <p className="text-gray-400 mt-2">Personalize a marca, gerencie conexões e segurança.</p>
         </div>
         <div className="flex flex-col gap-2">
+          <button 
+            onClick={async () => {
+              const newState = !botActive;
+              setBotActive(newState);
+              await supabase.from("tenant_config").update({ bot_active: newState }).neq("id", "0");
+              flash(newState ? "🤖 Lino ATIVADO!" : "💤 Lino DESATIVADO!");
+            }}
+            className={`px-4 py-2 font-bold rounded shadow transition text-sm ${botActive ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-600 hover:bg-gray-700 text-gray-300'}`}
+          >
+            {botActive ? '🤖 Lino está ON' : '💤 Lino está OFF'}
+          </button>
           <button 
             onClick={async () => {
               if (confirm('Tem certeza que deseja apagar o histórico de testes do número 5516991415319?')) {

@@ -72,6 +72,12 @@ export async function POST(request: Request) {
           .order('created_at', { ascending: true })
           .limit(10);
 
+        // Checagem se o bot está ligado globalmente
+        if (globalConfig?.bot_active === false) {
+          console.log('[Webhook] Robô desligado globalmente. Ignorando mensagem.');
+          return NextResponse.json({ status: 'ignored', reason: 'bot_disabled' });
+        }
+
         const aiResult = await processLeadWithSkills(history || []);
         
         if (!aiResult || aiResult.erro_openai) {
