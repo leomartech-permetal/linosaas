@@ -6,7 +6,7 @@ import { handleClientReturnedToSDR } from '@/lib/support-monitor';
 import { sendTextMessage } from '@/lib/evolution-api';
 
 // ⚠️ FILTRO DE TESTES: Apenas este número será processado. Remover após testes.
-const WHITELIST_NUMBERS = ['5516991415319'];
+const WHITELIST_NUMBERS = ['5516991415319', '551691415319'];
 
 export async function POST(request: Request) {
   try {
