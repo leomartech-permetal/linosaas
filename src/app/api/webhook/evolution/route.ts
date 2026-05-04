@@ -42,10 +42,13 @@ export async function POST(request: Request) {
       
       let messageContent = messageObj?.conversation || 
                            messageObj?.extendedTextMessage?.text || 
+                           messageObj?.text ||
                            messageObj?.imageMessage?.caption ||
                            messageObj?.videoMessage?.caption ||
                            '';
       
+      console.log(`[Webhook] Conteúdo capturado: "${messageContent}" de ${remoteJid}`);
+
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       const openaiKey = globalConfig?.openai_key;
 
