@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { 
   getLeadFullContext, 
+  getLeadMemory,
   saveLeadMemory, 
   updateLeadInfo,
   detectIntentFromMessage,
