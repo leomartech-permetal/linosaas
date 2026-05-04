@@ -211,32 +211,68 @@ export default function SkillsPage() {
       {loading ? <p className="text-gray-500">Carregando...</p> : (
         <>
           {/* PROMPT MESTRE */}
-          <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8 max-w-3xl">
-            <h3 className="text-lg font-bold mb-4 flex items-center">
-              <span className="bg-[hsl(var(--tenant-primary))] w-2 h-5 mr-2 rounded-sm"></span>
-              Prompt Mestre (Comportamento Geral)
-            </h3>
-            <p className="text-xs text-gray-500 mb-3">Este prompt define a personalidade base da IA em todas as conversas.</p>
+          <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8 max-w-4xl">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-bold flex items-center">
+                  <span className="bg-[hsl(var(--tenant-primary))] w-2 h-5 mr-2 rounded-sm"></span>
+                  Prompt Mestre (Comportamento Geral)
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xs text-gray-500">Este prompt define a <b>personalidade base</b> e a <b>identidade</b> do Lino.</p>
+                  <div className="group relative">
+                    <span className="cursor-help text-blue-400 text-[10px] border border-blue-400/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
+                    <div className="absolute left-6 top-0 w-72 p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed">
+                      <b className="text-blue-400 block mb-2 font-bold uppercase tracking-wider">🧠 Como preencher o Mestre:</b>
+                      Imagine que você está contratando um funcionário. O que ele precisa saber sobre a empresa? Como ele deve falar?
+                      <ul className="mt-2 space-y-2 text-gray-300">
+                        <li>• <b>Quem ele é:</b> "Você é Lino, assistente virtual da Permetal."</li>
+                        <li>• <b>Tom de voz:</b> "Seja técnico, porém amigável. Use 'você'."</li>
+                        <li>• <b>Regras de Ouro:</b> "Nunca invente preços. Nunca diga que é um robô."</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <textarea
               value={masterPrompt}
               onChange={(e) => setMasterPrompt(e.target.value)}
               rows={12}
-              className="w-full bg-black border border-gray-700 rounded p-3 text-white text-sm outline-none focus:border-[hsl(var(--tenant-primary))] mb-3 font-mono"
+              placeholder="Ex: Você é Lino, assistente comercial da Permetal. Seu objetivo é ajudar clientes com dúvidas sobre chapas e grades..."
+              className="w-full bg-black border border-gray-700 rounded p-3 text-white text-sm outline-none focus:border-[hsl(var(--tenant-primary))] mb-3 font-mono leading-relaxed"
             />
-            <button onClick={saveMasterPrompt} className="bg-[hsl(var(--tenant-primary))] px-6 py-2 rounded font-bold text-black hover:opacity-90 transition-opacity">
-              Salvar Prompt Mestre
-            </button>
+            <div className="flex justify-between items-center">
+              <button onClick={saveMasterPrompt} className="bg-[hsl(var(--tenant-primary))] px-6 py-2 rounded font-bold text-black hover:opacity-90 transition-opacity">
+                Salvar Prompt Mestre
+              </button>
+              <p className="text-[10px] text-gray-600 italic">* Alterações aqui afetam todas as conversas imediatamente.</p>
+            </div>
           </div>
 
           {/* BASE RAG */}
-          <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8 max-w-3xl">
+          <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8 max-w-4xl">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="text-lg font-bold flex items-center">
                   <span className="bg-purple-500 w-2 h-5 mr-2 rounded-sm"></span>
                   Base de Conhecimento RAG ({ragDocs.length})
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">Faça upload de PDF, DOCX, XLSX ou cole textos. Vincule a skills específicas.</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xs text-gray-500">Documentos e tabelas que o Lino pode consultar para tirar dúvidas técnicas.</p>
+                  <div className="group relative">
+                    <span className="cursor-help text-purple-400 text-[10px] border border-purple-400/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
+                    <div className="absolute left-6 top-0 w-72 p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed">
+                      <b className="text-purple-400 block mb-2 font-bold uppercase tracking-wider">📚 O que é RAG?</b>
+                      É a "biblioteca" do Lino. Em vez de decorar tudo, ele lê esses arquivos quando o cliente faz uma pergunta difícil.
+                      <ul className="mt-2 space-y-2 text-gray-300">
+                        <li>• <b>Use para:</b> Tabelas de furos, catálogos em PDF, listas de preços técnicos, FAQs da empresa.</li>
+                        <li>• <b>Dica:</b> Prefira arquivos de texto limpos ou tabelas simples (CSV/XLSX).</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
               <button onClick={() => setShowRagForm(!showRagForm)} className="bg-purple-700 px-4 py-2 rounded text-sm font-bold hover:bg-purple-800">
                 + Novo Documento
@@ -317,9 +353,39 @@ export default function SkillsPage() {
           </div>
 
           {/* SKILLS */}
-          <div className="max-w-3xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">Habilidades Específicas ({skills.length})</h3>
+          <div className="max-w-4xl">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-bold">Habilidades Específicas ({skills.length})</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xs text-gray-500">Módulos de especialização que complementam o Prompt Mestre.</p>
+                  <div className="group relative">
+                    <span className="cursor-help text-green-400 text-[10px] border border-green-400/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
+                    <div className="absolute left-6 top-0 w-80 p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed">
+                      <b className="text-green-400 block mb-2 font-bold uppercase tracking-wider">🎯 Como funcionam as Habilidades:</b>
+                      O Lino combina o Mestre com as Habilidades Ativas. Cada habilidade deve focar em um <b>assunto único</b>.
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+                        <div className="bg-blue-900/20 p-2 rounded">
+                          <b className="text-blue-400 block mb-1">PRODUTO:</b>
+                          Dados técnicos e especificações.
+                        </div>
+                        <div className="bg-green-900/20 p-2 rounded">
+                          <b className="text-green-400 block mb-1">ATENDIMENTO:</b>
+                          Saudações e tom de voz inicial.
+                        </div>
+                        <div className="bg-yellow-900/20 p-2 rounded">
+                          <b className="text-yellow-400 block mb-1">OBJEÇÃO:</b>
+                          Respostas para "tá caro" ou "demora muito".
+                        </div>
+                        <div className="bg-pink-900/20 p-2 rounded">
+                          <b className="text-pink-400 block mb-1">QUALIFICAÇÃO:</b>
+                          Perguntas para filtrar o lead.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={() => { setEditing(null); setForm({ name: "", type: "product", prompt: "" }); setSelectedRags([]); setShowForm(true); }}
                 className="bg-[hsl(var(--tenant-primary))] px-4 py-2 rounded text-sm font-bold text-black hover:opacity-90"
@@ -330,78 +396,108 @@ export default function SkillsPage() {
 
             {/* Form Skill */}
             {showForm && (
-              <div className="bg-[#1a1a1a] p-5 rounded-lg border border-gray-700 mb-6">
-                <h4 className="font-bold mb-4">{editing ? "Editar Skill" : "Nova Skill"}</h4>
-                <form onSubmit={saveSkill} className="space-y-3">
-                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome da skill (ex: Chapa Perfurada)" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
-                  <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
-                    {SKILL_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>{t.label} — {t.desc}</option>
-                    ))}
-                  </select>
-                  <textarea value={form.prompt} onChange={(e) => setForm({ ...form, prompt: e.target.value })} rows={4} placeholder="Instrução para a IA quando este assunto surgir..." className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+              <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-700 mb-8 shadow-xl">
+                <h4 className="font-bold text-lg mb-6 flex items-center gap-2">
+                  {editing ? "✏️ Editar Habilidade" : "✨ Criar Nova Habilidade"}
+                </h4>
+                <form onSubmit={saveSkill} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 uppercase mb-2">Nome da Habilidade</label>
+                      <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Chapas Perfuradas PSA" className="w-full bg-black border border-gray-700 rounded p-2.5 text-white text-sm outline-none focus:border-blue-500" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 uppercase mb-2">Tipo de Conhecimento</label>
+                      <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full bg-black border border-gray-700 rounded p-2.5 text-white text-sm outline-none focus:border-blue-500">
+                        {SKILL_TYPES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label} — {t.desc}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase mb-2">Prompt da Habilidade (Instruções)</label>
+                    <textarea 
+                      value={form.prompt} 
+                      onChange={(e) => setForm({ ...form, prompt: e.target.value })} 
+                      rows={6} 
+                      placeholder="Descreva aqui o conhecimento específico. Ex: Se o cliente perguntar de furos, explique que temos modelos redondos, quadrados e hexagonais..." 
+                      className="w-full bg-black border border-gray-700 rounded p-3 text-white text-sm outline-none focus:border-blue-500 font-mono leading-relaxed" 
+                      required 
+                    />
+                  </div>
 
                   {/* Vincular RAGs */}
                   {ragDocs.length > 0 && (
                     <div>
-                      <label className="block text-xs text-gray-400 mb-2">📚 Bases RAG vinculadas (selecione quais documentos esta skill pode consultar):</label>
-                      <div className="space-y-1 max-h-32 overflow-y-auto bg-black rounded border border-gray-700 p-2">
+                      <label className="block text-xs text-gray-500 uppercase mb-3 flex items-center gap-2">
+                        📚 Vincular Conhecimento RAG
+                        <span className="text-[10px] text-gray-600 normal-case">(Opcional: selecione quais arquivos esta skill pode ler)</span>
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto bg-black rounded border border-gray-800 p-3">
                         {ragDocs.map(doc => (
-                          <label key={doc.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-900 p-1 rounded">
-                            <input type="checkbox" checked={selectedRags.includes(doc.id)} onChange={() => toggleRagSelection(doc.id)} className="accent-purple-500" />
-                            <span className="text-xs text-purple-400 font-bold uppercase">{doc.source_type}</span>
-                            <span className="text-sm truncate">{doc.name}</span>
+                          <label key={doc.id} className={`flex items-center gap-3 cursor-pointer hover:bg-gray-900 p-2 rounded border transition-colors ${selectedRags.includes(doc.id) ? 'border-purple-500/50 bg-purple-900/10' : 'border-transparent'}`}>
+                            <input type="checkbox" checked={selectedRags.includes(doc.id)} onChange={() => toggleRagSelection(doc.id)} className="accent-purple-500 w-4 h-4" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold truncate">{doc.name}</p>
+                              <p className="text-[10px] text-gray-500 uppercase">{doc.source_type}</p>
+                            </div>
                           </label>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  <div className="flex gap-3">
-                    <button type="submit" className="flex-1 bg-[hsl(var(--tenant-primary))] text-black font-bold py-2 rounded hover:opacity-90">{editing ? "Atualizar" : "Criar Skill"}</button>
-                    <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="flex-1 border border-gray-700 py-2 rounded hover:bg-gray-800">Cancelar</button>
+                  <div className="flex gap-4 pt-4">
+                    <button type="submit" className="flex-1 bg-[hsl(var(--tenant-primary))] text-black font-bold py-3 rounded-lg hover:opacity-90 shadow-lg shadow-[hsl(var(--tenant-primary))]/10 transition-all">{editing ? "Atualizar Habilidade" : "Criar Habilidade"}</button>
+                    <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="flex-1 border border-gray-700 py-3 rounded-lg hover:bg-gray-800 transition-colors text-gray-400">Cancelar</button>
                   </div>
                 </form>
               </div>
             )}
 
             {/* Lista Skills */}
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4">
               {skills.map((s) => {
                 const info = getTypeInfo(s.type);
                 const linked = getLinkedRags(s.id);
                 return (
-                  <div key={s.id} className={`bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 group ${!s.active ? "opacity-50" : ""}`}>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs px-2 py-0.5 rounded font-bold" style={{ background: info.color + "22", color: info.color }}>{info.label}</span>
-                          <h4 className="font-bold text-sm">{s.name}</h4>
-                          {!s.active && <span className="text-[10px] text-red-400">(desativada)</span>}
+                  <div key={s.id} className={`bg-[#1a1a1a] p-5 rounded-lg border border-gray-800 group hover:border-gray-700 transition-all ${!s.active ? "opacity-40" : ""}`}>
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider" style={{ background: info.color + "22", color: info.color }}>{info.label}</span>
+                          <h4 className="font-bold text-base truncate">{s.name}</h4>
+                          {!s.active && <span className="text-[10px] bg-red-900/20 text-red-400 px-2 py-0.5 rounded uppercase font-bold">Desativada</span>}
                         </div>
-                        <p className="text-xs text-gray-500 line-clamp-2 mt-1">{s.prompt}</p>
+                        <p className="text-sm text-gray-400 line-clamp-3 leading-relaxed">{s.prompt}</p>
                         {linked.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
+                          <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-gray-800/50">
                             {linked.map((doc: any) => (
-                              <span key={doc.id} className="text-[10px] bg-purple-900/30 text-purple-400 px-2 py-0.5 rounded">📚 {doc.name}</span>
+                              <span key={doc.id} className="text-[10px] bg-purple-900/30 text-purple-400 px-2 py-1 rounded-full border border-purple-800/30 flex items-center gap-1">
+                                📚 {doc.name}
+                              </span>
                             ))}
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-                        <button onClick={() => toggleActive(s)} className={`text-[10px] px-2 py-1 rounded ${s.active ? "bg-yellow-900/50 text-yellow-400" : "bg-green-900/50 text-green-400"}`}>
-                          {s.active ? "Desativar" : "Ativar"}
+                      <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <button onClick={() => toggleActive(s)} className={`p-2 rounded hover:bg-gray-800 transition-colors ${s.active ? "text-yellow-500" : "text-green-500"}`} title={s.active ? "Desativar" : "Ativar"}>
+                          {s.active ? "⏸️" : "▶️"}
                         </button>
-                        <button onClick={() => startEdit(s)} className="text-[10px] bg-gray-800 px-2 py-1 rounded hover:bg-gray-700">Editar</button>
-                        <button onClick={() => deleteSkill(s.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded hover:bg-red-900">X</button>
+                        <button onClick={() => startEdit(s)} className="p-2 rounded hover:bg-gray-800 text-blue-400" title="Editar">✏️</button>
+                        <button onClick={() => deleteSkill(s.id)} className="p-2 rounded hover:bg-gray-800 text-red-500" title="Excluir">🗑️</button>
                       </div>
                     </div>
                   </div>
                 );
               })}
               {skills.length === 0 && !showForm && (
-                <div className="border border-dashed border-gray-700 rounded-lg p-8 text-center text-gray-600 text-sm">
-                  Nenhuma skill cadastrada. Clique em &quot;+ Adicionar Skill&quot; acima.
+                <div className="border border-dashed border-gray-800 rounded-xl p-12 text-center">
+                  <div className="text-4xl mb-4 opacity-20">🧠</div>
+                  <p className="text-gray-500 text-sm">O Lino ainda não tem habilidades específicas.</p>
+                  <p className="text-gray-600 text-xs mt-1">Adicione uma habilidade para treinar o robô em assuntos específicos.</p>
                 </div>
               )}
             </div>
