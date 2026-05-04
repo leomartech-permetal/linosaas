@@ -56,10 +56,12 @@ export async function POST(request: Request) {
         messageContent = `[ÁUDIO: ${audioText}] ${messageContent}`;
       }
 
+      /* 
       const cleanNumber = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
       if (!WHITELIST_NUMBERS.some(n => cleanNumber.includes(n))) {
         return NextResponse.json({ status: 'ignored', reason: 'not_in_whitelist' });
       }
+      */
 
       if (!messageContent.trim()) {
         return NextResponse.json({ status: 'ignored', reason: 'empty_content' });
