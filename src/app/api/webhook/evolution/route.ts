@@ -14,14 +14,15 @@ export async function POST(request: Request) {
 
     // Log para debug
     console.log('[Webhook] Evento:', body.event);
+    
+    // Captura flexível dos dados da mensagem
     const messageData = body.data?.messages?.[0] || body.data;
     const remoteJid = messageData?.key?.remoteJid || body.data?.key?.remoteJid || body.sender;
+    const messageId = messageData?.key?.id || messageData?.id;
 
     if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
-      const messageData = body.data?.messages?.[0] || body.data?.message || body.data;
       if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
 
-      const remoteJid = messageData.key?.remoteJid || messageData.remoteJid || body.sender;
       const fromMe = messageData.key?.fromMe;
 
       // 1. INTERVENÇÃO HUMANA
@@ -47,11 +48,14 @@ export async function POST(request: Request) {
       
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       const openaiKey = globalConfig?.openai_key;
-      const messageId = messageData.key?.id || messageData.id;
 
-      // Isolar processamento de mídia para não quebrar o bot
+      // Isolar processamento de mídia
       try {
+        // Prioriza o base64 que vem direto no data do webhook
+        let mediaBase64 = body.data?.base64 || messageData.base64 || null;
+
         if (messageType === 'imageMessage' && openaiKey && globalConfig) {
+          console.log('[Multimodal] Processando Imagem...');
           const visionDescription = await describeImage(
             globalConfig.evolution_url,
             globalConfig.evolution_instance_name,
@@ -59,25 +63,34 @@ export async function POST(request: Request) {
             messageId,
             remoteJid,
             openaiKey,
-            messageContent
+            messageContent,
+            mediaBase64
           );
-          messageContent = `[IMAGEM: ${visionDescription}] ${messageContent}`;
+          messageContent = `[IMAGEM RECEBIDA: ${visionDescription}] ${messageContent}`;
         }
 
         if (messageType === 'audioMessage' && openaiKey && globalConfig) {
+          console.log('[Multimodal] Processando Áudio...');
           const audioText = await transcribeAudio(
             globalConfig.evolution_url,
             globalConfig.evolution_instance_name,
             globalConfig.evolution_key,
             messageId,
             remoteJid,
-            openaiKey
+            openaiKey,
+            mediaBase64
           );
-          messageContent = `[ÁUDIO: ${audioText}] ${messageContent}`;
+          messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
+        }
+
+        if (messageType === 'documentMessage') {
+          const fileName = messageObj.documentMessage?.fileName || 'documento.pdf';
+          console.log('[Multimodal] Documento recebido:', fileName);
+          messageContent = `[DOCUMENTO RECEBIDO: ${fileName}] ${messageContent}`;
         }
       } catch (mediaError) {
         console.error('[Media Error] Falha ao processar mídia:', mediaError);
-        // Continua com o conteúdo que tiver (provavelmente vazio ou só legenda)
+        // Não interrompe o fluxo se a mídia falhar
       }
 
       /* 

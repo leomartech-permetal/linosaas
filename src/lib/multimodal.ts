@@ -32,11 +32,20 @@ async function getBase64FromEvolution(baseUrl: string, instance: string, apiKey:
 /**
  * Descreve uma imagem usando GPT-4o Vision com as regras técnicas da Permetal
  */
-export async function describeImage(baseUrl: string, instance: string, apiKey: string, messageId: string, remoteJid: string, openaiKey: string, context: string = ""): Promise<string> {
+export async function describeImage(
+  baseUrl: string, 
+  instance: string, 
+  apiKey: string, 
+  messageId: string, 
+  remoteJid: string, 
+  openaiKey: string, 
+  context: string = "",
+  mediaBase64: string | null = null
+): Promise<string> {
   const openai = new OpenAI({ apiKey: openaiKey });
 
   try {
-    const base64 = await getBase64FromEvolution(baseUrl, instance, apiKey, messageId, remoteJid);
+    const base64 = mediaBase64 || await getBase64FromEvolution(baseUrl, instance, apiKey, messageId, remoteJid);
     const cleanBase64 = base64.replace(/^data:.*;base64,/, '');
 
     const response = await openai.chat.completions.create({
@@ -80,11 +89,19 @@ export async function describeImage(baseUrl: string, instance: string, apiKey: s
 /**
  * Transcreve áudio usando Whisper
  */
-export async function transcribeAudio(baseUrl: string, instance: string, apiKey: string, messageId: string, remoteJid: string, openaiKey: string): Promise<string> {
+export async function transcribeAudio(
+  baseUrl: string, 
+  instance: string, 
+  apiKey: string, 
+  messageId: string, 
+  remoteJid: string, 
+  openaiKey: string,
+  mediaBase64: string | null = null
+): Promise<string> {
   const openai = new OpenAI({ apiKey: openaiKey });
 
   try {
-    const base64 = await getBase64FromEvolution(baseUrl, instance, apiKey, messageId, remoteJid);
+    const base64 = mediaBase64 || await getBase64FromEvolution(baseUrl, instance, apiKey, messageId, remoteJid);
     const cleanBase64 = base64.replace(/^data:.*;base64,/, '');
     const audioBuffer = Buffer.from(cleanBase64, 'base64');
     
