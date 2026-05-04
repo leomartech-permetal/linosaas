@@ -85,17 +85,18 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* KPIs Estilo Premium */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
             {[
               { label: "Total de Leads", val: total, color: "white", icon: "🔥" },
               { label: "Vendas Concluídas", val: fechados, color: "#10b981", icon: "💰" },
               { label: "Taxa de Conversão", val: `${taxa}%`, color: "hsl(var(--tenant-primary))", icon: "📈" },
               { label: "SDR em Aberto", val: porStatus["SDR_QUALIFICATION"] || 0, color: "#3b82f6", icon: "🤖" },
+              { label: "SLA em Risco", val: leads.filter(l => l.support_attempts > 0).length, color: "#f43f5e", icon: "🚨" },
             ].map((kpi, i) => (
-              <div key={i} className="bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-gray-800/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:border-[hsl(var(--tenant-primary)/0.4)] transition-all">
-                <div className="absolute top-0 right-0 p-4 opacity-20 text-3xl group-hover:scale-125 transition-transform">{kpi.icon}</div>
-                <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">{kpi.label}</p>
-                <p className="text-4xl font-black" style={{ color: kpi.color }}>{kpi.val}</p>
+              <div key={i} className="bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-gray-800/50 rounded-2xl p-5 shadow-2xl relative overflow-hidden group hover:border-[hsl(var(--tenant-primary)/0.4)] transition-all">
+                <div className="absolute top-0 right-0 p-4 opacity-20 text-2xl group-hover:scale-125 transition-transform">{kpi.icon}</div>
+                <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2">{kpi.label}</p>
+                <p className="text-3xl font-black" style={{ color: kpi.color }}>{kpi.val}</p>
                 <div className="mt-4 h-1 w-full bg-gray-900 rounded-full overflow-hidden">
                   <div className="h-full bg-current opacity-30" style={{ width: '70%', color: kpi.color }}></div>
                 </div>
@@ -103,7 +104,34 @@ export default function DashboardPage() {
             ))}
           </div>
 
+          {/* Seção de Suporte/SLA */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <div className="lg:col-span-1 bg-[#111] border border-red-500/20 rounded-2xl p-6 shadow-2xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 className="font-black text-xs text-red-500 uppercase tracking-widest">Alerta de Suporte (SLA)</h3>
+              </div>
+              <div className="space-y-4">
+                {leads.filter(l => l.support_attempts > 0).length === 0 ? (
+                  <p className="text-xs text-gray-600 italic">Nenhum lead com gargalo de atendimento no momento.</p>
+                ) : leads.filter(l => l.support_attempts > 0).sort((a,b) => b.support_attempts - a.support_attempts).slice(0, 5).map(l => (
+                  <div key={l.id} className="p-4 bg-red-500/5 border border-red-500/10 rounded-xl">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-xs font-bold text-white">{l.name || "Cliente"}</span>
+                      <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-black">{l.support_attempts}x</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">{l.company || 'Interesse em: ' + (l.produto || 'Produto')}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[8px] text-red-400 uppercase font-black tracking-widest italic">Vendedor não respondeu</span>
+                      <a href="/dashboard/sdr" className="text-[8px] text-white underline font-bold">Intervir</a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Gráfico de Barras Moderno */}
             <div className="lg:col-span-2 bg-[#111] border border-gray-800 rounded-2xl p-8 shadow-2xl">
               <h3 className="font-black text-xs text-gray-500 uppercase tracking-widest mb-8">Fluxo Semanal de Captação</h3>

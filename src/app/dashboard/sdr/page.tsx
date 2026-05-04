@@ -65,7 +65,25 @@ export default function SDRLeadsPage() {
               <h2 className="text-3xl font-bold tracking-tight text-white">Pipeline de Qualificação</h2>
               <p className="text-gray-500 mt-1">Gestão de leads multimodais e triagem inteligente</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-4 items-center">
+              <button 
+                onClick={() => {
+                  const headers = ["Data", "Nome", "Empresa", "Produto", "WhatsApp", "Status"];
+                  const csv = [headers.join(","), ...filteredLeads.map(l => [new Date(l.created_at).toLocaleDateString(), l.name, l.empresa || l.company, l.produto || l.detected_product, l.whatsapp_number, l.status].join(","))].join("\n");
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.setAttribute('hidden', '');
+                  a.setAttribute('href', url);
+                  a.setAttribute('download', 'leads_qualificacao.csv');
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}
+                className="text-[10px] font-black uppercase tracking-widest text-gray-400 border border-gray-800 px-4 py-2 rounded-lg hover:bg-white/5 transition-all"
+              >
+                📥 Exportar CSV
+              </button>
               <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-gray-800">
                 <button onClick={() => setFilter('all')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'all' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>TODOS</button>
                 <button onClick={() => setFilter('incomplete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'incomplete' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>PENDENTES</button>
