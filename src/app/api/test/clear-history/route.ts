@@ -1,52 +1,58 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
-    const { phone } = await request.json();
-    if (!phone) return NextResponse.json({ error: 'Número de telefone obrigatório' }, { status: 400 });
+    const { whatsapp_number } = await request.json();
 
-    const cleanPhone = phone.includes('@') ? phone : `${phone}@s.whatsapp.net`;
-    
-    // 1. Encontrar o Lead pelo whatsapp_number
-    const { data: lead } = await supabase.from('leads').select('id').eq('whatsapp_number', cleanPhone).single();
-    if (!lead) return NextResponse.json({ error: 'Lead não encontrado' }, { status: 404 });
+    if (!whatsapp_number) {
+      return NextResponse.json({ error: 'Número de WhatsApp é obrigatório' }, { status: 400 });
+    }
 
-    // 2. Apagar interações
-    await supabase.from('interactions').delete().eq('lead_id', lead.id);
-    
-    // 3. Apagar follow-ups
-    await supabase.from('lead_follow_ups').delete().eq('lead_id', lead.id);
-    
-    // 4. Apagar consentimentos
-    await supabase.from('consentimentos').delete().eq('lead_id', lead.id);
+    // Formata o número se necessário (garante que tenha @s.whatsapp.net)
+    const remoteJid = whatsapp_number.includes('@') ? whatsapp_number : `${whatsapp_number}@s.whatsapp.net`;
 
-    // 5. Resetar status e dono do lead para o SDR pegar de novo
-    await supabase.from('leads').update({
-      status: 'SDR_QUALIFICATION',
-      current_owner_id: null,
-      // Limpar campos de qualificação
-      produto: null,
-      ddd: null,
-      cidade: null,
-      aplicacao: null,
-      updated_at: new Date().toISOString()
-    }).eq('id', lead.id);
+    // 1. Buscar o lead
+    const { data: lead, error: leadError } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('whatsapp_number', remoteJid)
+      .single();
 
-    // 6. Limpar variáveis em tenant_config se houver cache de contexto
-    // (opcional - dependendo da implementação)
+    if (leadError || !lead) {
+      return NextResponse.json({ error: 'Lead não encontrado' }, { status: 404 });
+    }
+
+    // 2. Deletar interações
+    const { error: deleteInteractionsError } = await supabase
+      .from('interactions')
+      .delete()
+      .eq('lead_id', lead.id);
+
+    if (deleteInteractionsError) {
+      throw deleteInteractionsError;
+    }
+
+    // 3. Resetar status do lead
+    const { error: updateLeadError } = await supabase
+      .from('leads')
+      .update({ 
+        status: 'SDR_QUALIFICATION',
+        // Opcionalmente limpar outras variáveis se existirem colunas específicas
+      })
+      .eq('id', lead.id);
+
+    if (updateLeadError) {
+      throw updateLeadError;
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Histórico completo apagado! Lead resetsdo para SDR_QUALIFICATION.',
-      lead_id: lead.id 
+      message: `Histórico limpo para o número ${whatsapp_number}` 
     });
+
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[Clear History Error]', error);
+    return NextResponse.json({ error: error.message || 'Erro interno' }, { status: 500 });
   }
 }

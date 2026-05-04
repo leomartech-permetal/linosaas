@@ -144,7 +144,10 @@ export default function DashboardPage() {
 
           {/* Tabela últimos leads */}
           <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-5">
-            <h3 className="font-bold text-sm text-gray-400 mb-4">Últimos 10 Leads</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-sm text-gray-400">Últimos 10 Leads</h3>
+              <a href="/dashboard/sdr" className="text-xs text-[hsl(var(--tenant-primary))] hover:underline">Ver todos / Qualificação →</a>
+            </div>
             {ultimos.length === 0 ? (
               <p className="text-gray-600 text-sm">Nenhum lead registrado.</p>
             ) : (
@@ -152,9 +155,9 @@ export default function DashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-800 text-gray-500 text-left">
-                      <th className="pb-2">Nome</th>
+                      <th className="pb-2">Nome / Empresa</th>
                       <th className="pb-2">WhatsApp</th>
-                      <th className="pb-2">TAG</th>
+                      <th className="pb-2">Produto Interesse</th>
                       <th className="pb-2">Status</th>
                       <th className="pb-2">Data</th>
                     </tr>
@@ -162,9 +165,15 @@ export default function DashboardPage() {
                   <tbody>
                     {ultimos.map((lead) => (
                       <tr key={lead.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                        <td className="py-2 font-medium">{lead.name || "—"}</td>
-                        <td className="py-2 text-gray-400">{lead.whatsapp_number}</td>
-                        <td className="py-2 text-blue-400">{lead.gtm_tag || "—"}</td>
+                        <td className="py-2">
+                          <div className="font-medium">{lead.name || "—"}</div>
+                          <div className="text-[10px] text-gray-500">{lead.company || "—"}</div>
+                        </td>
+                        <td className="py-2 text-gray-400">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</td>
+                        <td className="py-2">
+                          <div className="text-blue-400">{lead.detected_product || "—"}</div>
+                          <div className="text-[10px] text-gray-500">{lead.detected_city || "—"}</div>
+                        </td>
                         <td className="py-2">
                           <span className="text-xs px-2 py-1 rounded" style={{ background: (statusColors[lead.status] || "#666") + "22", color: statusColors[lead.status] || "#666" }}>
                             {STATUS_LABELS[lead.status] || lead.status}

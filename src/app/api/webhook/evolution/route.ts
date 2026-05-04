@@ -39,17 +39,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'ignored', reason: 'empty_message' });
       }
 
-      // 1. BUSCAR OU CRIAR LEAD (Sem Whitelist para testes)
+      // 1. BUSCAR CONFIGURAÇÃO PARA SABER O TENANT
+      const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
+
+      // 2. BUSCAR OU CRIAR LEAD
       let { data: lead } = await supabase
         .from('leads')
         .select('*')
         .eq('whatsapp_number', remoteJid)
         .single();
-
+ 
       if (!lead) {
         const { data: newLead } = await supabase
           .from('leads')
-          .insert([{ whatsapp_number: remoteJid, status: 'SDR_QUALIFICATION' }])
+          .insert([{ 
+            whatsapp_number: remoteJid, 
+            status: 'SDR_QUALIFICATION',
+            tenant_id: globalConfig?.id 
+          }])
           .select()
           .single();
         lead = newLead;
@@ -67,14 +74,16 @@ export async function POST(request: Request) {
       }
 
       if (lead.status === 'SDR_QUALIFICATION') {
-        const { data: history } = await supabase
+        const { data: historyData } = await supabase
           .from('interactions')
           .select('sender_type, message_content')
           .eq('lead_id', lead.id)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: false })
           .limit(10);
 
-        const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
+        const history = (historyData || []).reverse();
+
+
 
         // Checagem se o bot está ligado globalmente
         if (globalConfig?.bot_active === false) {
@@ -95,6 +104,18 @@ export async function POST(request: Request) {
         if (aiResult) {
           const { resposta_whatsapp, variaveis } = aiResult;
 
+          // ATUALIZAR DADOS DO LEAD COM O QUE FOI DESCOBERTO
+          const leadUpdate: any = { updated_at: new Date().toISOString() };
+          if (variaveis?.produto) leadUpdate.detected_product = variaveis.produto;
+          if (variaveis?.ddd) leadUpdate.detected_ddd = variaveis.ddd;
+          if (variaveis?.cidade) leadUpdate.detected_city = variaveis.cidade;
+          if (variaveis?.quantidade) leadUpdate.detected_qty = variaveis.quantidade;
+          if (variaveis?.material) leadUpdate.detected_material = variaveis.material;
+          if (variaveis?.empresa) leadUpdate.company = variaveis.empresa;
+          if (variaveis?.nome_cliente) leadUpdate.name = variaveis.nome_cliente;
+
+          await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
+
           if (resposta_whatsapp) {
             await supabase.from('interactions').insert([
               { lead_id: lead.id, sender_type: 'sdr_ai', message_content: resposta_whatsapp }
@@ -112,7 +133,7 @@ export async function POST(request: Request) {
           }
 
           const temProduto = !!variaveis?.produto;
-          const temDDD = variaveis?.ddd && variaveis.ddd.length >= 2;
+          const temDDD = (variaveis?.ddd && variaveis.ddd.length >= 2) || (variaveis?.cidade && variaveis.cidade.length > 3);
 
           if (temProduto && temDDD && globalConfig) {
             const transicao = "Estou te transferindo para o especialista agora...";

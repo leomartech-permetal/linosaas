@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'fake-key' });
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 async function buildContext(): Promise<string> {
@@ -46,44 +45,52 @@ export interface ChatMessage {
 }
 
 export async function processLeadWithSkills(history: { sender_type: string, message_content: string }[]) {
+  // 1. Buscar configuração e chave
+  const { data: config } = await supabase.from('tenant_config').select('*').limit(1).single();
+  const apiKey = config?.openai_key || process.env.OPENAI_API_KEY;
+
+  if (!apiKey || apiKey === 'fake-key') {
+    return { erro_openai: 'Chave da OpenAI não configurada no banco de dados ou env.' };
+  }
+
+  const dynamicOpenai = new OpenAI({ apiKey });
   const systemContext = await buildContext();
 
   const extractionPrompt = `${systemContext}
 
 ---
-TAREFA: Você é o Chatbot "Lino", assistente comercial da Permetal. Seu objetivo é conversar naturalmente no WhatsApp para QUALIFICAR o lead.
+TAREFA: Você é o Chatbot "Lino", assistente comercial da Permetal. Seu objetivo é conversar naturalmente no WhatsApp para QUALIFICAR o lead antes de passar para um vendedor.
 
-⚠️ REGRAS CRÍTICAS - SEGUEixen estritamente:
+⚠️ REGRAS OBRIGATÓRIAS:
 
-1. **SAUDAÇÕES**: Se a mensagem do usuário for apenas "oi", "olá", "boa tarde", "boa noite", "bom dia", "ei", "oiê", "eai", "hello", ou similares, RESPONDA COM SAUDAÇÃO NATURAL e NÃO extraia variáveis. Exemplo: "Olá! Sou o Lino, atendimento Permetal. Como posso ajudar?" (NUNCA assuma produto)
+1. **SAUDAÇÕES**: Se o usuário apenas disser "oi", "olá", "bom dia" ou similar, responda APENAS com uma saudação amigável e pergunte como pode ajudar. 
+   - EXEMPLO: "Olá! Sou o Lino, assistente da Permetal. Como posso te ajudar hoje?"
+   - NUNCA assuma que ele quer um produto específico (como chapa ou piso) se ele não disse.
 
-2. **NÃO ASSUMA PRODUTO**: Só marque produto se o cliente MENcionar explicitamente. Se o cliente disser "oi", não assuma que ele quer "piso industrial" ou qualquer outro produto.
+2. **IDENTIFICAÇÃO DE PRODUTO**: Só registre o produto se o cliente mencionar explicitamente algo do catálogo ou relacionado. Se não souber, mantenha "produto": null.
 
-3. **UMA PERGUNTA POR VEZ**: Não sobrecarregue o cliente.
+3. **FLUXO DE QUALIFICAÇÃO**:
+   - Primeiro: Identifique o PRODUTO.
+   - Segundo: Identifique a REGIÃO/CIDADE/DDD.
+   - Terceiro: Pergunte a QUANTIDADE ou MEDIDAS.
 
-4. **MÍNIMO PARA TRANSFERÊNCIA**: Precisamos de PRODUTO + REGIÃO (DDD ou cidade). Não transfira sem esses dois.
+4. **TRANSFERÊNCIA**: Só diga que vai transferir quando tiver pelo menos o PRODUTO e a REGIÃO.
 
-5. **SEGUNDO PASSO**: Primeiro pergunte o produto. Só depois pergunte a região/DDD.
+5. **SUPERVISÃO INTERNA**: Antes de gerar a resposta, revise o histórico. Se o cliente disse que NÃO quer algo, nunca insista nesse item. Se ele corrigiu você, peça desculpas e siga o novo contexto.
 
-6. **USE CATÁLOGO SÓ SE CLIENTE PERGUNTAR**: Use as informações de produto SOMENTE para responder dúvidas técnicas, não para assumir que o cliente quer algo.
+6. **RESPOSTA CURTA**: Seja direto e amigável. Use emojis moderadamente.
 
 Devolva EXCLUSIVAMENTE JSON:
 {
   "resposta_whatsapp": "sua mensagem para o cliente",
   "variaveis": {
-    "produto": "produto mencionado (null se não souber)",
-    "ddd": "2 dígitos DDD (null se não souber)",
-    "quantidade": "'5 peças', '20m2' (null)",
-    "quantidade_nivel": "'baixa','media','alta' (null)",
-    "aplicacao": "industrial,obra,revenda (null)",
-    "precisa_desenho": true/false/null,
-    "precisa_prototipo": true/false/null,
-    "nome_cliente": "nome (null)",
-    "email": "email (null)",
-    "empresa": "empresa (null)",
-    "cnpj": "cnpj (null)",
-    "cidade": "cidade/estado (null)",
-    "segmento_detectado": "industria/construcao/revenda (null)"
+    "produto": "nome do produto detectado ou null",
+    "ddd": "DDD detectado ou null",
+    "quantidade": "quantidade detectada ou null",
+    "cidade": "cidade detectada ou null",
+    "material": "carbono, inox, galvanizado ou null",
+    "empresa": "nome da empresa ou null",
+    "nome_cliente": "nome da pessoa ou null"
   }
 }`;
 
@@ -105,7 +112,7 @@ Devolva EXCLUSIVAMENTE JSON:
 
   try {
     console.log(`[OpenAI] Enviando requisição com ${messages.length} mensagens.`);
-    const response = await openai.chat.completions.create({
+    const response = await dynamicOpenai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: messages as any,
       response_format: { type: 'json_object' }
