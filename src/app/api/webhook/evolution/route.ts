@@ -114,24 +114,51 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'ignored', reason: 'empty_content' });
       }
 
-      // 3. BUSCAR/CRIAR LEAD
+      // 3. BUSCAR/CRIAR LEAD IMEDIATAMENTE
       if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'global_bot_off' });
 
-      let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
+      let { data: lead, error: leadError } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
+      
       if (!lead) {
-        const { data: newLead } = await supabase.from('leads').insert([{ 
+        const { data: newLead, error: insertError } = await supabase.from('leads').insert([{ 
           whatsapp_number: remoteJid, status: 'SDR_QUALIFICATION', tenant_id: globalConfig?.id 
         }]).select().single();
+        
+        if (insertError) {
+           console.error('[Webhook] Erro ao criar lead:', insertError);
+           return NextResponse.json({ status: 'error', reason: 'lead_creation_failed', detail: insertError });
+        }
         lead = newLead;
       }
 
-      if (!lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'lead_bot_paused' });
+      if (!lead?.bot_active) return NextResponse.json({ status: 'ignored', reason: 'lead_bot_paused' });
 
-      // 4. SISTEMA DE BUFFER (DEBOUNCE)
-      const { data: bufferEntry } = await supabase.from('conversation_buffers').insert([{
-        lead_id: lead.id,
-        content: messageContent
-      }]).select().single();
+      // 4. EXTRAÇÃO DE MULTIMÍDIA (Agora com o lead já garantido)
+      const messageObj = messageData.message || messageData;
+      const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
+      
+      try {
+        let mediaBase64 = body.data?.base64 || messageData.base64 || null;
+
+        if (messageType === 'imageMessage' && openaiKey && globalConfig) {
+          const visionDescription = await describeImage(globalConfig.evolution_url, globalConfig.evolution_instance_name, globalConfig.evolution_key, messageId, remoteJid, openaiKey, messageContent, mediaBase64);
+          messageContent = `[IMAGEM RECEBIDA: ${visionDescription}] ${messageContent}`;
+        }
+
+        if (messageType === 'audioMessage' && openaiKey && globalConfig) {
+          const audioText = await transcribeAudio(globalConfig.evolution_url, globalConfig.evolution_instance_name, globalConfig.evolution_key, messageId, remoteJid, openaiKey, mediaBase64);
+          messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
+        }
+
+        if (messageType === 'documentMessage') {
+          const fileName = messageObj.documentMessage?.fileName || 'documento.pdf';
+          messageContent = `[DOCUMENTO RECEBIDO: ${fileName}] ${messageContent}`;
+        }
+      } catch (mediaError) {
+        console.error('[Media Error] Falha ao processar mídia:', mediaError);
+        // Registra o erro no banco para diagnóstico tipo n8n
+        await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: `[ERRO MULTIMÍDIA]: ${messageContent}` }]);
+      }
 
       // Aguarda 10 segundos
       await new Promise(resolve => setTimeout(resolve, 10000));
