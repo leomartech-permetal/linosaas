@@ -1,59 +1,104 @@
 import { OpenAI } from "openai";
 
 /**
- * Descreve uma imagem usando GPT-4o Vision
+ * Obtém o Base64 de uma mídia da Evolution API
  */
-export async function describeImage(imageUrl: string, openaiKey: string, context: string = ""): Promise<string> {
+async function getBase64FromEvolution(baseUrl: string, instance: string, apiKey: string, messageId: string, remoteJid: string): Promise<string> {
+  const url = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}chat/getBase64FromMediaMessage/${instance}`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'apikey': apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: {
+        key: {
+          remoteJid: remoteJid,
+          fromMe: false,
+          id: messageId
+        }
+      },
+      convertToMp4: false
+    })
+  });
+
+  if (!response.ok) throw new Error(`Falha ao obter base64: ${response.statusText}`);
+  const data = await response.json();
+  return data.base64; // Evolution retorna { base64: "..." }
+}
+
+/**
+ * Descreve uma imagem usando GPT-4o Vision com as regras técnicas da Permetal
+ */
+export async function describeImage(baseUrl: string, instance: string, apiKey: string, messageId: string, remoteJid: string, openaiKey: string, context: string = ""): Promise<string> {
   const openai = new OpenAI({ apiKey: openaiKey });
 
   try {
+    const base64 = await getBase64FromEvolution(baseUrl, instance, apiKey, messageId, remoteJid);
+    const cleanBase64 = base64.replace(/^data:.*;base64,/, '');
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: `Você é um especialista técnico da Permetal. 
-          Sua tarefa é analisar a imagem enviada pelo cliente e descrevê-la tecnicamente para que outro agente de IA possa processar o pedido.
-          Identifique: Produto (chapa, gradil, tela, etc), modelo, cor, material e qualquer detalhe técnico visível.
-          Se houver texto na imagem, transcreva-o.
+          content: `Você é LINO, assistente comercial do Grupo Permetal. 
+          Objetivo: extrair dados para COTAÇÃO técnicos da imagem.
+          
+          REGRAS DE MARCA:
+          - Se for piso/degrau/grade de piso => MARCA: "METALGRADE"
+          - Se for fachada/brise/forro/painel => MARCA: "PSA"
+          - Se for chapas perfurada/expandida/recalcada/moeda => MARCA: "PERMETAL"
+          - Se tipo_cliente=pessoa física e baixa quantidade => MARCA: "PERMETAL EXPRESS"
+          
+          DADOS A EXTRAIR: produto, padrão (oblongo/redondo/moeda), medidas, material, espessura, quantidade e empresa.
+          
           Contexto da conversa: ${context}`
         },
         {
           role: "user",
           content: [
-            { type: "text", text: "O que você vê nesta imagem que seja relevante para a Permetal?" },
+            { type: "text", text: "Descreva tecnicamente os produtos nesta imagem seguindo as regras de marca da Permetal." },
             {
               type: "image_url",
-              image_url: { url: imageUrl }
+              image_url: { url: `data:image/jpeg;base64,${cleanBase64}` }
             },
           ],
         },
       ],
     });
 
-    return response.choices[0].message.content || "Não foi possível analisar a imagem.";
+    return response.choices[0].message.content || "Imagem analisada.";
   } catch (error: any) {
-    console.error("Erro no Vision:", error);
-    return `[Erro ao analisar imagem: ${error.message}]`;
+    console.error("Erro Vision:", error);
+    return `[Erro ao processar imagem: ${error.message}]`;
   }
 }
 
 /**
- * Transcreve um áudio usando OpenAI Whisper
+ * Transcreve áudio usando Whisper
  */
-export async function transcribeAudio(audioUrl: string, openaiKey: string): Promise<string> {
+export async function transcribeAudio(baseUrl: string, instance: string, apiKey: string, messageId: string, remoteJid: string, openaiKey: string): Promise<string> {
   const openai = new OpenAI({ apiKey: openaiKey });
 
   try {
-    // Nota: O Whisper via URL direta não funciona, precisaríamos baixar o arquivo.
-    // Como estamos integrados à Evolution, ela pode nos mandar a URL.
-    // Para simplificar agora, vamos simular ou usar uma ferramenta de download.
-    // Em um ambiente real, faríamos fetch(audioUrl) e passaríamos o buffer.
+    const base64 = await getBase64FromEvolution(baseUrl, instance, apiKey, messageId, remoteJid);
+    const cleanBase64 = base64.replace(/^data:.*;base64,/, '');
+    const audioBuffer = Buffer.from(cleanBase64, 'base64');
     
-    // Por enquanto, vamos marcar como pendente de download ou retornar um placeholder
-    // se não tivermos uma lib de fetch disponível aqui.
-    return "[Áudio recebido e pendente de transcrição técnica]";
+    const file = new File([audioBuffer], "audio.ogg", { type: "audio/ogg" });
+
+    const transcription = await openai.audio.transcriptions.create({
+      file: file,
+      model: "whisper-1",
+      language: "pt"
+    });
+
+    return transcription.text;
   } catch (error: any) {
-    return `[Erro na transcrição: ${error.message}]`;
+    console.error("Erro Whisper:", error);
+    return "[Áudio recebido, erro na transcrição]";
   }
 }

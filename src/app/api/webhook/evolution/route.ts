@@ -41,18 +41,30 @@ export async function POST(request: Request) {
       
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       const openaiKey = globalConfig?.openai_key;
+      const messageId = messageData.key?.id;
 
-      // Processar Imagem
-      if (messageType === 'imageMessage' && openaiKey) {
-        const imageUrl = messageData.message.imageMessage.url || '';
-        const visionDescription = await describeImage(imageUrl, openaiKey, messageContent);
+      if (messageType === 'imageMessage' && openaiKey && globalConfig) {
+        const visionDescription = await describeImage(
+          globalConfig.evolution_url,
+          globalConfig.evolution_instance_name,
+          globalConfig.evolution_key,
+          messageId,
+          remoteJid,
+          openaiKey,
+          messageContent
+        );
         messageContent = `[IMAGEM: ${visionDescription}] ${messageContent}`;
       }
 
-      // Processar Áudio
-      if (messageType === 'audioMessage' && openaiKey) {
-        const audioUrl = messageData.message.audioMessage.url || '';
-        const audioText = await transcribeAudio(audioUrl, openaiKey);
+      if (messageType === 'audioMessage' && openaiKey && globalConfig) {
+        const audioText = await transcribeAudio(
+          globalConfig.evolution_url,
+          globalConfig.evolution_instance_name,
+          globalConfig.evolution_key,
+          messageId,
+          remoteJid,
+          openaiKey
+        );
         messageContent = `[ÁUDIO: ${audioText}] ${messageContent}`;
       }
 
