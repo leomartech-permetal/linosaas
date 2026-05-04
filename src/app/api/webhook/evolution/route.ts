@@ -18,10 +18,7 @@ export async function POST(request: Request) {
     const messageId = messageData?.key?.id || messageData?.id;
 
     if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
-      if (!messageData) {
-        console.log('[Webhook] Ignorado: Sem dados de mensagem');
-        return NextResponse.json({ status: 'ignored', reason: 'no_data' });
-      }
+      if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
 
       const fromMe = messageData.key?.fromMe;
 
@@ -34,15 +31,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'success', reason: 'human_intervention' });
       }
 
-      if (!remoteJid) {
-        console.log('[Webhook] Ignorado: Sem remoteJid');
-        return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
-      }
+      if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
-      // 2. EXTRAÇÃO E MULTIMÍDIA
+      // 2. EXTRAÇÃO DE TEXTO
       const messageObj = messageData.message || messageData;
-      
-      // Captura de texto exaustiva
       let messageContent = messageObj?.conversation || 
                            messageObj?.extendedTextMessage?.text || 
                            messageObj?.text ||
@@ -52,118 +44,58 @@ export async function POST(request: Request) {
                            messageObj?.documentMessage?.caption ||
                            '';
       
-      console.log(`[Webhook] Recebido: "${messageContent}" de ${remoteJid} (Tipo: ${messageData.messageType || 'desconhecido'})`);
+      console.log(`[Webhook] Recebido: "${messageContent}" de ${remoteJid}`);
 
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
-      const openaiKey = globalConfig?.openai_key;
-
-      const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
-
-      // Isolar processamento de mídia
-      try {
-        // Prioriza o base64 que vem direto no data do webhook
-        let mediaBase64 = body.data?.base64 || messageData.base64 || null;
-
-        if (messageType === 'imageMessage' && openaiKey && globalConfig) {
-          console.log('[Multimodal] Processando Imagem...');
-          const visionDescription = await describeImage(
-            globalConfig.evolution_url,
-            globalConfig.evolution_instance_name,
-            globalConfig.evolution_key,
-            messageId,
-            remoteJid,
-            openaiKey,
-            messageContent,
-            mediaBase64
-          );
-          messageContent = `[IMAGEM RECEBIDA: ${visionDescription}] ${messageContent}`;
-        }
-
-        if (messageType === 'audioMessage' && openaiKey && globalConfig) {
-          console.log('[Multimodal] Processando Áudio...');
-          const audioText = await transcribeAudio(
-            globalConfig.evolution_url,
-            globalConfig.evolution_instance_name,
-            globalConfig.evolution_key,
-            messageId,
-            remoteJid,
-            openaiKey,
-            mediaBase64
-          );
-          messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
-        }
-
-        if (messageType === 'documentMessage') {
-          const fileName = messageObj.documentMessage?.fileName || 'documento.pdf';
-          console.log('[Multimodal] Documento recebido:', fileName);
-          messageContent = `[DOCUMENTO RECEBIDO: ${fileName}] ${messageContent}`;
-        }
-      } catch (mediaError) {
-        console.error('[Media Error] Falha ao processar mídia:', mediaError);
-        // Não interrompe o fluxo se a mídia falhar
-      }
-
-      /* 
-      const cleanNumber = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
-      if (!WHITELIST_NUMBERS.some(n => cleanNumber.includes(n))) {
-        return NextResponse.json({ status: 'ignored', reason: 'not_in_whitelist' });
-      }
-      */
-
-      if (!messageContent.trim()) {
-        return NextResponse.json({ status: 'ignored', reason: 'empty_content' });
-      }
-
-      // 3. BUSCAR/CRIAR LEAD IMEDIATAMENTE
       if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'global_bot_off' });
 
-      let { data: lead, error: leadError } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
-      
+      // 3. BUSCAR/CRIAR LEAD
+      let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
       if (!lead) {
-        const { data: newLead, error: insertError } = await supabase.from('leads').insert([{ 
+        const { data: newLead } = await supabase.from('leads').insert([{ 
           whatsapp_number: remoteJid, status: 'SDR_QUALIFICATION', tenant_id: globalConfig?.id 
         }]).select().single();
-        
-        if (insertError) {
-           console.error('[Webhook] Erro ao criar lead:', insertError);
-           return NextResponse.json({ status: 'error', reason: 'lead_creation_failed', detail: insertError });
-        }
         lead = newLead;
       }
 
-      if (!lead?.bot_active) return NextResponse.json({ status: 'ignored', reason: 'lead_bot_paused' });
+      if (!lead || !lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'bot_paused' });
 
-      // 4. EXTRAÇÃO DE MULTIMÍDIA (Agora com o lead já garantido)
-      const messageObj = messageData.message || messageData;
+      // 4. PROCESSAMENTO MULTIMODAL
+      const openaiKey = globalConfig?.openai_key;
       const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
-      
+
       try {
         let mediaBase64 = body.data?.base64 || messageData.base64 || null;
 
         if (messageType === 'imageMessage' && openaiKey && globalConfig) {
           const visionDescription = await describeImage(globalConfig.evolution_url, globalConfig.evolution_instance_name, globalConfig.evolution_key, messageId, remoteJid, openaiKey, messageContent, mediaBase64);
           messageContent = `[IMAGEM RECEBIDA: ${visionDescription}] ${messageContent}`;
-        }
-
-        if (messageType === 'audioMessage' && openaiKey && globalConfig) {
+        } else if (messageType === 'audioMessage' && openaiKey && globalConfig) {
           const audioText = await transcribeAudio(globalConfig.evolution_url, globalConfig.evolution_instance_name, globalConfig.evolution_key, messageId, remoteJid, openaiKey, mediaBase64);
           messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
-        }
-
-        if (messageType === 'documentMessage') {
+        } else if (messageType === 'documentMessage') {
           const fileName = messageObj.documentMessage?.fileName || 'documento.pdf';
           messageContent = `[DOCUMENTO RECEBIDO: ${fileName}] ${messageContent}`;
         }
       } catch (mediaError) {
-        console.error('[Media Error] Falha ao processar mídia:', mediaError);
-        // Registra o erro no banco para diagnóstico tipo n8n
-        await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: `[ERRO MULTIMÍDIA]: ${messageContent}` }]);
+        console.error('[Media Error]', mediaError);
       }
 
-      // Aguarda 10 segundos
+      if (!messageContent.trim()) return NextResponse.json({ status: 'ignored', reason: 'empty_content' });
+
+      // 5. SISTEMA DE BUFFER (DEBOUNCE)
+      const { data: bufferEntry, error: bufferError } = await supabase.from('conversation_buffers').insert([{
+        lead_id: lead.id,
+        content: messageContent
+      }]).select().single();
+
+      if (bufferError) {
+        console.error('[Buffer Error]', bufferError);
+        return NextResponse.json({ status: 'error', reason: 'buffer_insert_failed' });
+      }
+
       await new Promise(resolve => setTimeout(resolve, 10000));
 
-      // Verifica se houve alguma mensagem MAIS NOVA
       const { data: newerMessages } = await supabase
         .from('conversation_buffers')
         .select('id')
@@ -175,7 +107,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'success', detail: 'waiting_for_more' });
       }
 
-      // Processar TUDO do buffer
       const { data: allUnprocessed } = await supabase
         .from('conversation_buffers')
         .select('*')
@@ -189,7 +120,7 @@ export async function POST(request: Request) {
 
       const fullContext = allUnprocessed.map(m => m.content).filter(Boolean).join(' | ');
 
-      // 5. SALVAR INTERAÇÃO E IA
+      // 6. SALVAR INTERAÇÃO E IA
       await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: fullContext }]);
 
       if (lead.status === 'SDR_QUALIFICATION') {
