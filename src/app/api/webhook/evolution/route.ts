@@ -12,16 +12,16 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Log para debug
-    console.log('[Webhook] Evento:', body.event);
-    
     // Captura flexível dos dados da mensagem
     const messageData = body.data?.messages?.[0] || body.data;
-    const remoteJid = messageData?.key?.remoteJid || body.data?.key?.remoteJid || body.sender;
+    const remoteJid = messageData?.key?.remoteJid || messageData?.remoteJid || body.data?.key?.remoteJid || body.sender;
     const messageId = messageData?.key?.id || messageData?.id;
 
     if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
-      if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
+      if (!messageData) {
+        console.log('[Webhook] Ignorado: Sem dados de mensagem');
+        return NextResponse.json({ status: 'ignored', reason: 'no_data' });
+      }
 
       const fromMe = messageData.key?.fromMe;
 
@@ -34,23 +34,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'success', reason: 'human_intervention' });
       }
 
-      if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
+      if (!remoteJid) {
+        console.log('[Webhook] Ignorado: Sem remoteJid');
+        return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
+      }
 
       // 2. EXTRAÇÃO E MULTIMÍDIA
       const messageObj = messageData.message || messageData;
-      const messageType = Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || (messageObj?.conversation ? 'conversation' : '');
       
+      // Captura de texto exaustiva
       let messageContent = messageObj?.conversation || 
                            messageObj?.extendedTextMessage?.text || 
                            messageObj?.text ||
+                           messageData?.text ||
                            messageObj?.imageMessage?.caption ||
                            messageObj?.videoMessage?.caption ||
+                           messageObj?.documentMessage?.caption ||
                            '';
       
-      console.log(`[Webhook] Conteúdo capturado: "${messageContent}" de ${remoteJid}`);
+      console.log(`[Webhook] Recebido: "${messageContent}" de ${remoteJid} (Tipo: ${messageData.messageType || 'desconhecido'})`);
 
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       const openaiKey = globalConfig?.openai_key;
+
+      const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
 
       // Isolar processamento de mídia
       try {
