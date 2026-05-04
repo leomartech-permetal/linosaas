@@ -31,6 +31,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'success', reason: 'human_intervention' });
       }
 
+      if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
+
       // 2. EXTRAÇÃO E MULTIMÍDIA
       const messageType = Object.keys(messageData.message || {})[0];
       let messageContent = messageData.message?.conversation || 
@@ -40,46 +42,30 @@ export async function POST(request: Request) {
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       const openaiKey = globalConfig?.openai_key;
 
+      // Processar Imagem
       if (messageType === 'imageMessage' && openaiKey) {
         const imageUrl = messageData.message.imageMessage.url || '';
         const visionDescription = await describeImage(imageUrl, openaiKey, messageContent);
-        messageContent = `[IMAGEM RECEBIDA: ${visionDescription}] ${messageContent}`;
+        messageContent = `[IMAGEM: ${visionDescription}] ${messageContent}`;
       }
 
+      // Processar Áudio
       if (messageType === 'audioMessage' && openaiKey) {
         const audioUrl = messageData.message.audioMessage.url || '';
         const audioText = await transcribeAudio(audioUrl, openaiKey);
-        messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
+        messageContent = `[ÁUDIO: ${audioText}] ${messageContent}`;
       }
-
-      if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
       const cleanNumber = remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
       if (!WHITELIST_NUMBERS.some(n => cleanNumber.includes(n))) {
         return NextResponse.json({ status: 'ignored', reason: 'not_in_whitelist' });
       }
 
-      // 2. EXTRAÇÃO DE CONTEÚDO (Texto ou Mídia)
-      const messageType = Object.keys(messageData.message || {})[0];
-      let messageContent = messageData.message?.conversation || 
-                           messageData.message?.extendedTextMessage?.text || 
-                           '';
-      
-      let mediaUrl = '';
-      let mediaType = '';
-
-      if (['imageMessage', 'audioMessage', 'documentMessage'].includes(messageType)) {
-        mediaType = messageType.replace('Message', '');
-        // A Evolution API geralmente manda a URL da mídia se o webhook estiver configurado para isso
-        mediaUrl = messageData.message[messageType]?.url || ''; 
-      }
-
-      if (!messageContent.trim() && !mediaUrl) {
+      if (!messageContent.trim()) {
         return NextResponse.json({ status: 'ignored', reason: 'empty_content' });
       }
 
-      // 3. BUSCAR CONFIGURAÇÃO E LEAD
-      const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
+      // 3. BUSCAR/CRIAR LEAD
       if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'global_bot_off' });
 
       let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
@@ -93,19 +79,15 @@ export async function POST(request: Request) {
       if (!lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'lead_bot_paused' });
 
       // 4. SISTEMA DE BUFFER (DEBOUNCE)
-      // Salva no buffer para processar depois de 10 segundos de silêncio
       const { data: bufferEntry } = await supabase.from('conversation_buffers').insert([{
         lead_id: lead.id,
-        content: messageContent,
-        media_attachment_id: null // Poderíamos salvar o anexo aqui se processado
+        content: messageContent
       }]).select().single();
 
-      console.log(`[Webhook] Mensagem de ${remoteJid} adicionada ao buffer.`);
-
-      // Aguarda 10 segundos (Debounce)
+      // Aguarda 10 segundos
       await new Promise(resolve => setTimeout(resolve, 10000));
 
-      // Verifica se houve alguma mensagem MAIS NOVA no buffer. Se sim, deixa a outra instância processar.
+      // Verifica se houve alguma mensagem MAIS NOVA
       const { data: newerMessages } = await supabase
         .from('conversation_buffers')
         .select('id')
@@ -114,10 +96,10 @@ export async function POST(request: Request) {
         .eq('processed', false);
 
       if (newerMessages && newerMessages.length > 0) {
-        return NextResponse.json({ status: 'success', detail: 'waiting_for_more_messages' });
+        return NextResponse.json({ status: 'success', detail: 'waiting_for_more' });
       }
 
-      // Se chegamos aqui, somos a última mensagem. Vamos processar TUDO do buffer.
+      // Processar TUDO do buffer
       const { data: allUnprocessed } = await supabase
         .from('conversation_buffers')
         .select('*')
@@ -127,12 +109,11 @@ export async function POST(request: Request) {
 
       if (!allUnprocessed || allUnprocessed.length === 0) return NextResponse.json({ status: 'ignored' });
 
-      // Marcar como processado
       await supabase.from('conversation_buffers').update({ processed: true }).eq('lead_id', lead.id).eq('processed', false);
 
       const fullContext = allUnprocessed.map(m => m.content).filter(Boolean).join(' | ');
 
-      // 5. SALVAR INTERAÇÃO E PROCESSAR IA
+      // 5. SALVAR INTERAÇÃO E IA
       await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: fullContext }]);
 
       if (lead.status === 'SDR_QUALIFICATION') {
@@ -144,7 +125,6 @@ export async function POST(request: Request) {
         if (aiResult && !aiResult.erro_openai) {
           const { resposta_whatsapp, variaveis } = aiResult;
           
-          // Atualiza Lead
           const leadUpdate: any = { updated_at: new Date().toISOString() };
           if (variaveis?.produto) leadUpdate.detected_product = variaveis.produto;
           if (variaveis?.ddd) leadUpdate.detected_ddd = variaveis.ddd;
@@ -167,9 +147,6 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json({ status: 'success', processed_count: allUnprocessed.length });
-    }
-
-      return NextResponse.json({ status: 'success', lead_id: lead?.id });
     }
 
     return NextResponse.json({ status: 'ignored', event: body.event });
