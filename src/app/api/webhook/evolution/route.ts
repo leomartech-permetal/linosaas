@@ -5,14 +5,16 @@ import { routeLead } from '@/lib/router';
 import { handleClientReturnedToSDR } from '@/lib/support-monitor';
 import { sendTextMessage } from '@/lib/evolution-api';
 
-const WHITELIST_NUMBERS = ['5516991415319'];
+const WHITELIST_NUMBERS = ['5516991415319', '551635187121', '551699141531', '55163518712'];
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Log bruto para diagnóstico no banco
-    console.log('[Webhook] Payload recebido:', JSON.stringify(body).substring(0, 500));
+    // Log para debug
+    console.log('[Webhook] Evento:', body.event);
+    const remoteJid = body.data?.messages?.[0]?.key?.remoteJid || body.sender;
+    console.log('[Webhook] Sender:', remoteJid);
 
     if (body.event === 'messages.upsert') {
       const messageData = body.data?.messages?.[0] || body.data;
