@@ -91,20 +91,42 @@ export async function POST(request: Request) {
         console.error('[Media Error]', mediaError);
       }
 
-      if (!messageContent.trim()) return NextResponse.json({ status: 'ignored', reason: 'empty_content' });
-
       // 5. SISTEMA DE BUFFER (DEBOUNCE)
+      // Plano de Ação - Correção 1: Garantir texto de qualquer campo
+      const finalContent = messageContent 
+        || (messageData as any).texto_completo 
+        || (messageData as any).texto_midia 
+        || (messageData as any).message_raw 
+        || '';
+
+      console.log(`[Webhook] Processando para o Buffer: "${finalContent.substring(0, 50)}..."`);
+
       const { data: bufferEntry, error: bufferError } = await supabase.from('conversation_buffers').insert([{
         lead_id: lead.id,
-        content: messageContent
+        content: finalContent
       }]).select().single();
 
       if (bufferError) {
         console.error('[Buffer Error]', bufferError);
-        return NextResponse.json({ status: 'error', reason: 'buffer_insert_failed' });
+        return NextResponse.json({ status: 'error', reason: 'BUFFER_INSERT_FAILED', detail: bufferError });
       }
 
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      // Plano de Ação - Correção 2: Forçar processamento se for a primeira ou se já passou o tempo
+      // Primeiro, verificamos se há outras mensagens não processadas ANTES desta
+      const { data: previousMessages } = await supabase
+        .from('conversation_buffers')
+        .select('id')
+        .eq('lead_id', lead.id)
+        .lt('created_at', bufferEntry.created_at)
+        .eq('processed', false);
+
+      const isPrimeiraMensagem = !previousMessages || previousMessages.length === 0;
+      
+      // Se for a primeira mensagem, podemos esperar menos ou processar logo
+      const waitTime = isPrimeiraMensagem ? 4000 : 10000; 
+      console.log(`[Webhook] Aguardando ${waitTime}ms (Primeira: ${isPrimeiraMensagem})`);
+      
+      await new Promise(resolve => setTimeout(resolve, waitTime));
 
       const { data: newerMessages } = await supabase
         .from('conversation_buffers')
@@ -114,7 +136,7 @@ export async function POST(request: Request) {
         .eq('processed', false);
 
       if (newerMessages && newerMessages.length > 0) {
-        return NextResponse.json({ status: 'success', detail: 'waiting_for_more' });
+        return NextResponse.json({ status: 'success', detail: 'WAITING_FOR_MORE_MESSAGES' });
       }
 
       const { data: allUnprocessed } = await supabase
