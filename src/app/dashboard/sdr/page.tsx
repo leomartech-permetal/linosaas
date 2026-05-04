@@ -111,7 +111,7 @@ export default function SDRLeadsPage() {
               </thead>
               <tbody className="divide-y divide-gray-800/50">
                 {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-800/20 transition-colors">
+                  <tr key={lead.id} className={`hover:bg-gray-800/20 transition-colors ${!lead.bot_active ? 'border-l-2 border-yellow-500' : ''}`}>
                     <td className="px-4 py-4">
                       <div className="font-bold text-white">{lead.name || "Visitante"}</div>
                       <div className="text-xs text-gray-500">{lead.company || "Sem empresa"}</div>
@@ -128,9 +128,22 @@ export default function SDRLeadsPage() {
                       <div className="text-xs text-gray-400">{lead.detected_ddd ? `DDD ${lead.detected_ddd}` : "—"}</div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${lead.status === 'SDR_QUALIFICATION' ? 'bg-blue-900/30 text-blue-400' : 'bg-green-900/30 text-green-400'}`}>
-                        {lead.status === 'SDR_QUALIFICATION' ? 'Qualificando' : 'Qualificado'}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-[10px] text-center uppercase font-bold px-2 py-1 rounded ${lead.status === 'SDR_QUALIFICATION' ? 'bg-blue-900/30 text-blue-400' : 'bg-green-900/30 text-green-400'}`}>
+                          {lead.status === 'SDR_QUALIFICATION' ? 'Qualificando' : 'Qualificado'}
+                        </span>
+                        <button 
+                          onClick={async () => {
+                            const newState = !lead.bot_active;
+                            await supabase.from('leads').update({ bot_active: newState }).eq('id', lead.id);
+                            // Atualizar localmente
+                            setLeads(leads.map(l => l.id === lead.id ? {...l, bot_active: newState} : l));
+                          }}
+                          className={`text-[9px] uppercase font-black py-1 px-2 rounded border transition-all ${lead.bot_active ? 'bg-green-500/10 border-green-500/50 text-green-500' : 'bg-yellow-500 text-black border-yellow-500'}`}
+                        >
+                          {lead.bot_active ? '🤖 Bot Ativo' : '✋ Bot Pausado'}
+                        </button>
+                      </div>
                     </td>
                     <td className="px-4 py-4 text-right text-gray-500 text-xs">
                       {new Date(lead.updated_at).toLocaleString('pt-BR')}
