@@ -152,9 +152,10 @@ export async function POST(request: Request) {
 
       const fullContext = allUnprocessed.map(m => m.content).filter(Boolean).join(' | ');
 
-      // 6. SALVAR INTERAÇÃO E IA
+      // 6. SALVAR INTERAÇÃO
       await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: fullContext }]);
 
+      // 7. LÓGICA DE RESPOSTA (SDR OU ESPERA)
       if (lead.status === 'SDR_QUALIFICATION') {
         const { data: historyData } = await supabase.from('interactions').select('sender_type, message_content').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(15);
         const history = (historyData || []).reverse();
@@ -182,6 +183,13 @@ export async function POST(request: Request) {
             await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, "Estou te transferindo para o especialista agora...");
             await routeLead(lead.id, lead.tenant_id, variaveis);
           }
+        }
+      } else if (lead.status === 'WAITING_SELLER') {
+        // Se o cliente continuar falando, o Lino avisa que o especialista está vindo
+        const msgAviso = "O consultor especialista já recebeu seus dados e entrará em contato em instantes por aqui. Se preferir adiantar algo, pode mandar!";
+        await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'sdr_ai', message_content: msgAviso }]);
+        if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
+          await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgAviso);
         }
       }
 

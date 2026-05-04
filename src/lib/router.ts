@@ -124,16 +124,73 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
 
   // 8. Atualizar lead
   await supabase.from('leads').update({
-    current_owner_id: assignedUserId, // pode ser nulo se cair no limbo
-    status: 'WAITING_SELLER', // Força a saída do SDR para evitar loop infinito da IA
+    current_owner_id: assignedUserId,
+    status: 'WAITING_SELLER',
     updated_at: new Date().toISOString(),
   }).eq('id', leadId);
 
+  // 9. Notificar Vendedor (Notificação de Elite)
   if (assignedUserId) {
-    console.log(`[Roteador] ✅ Lead ${leadId} atribuído ao vendedor ${assignedUserId}`);
-  } else {
-    console.log(`[Roteador] ⚠️ Nenhum vendedor encontrado. Lead no limbo (WAITING_SELLER sem dono).`);
+    try {
+      await sendSellerNotification(leadId, assignedUserId, variables, finalBrand || 'PERMETAL');
+    } catch (e) {
+      console.error('[Roteador] Erro ao notificar vendedor:', e);
+    }
   }
 
   return { assignedUserId, product, region, segment, express, coleta, finalBrand };
+}
+
+/** Notificação de Elite para o Vendedor */
+async function sendSellerNotification(leadId: string, sellerId: string, variables: LeadVariables, brand: string) {
+  // 1. Buscar dados do vendedor
+  const { data: seller } = await supabase.from('users').select('whatsapp_number, name').eq('id', sellerId).single();
+  if (!seller?.whatsapp_number) return;
+
+  // 2. Buscar dados brutos do lead
+  const { data: lead } = await supabase.from('leads').select('whatsapp_number, name').eq('id', leadId).single();
+  
+  // 3. Gerar código de atendimento curto
+  const ticketCode = `LINO.${leadId.split('-')[0].toUpperCase()}`;
+  
+  // 4. Buscar histórico resumido
+  const { data: interactions } = await supabase.from('interactions')
+    .select('message_content')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false })
+    .limit(3);
+  
+  const resumo = interactions?.reverse().map(i => i.message_content).join('\n') || 'Sem observações adicionais.';
+  const whatsappUrl = `https://wa.me/${lead?.whatsapp_number?.replace(/\D/g, '')}`;
+
+  const message = `🔥 *NOVO LEAD* 🔥
+📌 *CÓDIGO DO ATENDIMENTO:* ${ticketCode}
+✅ Anote este código no cadastro do cliente.
+
+━━━━━━━━━━━━━━━━━━━━
+*Cliente:* ${variables.nome_cliente || lead?.name || 'Não informado'}
+*Empresa:* ${variables.empresa || 'Não informado'}
+*CNPJ:* ${variables.cnpj || 'Não informado'}
+*WhatsApp:* ${whatsappUrl}
+*E-mail:* ${variables.email || 'Não informado'}
+
+*Produto:* ${variables.produto || 'Não informado'}
+*Segmento:* ${variables.segmento_detectado || 'Indústria'}
+*Localização:* ${variables.cidade || 'Não informado'} - ${variables.ddd || ''}
+
+*Marca (roteada):* ${brand.toUpperCase()}
+━━━━━━━━━━━━━━━━━━━━
+
+📝 *Resumo da conversa:*
+${resumo}
+
+⏰ *Enviado em:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+`;
+
+  // 5. Enviar via Evolution API
+  const { data: config } = await supabase.from('tenant_config').select('*').limit(1).single();
+  if (config?.evolution_url && config?.evolution_key) {
+    const { sendTextMessage } = require('./evolution-api');
+    await sendTextMessage(config.evolution_instance_name, config.evolution_url, config.evolution_key, seller.whatsapp_number, message);
+  }
 }
