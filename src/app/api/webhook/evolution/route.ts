@@ -47,18 +47,28 @@ export async function POST(request: Request) {
       console.log(`[Webhook] Recebido: "${messageContent}" de ${remoteJid}`);
 
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
-      if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'global_bot_off' });
+      if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'GLOBAL_BOT_OFF' });
 
       // 3. BUSCAR/CRIAR LEAD
       let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
       if (!lead) {
-        const { data: newLead } = await supabase.from('leads').insert([{ 
-          whatsapp_number: remoteJid, status: 'SDR_QUALIFICATION', tenant_id: globalConfig?.id 
+        console.log('[Webhook] Criando novo lead para:', remoteJid);
+        const { data: newLead, error: insertError } = await supabase.from('leads').insert([{ 
+          whatsapp_number: remoteJid, 
+          status: 'SDR_QUALIFICATION', 
+          tenant_id: globalConfig?.id,
+          bot_active: true // Forçar ativo na criação
         }]).select().single();
+        
+        if (insertError) {
+          console.error('[Webhook] Erro ao inserir lead:', insertError);
+          return NextResponse.json({ status: 'error', reason: 'LEAD_INSERT_FAILED', detail: insertError });
+        }
         lead = newLead;
       }
 
-      if (!lead || !lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'bot_paused' });
+      if (!lead) return NextResponse.json({ status: 'error', reason: 'LEAD_NOT_FOUND_AFTER_INSERT' });
+      if (!lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'LEAD_BOT_PAUSED' });
 
       // 4. PROCESSAMENTO MULTIMODAL
       const openaiKey = globalConfig?.openai_key;
