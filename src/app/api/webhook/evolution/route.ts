@@ -17,9 +17,11 @@ export async function POST(request: Request) {
     const messageData = body.data?.messages?.[0] || body.data;
     const remoteJid = messageData?.key?.remoteJid || body.data?.key?.remoteJid || body.sender;
 
-    if (body.event === 'messages.upsert') {
+    if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
+      const messageData = body.data?.messages?.[0] || body.data?.message || body.data;
       if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
 
+      const remoteJid = messageData.key?.remoteJid || messageData.remoteJid || body.sender;
       const fromMe = messageData.key?.fromMe;
 
       // 1. INTERVENÇÃO HUMANA
@@ -34,38 +36,48 @@ export async function POST(request: Request) {
       if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
       // 2. EXTRAÇÃO E MULTIMÍDIA
-      const messageType = Object.keys(messageData.message || {})[0];
-      let messageContent = messageData.message?.conversation || 
-                           messageData.message?.extendedTextMessage?.text || 
+      const messageObj = messageData.message || messageData;
+      const messageType = Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || (messageObj?.conversation ? 'conversation' : '');
+      
+      let messageContent = messageObj?.conversation || 
+                           messageObj?.extendedTextMessage?.text || 
+                           messageObj?.imageMessage?.caption ||
+                           messageObj?.videoMessage?.caption ||
                            '';
       
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       const openaiKey = globalConfig?.openai_key;
-      const messageId = messageData.key?.id;
+      const messageId = messageData.key?.id || messageData.id;
 
-      if (messageType === 'imageMessage' && openaiKey && globalConfig) {
-        const visionDescription = await describeImage(
-          globalConfig.evolution_url,
-          globalConfig.evolution_instance_name,
-          globalConfig.evolution_key,
-          messageId,
-          remoteJid,
-          openaiKey,
-          messageContent
-        );
-        messageContent = `[IMAGEM: ${visionDescription}] ${messageContent}`;
-      }
+      // Isolar processamento de mídia para não quebrar o bot
+      try {
+        if (messageType === 'imageMessage' && openaiKey && globalConfig) {
+          const visionDescription = await describeImage(
+            globalConfig.evolution_url,
+            globalConfig.evolution_instance_name,
+            globalConfig.evolution_key,
+            messageId,
+            remoteJid,
+            openaiKey,
+            messageContent
+          );
+          messageContent = `[IMAGEM: ${visionDescription}] ${messageContent}`;
+        }
 
-      if (messageType === 'audioMessage' && openaiKey && globalConfig) {
-        const audioText = await transcribeAudio(
-          globalConfig.evolution_url,
-          globalConfig.evolution_instance_name,
-          globalConfig.evolution_key,
-          messageId,
-          remoteJid,
-          openaiKey
-        );
-        messageContent = `[ÁUDIO: ${audioText}] ${messageContent}`;
+        if (messageType === 'audioMessage' && openaiKey && globalConfig) {
+          const audioText = await transcribeAudio(
+            globalConfig.evolution_url,
+            globalConfig.evolution_instance_name,
+            globalConfig.evolution_key,
+            messageId,
+            remoteJid,
+            openaiKey
+          );
+          messageContent = `[ÁUDIO: ${audioText}] ${messageContent}`;
+        }
+      } catch (mediaError) {
+        console.error('[Media Error] Falha ao processar mídia:', mediaError);
+        // Continua com o conteúdo que tiver (provavelmente vazio ou só legenda)
       }
 
       /* 
