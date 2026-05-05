@@ -133,15 +133,25 @@ export default function SettingsPage() {
   // USERS
   async function addUser(e: React.FormEvent) {
     e.preventDefault();
-    const payload: any = { name: userForm.name, whatsapp_number: userForm.whatsapp_number, role: userForm.role };
-    if (userForm.team_id) payload.team_id = userForm.team_id;
+    const payload: any = { 
+      name: userForm.name, 
+      whatsapp_number: userForm.whatsapp_number, 
+      role: userForm.role,
+      team_id: userForm.team_id || null
+    };
+
     if (editingUser) {
-      await supabase.from("admin_users").update(payload).eq("id", editingUser.id);
-      setEditingUser(null); flash("✔ Atualizado!");
+      const { error } = await supabase.from("admin_users").update(payload).eq("id", editingUser.id);
+      if (error) { flash("Erro: " + error.message); return; }
+      setEditingUser(null); 
+      flash("✔ Vendedor atualizado!");
     } else {
-      await supabase.from("admin_users").insert([payload]); flash("✔ Cadastrado!");
+      const { error } = await supabase.from("admin_users").insert([payload]);
+      if (error) { flash("Erro: " + error.message); return; }
+      flash("✔ Vendedor cadastrado!");
     }
-    setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); loadAll();
+    setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); 
+    loadAll();
   }
   async function deleteUser(id: string) {
     if (!confirm("Excluir vendedor?")) return;
