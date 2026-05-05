@@ -88,13 +88,20 @@ export async function isExpress(product: any, variables: LeadVariables): Promise
     return false;
   }
 
-  // 3. Verificar limites quantitativos
+  // 3. Verificar limites quantitativos (Prioridade: Produto > Regra Global)
+  const productLimit = product.express_max_qty ? parseInt(product.express_max_qty.replace(/\D/g, '')) : null;
+
   if (ruleKey === 'express_permetal') {
-    if (variables.m2 && variables.m2 > config.max_m2) return false;
-    if (variables.pecas_2x1 && variables.pecas_2x1 > config.max_pcs_2x1) return false;
-    if (variables.pecas_3x1 && variables.pecas_3x1 > config.max_pcs_3x1) return false;
+    const m2Limit = productLimit || config.max_m2;
+    const p2x1Limit = productLimit || config.max_pcs_2x1;
+    const p3x1Limit = productLimit || config.max_pcs_3x1;
+
+    if (variables.m2 && variables.m2 > m2Limit) return false;
+    if (variables.pecas_2x1 && variables.pecas_2x1 > p2x1Limit) return false;
+    if (variables.pecas_3x1 && variables.pecas_3x1 > p3x1Limit) return false;
   } else if (ruleKey === 'express_metalgrade') {
-    if (variables.m_lineares && variables.m_lineares > config.max_m_lineares) return false;
+    const mlLimit = productLimit || config.max_m_lineares;
+    if (variables.m_lineares && variables.m_lineares > mlLimit) return false;
   }
 
   // 4. Outras restrições
