@@ -21,12 +21,16 @@ const statusColors: Record<string, string> = {
 
 export default function DashboardPage() {
   const [leads, setLeads] = useState<any[]>([]);
+  const [bottlenecks, setBottlenecks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
-      if (data) setLeads(data);
+      const { data: leadsData } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
+      const { data: bData } = await supabase.from("attendance_bottlenecks").select("*, leads(name)").order("created_at", { ascending: false }).limit(5);
+      
+      if (leadsData) setLeads(leadsData);
+      if (bData) setBottlenecks(bData);
       setLoading(false);
     }
     load();
@@ -106,27 +110,26 @@ export default function DashboardPage() {
 
           {/* Seção de Suporte/SLA */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-            <div className="lg:col-span-1 bg-[#111] border border-red-500/20 rounded-2xl p-6 shadow-2xl">
+            <div className="lg:col-span-1 bg-[#111] border border-orange-500/20 rounded-2xl p-6 shadow-2xl">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <h3 className="font-black text-xs text-red-500 uppercase tracking-widest">Alerta de Suporte (SLA)</h3>
+                <h3 className="font-black text-xs text-orange-500 uppercase tracking-widest">Gargalos de Atendimento</h3>
               </div>
               <div className="space-y-4">
-                {leads.filter(l => l.support_attempts > 0).length === 0 ? (
-                  <p className="text-xs text-gray-600 italic">Nenhum lead com gargalo de atendimento no momento.</p>
-                ) : leads.filter(l => l.support_attempts > 0).sort((a,b) => b.support_attempts - a.support_attempts).slice(0, 5).map(l => (
-                  <div key={l.id} className="p-4 bg-red-500/5 border border-red-500/10 rounded-xl">
+                {bottlenecks.length === 0 ? (
+                  <p className="text-xs text-gray-600 italic">Nenhum gargalo operacional detectado.</p>
+                ) : bottlenecks.map(b => (
+                  <div key={b.id} className="p-4 bg-orange-500/5 border border-orange-500/10 rounded-xl">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-bold text-white">{l.name || "Cliente"}</span>
-                      <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-black">{l.support_attempts}x</span>
+                      <span className="text-xs font-bold text-white">{b.leads?.name || "Lead"}</span>
+                      <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase ${b.severity === 'critical' ? 'bg-red-500' : 'bg-orange-500'}`}>
+                        {b.severity}
+                      </span>
                     </div>
-                    <p className="text-[10px] text-gray-500 mb-2">{l.company || 'Interesse em: ' + (l.produto || 'Produto')}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[8px] text-red-400 uppercase font-black tracking-widest italic">Vendedor não respondeu</span>
-                      <a href="/dashboard/sdr" className="text-[8px] text-white underline font-bold">Intervir</a>
-                    </div>
+                    <p className="text-[10px] text-gray-400 mb-1 font-bold uppercase">{b.bottleneck_type.replace('_', ' ')}</p>
+                    <p className="text-[10px] text-gray-500 leading-tight">{b.description}</p>
                   </div>
                 ))}
               </div>

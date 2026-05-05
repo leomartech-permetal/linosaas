@@ -19,6 +19,10 @@ export interface LeadVariables {
   cnpj?: string;
   cidade?: string;
   segmento_detectado?: string;
+  m2?: number;
+  pecas_2x1?: number;
+  pecas_3x1?: number;
+  m_lineares?: number;
 }
 
 /** Resolve produto pelo nome ou sinônimo */
@@ -61,17 +65,49 @@ export async function resolverSegmento(aplicacao: string) {
   return null;
 }
 
-/** Verifica se é EXPRESS */
-export function isExpress(product: any, variables: LeadVariables): boolean {
+/** Verifica se é EXPRESS (Regras Flexíveis via Banco de Dados) */
+export async function isExpress(product: any, variables: LeadVariables): Promise<boolean> {
   if (!product?.is_express_eligible) return false;
+
+  // 1. Buscar regras no banco
+  const brand = product?.brands?.name?.toUpperCase();
+  const ruleKey = brand?.includes('METALGRADE') ? 'express_metalgrade' : 'express_permetal';
+  
+  const { data: rule } = await supabase
+    .from('business_rules')
+    .select('config')
+    .eq('rule_key', ruleKey)
+    .single();
+
+  if (!rule || !rule.config) return false;
+  const config = rule.config as any;
+
+  // 2. Verificar exclusões (ex: antiofuscante, belinox)
+  const productName = product.name.toLowerCase();
+  if (config.exclusions?.some((ex: string) => productName.includes(ex.toLowerCase()))) {
+    return false;
+  }
+
+  // 3. Verificar limites quantitativos
+  if (ruleKey === 'express_permetal') {
+    if (variables.m2 && variables.m2 > config.max_m2) return false;
+    if (variables.pecas_2x1 && variables.pecas_2x1 > config.max_pcs_2x1) return false;
+    if (variables.pecas_3x1 && variables.pecas_3x1 > config.max_pcs_3x1) return false;
+  } else if (ruleKey === 'express_metalgrade') {
+    if (variables.m_lineares && variables.m_lineares > config.max_m_lineares) return false;
+  }
+
+  // 4. Outras restrições
   if (variables.precisa_desenho || variables.precisa_prototipo) return false;
   if (variables.quantidade_nivel === 'alta') return false;
+
   return true;
 }
 
 /** Determina tipo de coleta */
-export function tipoColeta(product: any, segment: any, variables: LeadVariables): 'short' | 'normal' {
-  if (isExpress(product, variables)) return 'short';
+export async function tipoColeta(product: any, segment: any, variables: LeadVariables): Promise<'short' | 'normal'> {
+  const express = await isExpress(product, variables);
+  if (express) return 'short';
   if (segment?.collection_type === 'short') return 'short';
   return 'normal';
 }
@@ -94,9 +130,9 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
   console.log(`[Roteador] Segmento: ${segment?.name || 'N/A'}`);
 
   // 4. Verificar EXPRESS
-  const express = isExpress(product, variables);
+  const express = await isExpress(product, variables);
   const finalBrand = express ? 'PERMETAL EXPRESS' : brandName;
-  const coleta = tipoColeta(product, segment, variables);
+  const coleta = await tipoColeta(product, segment, variables);
   console.log(`[Roteador] Express: ${express} | Marca final: ${finalBrand} | Coleta: ${coleta}`);
 
   // 5. Buscar equipe pela marca

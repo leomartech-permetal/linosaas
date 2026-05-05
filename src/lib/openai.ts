@@ -86,13 +86,19 @@ Devolva EXCLUSIVAMENTE JSON:
   "variaveis": {
     "produto": "nome do produto detectado ou null",
     "ddd": "DDD detectado ou null",
-    "quantidade": "quantidade detectada ou null",
+    "quantidade": "quantidade bruta detectada ou null",
+    "m2": "área total em metros quadrados (número ou null)",
+    "pecas_2x1": "número de peças 2x1m detectadas ou null",
+    "pecas_3x1": "número de peças 3x1m detectadas ou null",
+    "m_lineares": "metros lineares detectados (para gradil/metalgrade) ou null",
     "cidade": "cidade detectada ou null",
     "material": "carbono, inox, galvanizado ou null",
     "empresa": "nome da empresa ou null",
     "nome_cliente": "nome da pessoa ou null"
   }
-}`;
+}
+
+⚠️ DICA: Se o cliente falar "preciso de 20m2" ou "12 chapas de 2x1", extraia o valor numérico para o campo correspondente. Se for Metalgrade/Gradil, use m_lineares.`;
 
   const messages: ChatMessage[] = [
     { role: 'system', content: extractionPrompt }
