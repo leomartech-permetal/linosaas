@@ -102,10 +102,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="w-64 flex flex-col bg-[#050505] border-r border-gray-800/50 z-50">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black" style={{ backgroundColor: config.primary_color }}>
-              L
-            </div>
-            <span className="font-black tracking-tighter text-xl text-white">{config.company_name}</span>
+            {config.logo_url ? (
+              <img src={config.logo_url} alt="Logo" className="h-8 object-contain" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black" style={{ backgroundColor: config.primary_color }}>
+                P
+              </div>
+            )}
+            {!config.logo_url && (
+              <span className="font-black tracking-tighter text-xl text-white">{config.company_name}</span>
+            )}
           </div>
           <p className="text-[9px] text-gray-600 uppercase font-black tracking-widest leading-none">{config.company_subtitle}</p>
         </div>

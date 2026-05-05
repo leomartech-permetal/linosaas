@@ -254,8 +254,7 @@ export default function SaaSPage() {
                     background: bgType === "solid" ? bgColor1 : bgType === "gradient" ? `linear-gradient(135deg, ${bgColor1}, ${bgColor2})` : "#0a0a0a",
                     color: primaryColor, opacity: bgOpacity + 0.5,
                   }}>
-                    {logoUrl ? <img src={logoUrl} alt="" className="h-10 object-contain mr-2" /> : null}
-                    {companyName || "LINO CRM"}
+                    {logoUrl ? <img src={logoUrl} alt="" className="h-12 object-contain" /> : companyName}
                   </div>
                 </div>
                 <button type="submit" className="w-full bg-[hsl(var(--tenant-primary))] py-2 rounded font-bold text-black hover:opacity-90">Aplicar Design</button>
