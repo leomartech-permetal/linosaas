@@ -36,6 +36,7 @@ export default function SaaSPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [instForm, setInstForm] = useState({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" });
   const [showInstForm, setShowInstForm] = useState(false);
+  const [editingInstance, setEditingInstance] = useState<any>(null);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -112,12 +113,34 @@ export default function SaaSPage() {
     if (!instForm.name) return;
     const payload: any = { name: instForm.name, phone_number: instForm.phone_number, evolution_instance_name: instForm.evolution_instance_name, evolution_url: instForm.evolution_url, evolution_key: instForm.evolution_key };
     if (instForm.assigned_user_id) payload.assigned_user_id = instForm.assigned_user_id;
-    const { error } = await supabase.from("instances").insert([payload]);
-    if (error) { flash("Erro: " + error.message); return; }
+    
+    if (editingInstance) {
+      const { error } = await supabase.from("instances").update(payload).eq("id", editingInstance.id);
+      if (error) { flash("Erro: " + error.message); return; }
+      setEditingInstance(null);
+      flash("✔ Instância atualizada!");
+    } else {
+      const { error } = await supabase.from("instances").insert([payload]);
+      if (error) { flash("Erro: " + error.message); return; }
+      flash("✔ Instância criada!");
+    }
+    
     setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" });
     setShowInstForm(false);
-    flash("✔ Instância criada!");
     loadAll();
+  }
+
+  function startEditInstance(inst: any) {
+    setEditingInstance(inst);
+    setInstForm({
+      name: inst.name,
+      phone_number: inst.phone_number || "",
+      evolution_instance_name: inst.evolution_instance_name || "",
+      evolution_url: inst.evolution_url || "",
+      evolution_key: inst.evolution_key || "",
+      assigned_user_id: inst.assigned_user_id || ""
+    });
+    setShowInstForm(true);
   }
 
   async function toggleInstance(inst: any) {
@@ -295,7 +318,7 @@ export default function SaaSPage() {
             {/* Form nova instância */}
             {showInstForm && (
               <div className="bg-black p-4 rounded-lg border border-gray-700 mb-4">
-                <h4 className="font-bold text-sm mb-3">Cadastrar Nova Instância</h4>
+                <h4 className="font-bold text-sm mb-3">{editingInstance ? "Editar Instância" : "Cadastrar Nova Instância"}</h4>
                 <form onSubmit={addInstance} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] text-gray-400 mb-1">Nome da Instância *</label>
@@ -325,8 +348,8 @@ export default function SaaSPage() {
                     <input type="password" value={instForm.evolution_key} onChange={(e) => setInstForm({ ...instForm, evolution_key: e.target.value })} placeholder="Token específico" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
                   </div>
                   <div className="md:col-span-2 flex gap-3">
-                    <button type="submit" className="flex-1 bg-green-700 py-2 rounded font-bold text-sm hover:bg-green-800">Criar Instância</button>
-                    <button type="button" onClick={() => setShowInstForm(false)} className="flex-1 border border-gray-700 py-2 rounded text-sm hover:bg-gray-800">Cancelar</button>
+                    <button type="submit" className="flex-1 bg-green-700 py-2 rounded font-bold text-sm hover:bg-green-800">{editingInstance ? "Salvar Alterações" : "Criar Instância"}</button>
+                    <button type="button" onClick={() => { setShowInstForm(false); setEditingInstance(null); setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" }); }} className="flex-1 border border-gray-700 py-2 rounded text-sm hover:bg-gray-800">Cancelar</button>
                   </div>
                 </form>
               </div>
@@ -347,6 +370,7 @@ export default function SaaSPage() {
                     </p>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => startEditInstance(inst)} className="text-[10px] bg-blue-900/50 text-blue-400 px-2 py-1 rounded hover:bg-blue-900">Editar</button>
                     <button onClick={() => toggleInstance(inst)} className={`text-[10px] px-2 py-1 rounded ${inst.active ? "bg-yellow-900/50 text-yellow-400" : "bg-green-900/50 text-green-400"}`}>
                       {inst.active ? "Desativar" : "Ativar"}
                     </button>
