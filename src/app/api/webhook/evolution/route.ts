@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { processLeadWithSkills } from '@/lib/openai';
 import { routeLead } from '@/lib/router';
-import { handleClientReturnedToSDR } from '@/lib/support-monitor';
+import { handleClientReturn } from '@/lib/support-monitor';
 import { sendTextMessage } from '@/lib/evolution-api';
 import { describeImage, transcribeAudio } from '@/lib/multimodal';
 
@@ -184,12 +184,37 @@ export async function POST(request: Request) {
             await routeLead(lead.id, lead.tenant_id, variaveis);
           }
         }
-      } else if (lead.status === 'WAITING_SELLER') {
-        // Se o cliente continuar falando, o Lino avisa que o especialista está vindo
-        const msgAviso = "O consultor especialista já recebeu seus dados e entrará em contato em instantes por aqui. Se preferir adiantar algo, pode mandar!";
-        await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'sdr_ai', message_content: msgAviso }]);
+      } else if (lead.status === 'WAITING_SELLER' || lead.status === 'SENT_TO_SELLER' || lead.status === 'SELLER_RECEIVED' || lead.status === 'ATTENDANCE_STARTED') {
+        // NOVA LÓGICA: Consultar estado REAL e decidir ação determinística
+        const result = await handleClientReturn(remoteJid, fullContext);
+        
+        console.log(`[Webhook] Lino Suporte ação: ${result.action}`);
+        
+        // Registrar interação
+        await supabase.from('interactions').insert([{ 
+          lead_id: lead.id, 
+          sender_type: 'sdr_ai', 
+          message_content: result.message 
+        }]);
+        
+        // Enviar resposta baseada na ação
         if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-          await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgAviso);
+          await sendTextMessage(
+            globalConfig.evolution_instance_name, 
+            globalConfig.evolution_url, 
+            globalConfig.evolution_key, 
+            remoteJid, 
+            result.message
+          );
+        }
+
+        // Ações especiais baseadas no retorno
+        if (result.action === 'NOTIFY_SELLER' || result.action === 'NOTIFY_SELLER_URGENT') {
+          // O handleClientReturn já cuidou da notificação internamente
+          console.log(`[Webhook] Notificação ao vendedor acionada`);
+        } else if (result.action === 'ESCALATE_SUPERVISOR') {
+          // Escalação handled internally
+          console.log(`[Webhook] Escalação para supervisor acionada`);
         }
       }
 

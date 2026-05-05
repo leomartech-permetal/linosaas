@@ -117,7 +117,7 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
     const teamName = finalBrand || 'Construção';
     const { data: team } = await supabase.from('teams').select('id').ilike('name', `%${teamName}%`).limit(1).single();
     if (team) {
-      const { data: user } = await supabase.from('users').select('id').eq('team_id', team.id).limit(1).single();
+      const { data: user } = await supabase.from('admin_users').select('id').eq('team_id', team.id).limit(1).single();
       assignedUserId = user?.id || null;
     }
   }
@@ -144,7 +144,7 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
 /** Notificação de Elite para o Vendedor */
 async function sendSellerNotification(leadId: string, sellerId: string, variables: LeadVariables, brand: string) {
   // 1. Buscar dados do vendedor
-  const { data: seller } = await supabase.from('users').select('whatsapp_number, name').eq('id', sellerId).single();
+  const { data: seller } = await supabase.from('admin_users').select('whatsapp_number, name').eq('id', sellerId).single();
   if (!seller?.whatsapp_number) return;
 
   // 2. Buscar dados brutos do lead
