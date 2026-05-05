@@ -19,6 +19,8 @@ export default function SaaSPage() {
   const [bgOpacity, setBgOpacity] = useState(0.2);
   const [logoUrl, setLogoUrl] = useState("");
   const [textureUrl, setTextureUrl] = useState("");
+  const [fontHeading, setFontHeading] = useState("Roboto Condensed");
+  const [fontBody, setFontBody] = useState("Assistant");
 
   // API
   const [evolutionUrl, setEvolutionUrl] = useState("");
@@ -60,6 +62,8 @@ export default function SaaSPage() {
       setBgOpacity(d.bg_opacity || 0.2);
       setLogoUrl(d.logo_url || "");
       setTextureUrl(d.texture_url || "");
+      setFontHeading(d.font_heading || "Roboto Condensed");
+      setFontBody(d.font_body || "Assistant");
       setEvolutionUrl(d.evolution_url || "");
       setEvolutionKey(d.evolution_key || "");
       setEvolutionInstanceName(d.evolution_instance_name || "");
@@ -81,6 +85,7 @@ export default function SaaSPage() {
       primary_color: primaryColor, secondary_color: secondaryColor,
       bg_type: bgType, bg_color1: bgColor1, bg_color2: bgColor2,
       bg_opacity: bgOpacity, logo_url: logoUrl, texture_url: textureUrl,
+      font_heading: fontHeading, font_body: fontBody,
     }).eq("id", config.id);
     if (error) { flash("Erro: " + error.message); return; }
     flash("✔ Design aplicado com sucesso! Recarregue para ver as mudanças.");
@@ -242,6 +247,28 @@ export default function SaaSPage() {
                     <option value="gradient">Degradê</option>
                     <option value="texture">Textura Metálica</option>
                   </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Fonte Títulos</label>
+                    <select value={fontHeading} onChange={(e) => setFontHeading(e.target.value)} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
+                      <option value="Roboto Condensed">Roboto Condensed</option>
+                      <option value="Montserrat">Montserrat</option>
+                      <option value="Inter">Inter</option>
+                      <option value="Oswald">Oswald</option>
+                      <option value="Poppins">Poppins</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Fonte Corpo</label>
+                    <select value={fontBody} onChange={(e) => setFontBody(e.target.value)} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
+                      <option value="Assistant">Assistant</option>
+                      <option value="Roboto">Roboto</option>
+                      <option value="Open Sans">Open Sans</option>
+                      <option value="Lato">Lato</option>
+                      <option value="Inter">Inter</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Opacidade ({Math.round(bgOpacity * 100)}%)</label>

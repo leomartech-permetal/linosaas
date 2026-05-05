@@ -54,10 +54,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.from("tenant_config").select("*").limit(1).single();
       if (data) {
         setConfig({
+          ...data,
           company_name: data.company_name || "LINO CRM",
           company_subtitle: data.company_subtitle || "Grupo Permetal",
           primary_color: data.primary_color || "#0ecab2",
           secondary_color: data.secondary_color || "#087f71",
+          font_heading: data.font_heading || "Roboto Condensed",
+          font_body: data.font_body || "Assistant",
           bg_type: data.bg_type || "texture",
           bg_color1: data.bg_color1 || "#0a0a0a",
           bg_color2: data.bg_color2 || "#1a1a1a",
@@ -97,11 +100,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#0a0a0a]" style={{ "--tenant-primary": primaryHSL } as any}>
+    <div className="flex h-screen w-full bg-[#0a0a0a]" style={{ 
+      "--tenant-primary": primaryHSL,
+      "--font-heading": (config as any).font_heading || 'Roboto Condensed',
+      "--font-body": (config as any).font_body || 'Assistant'
+    } as any}>
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=${((config as any).font_heading || 'Roboto Condensed').replace(/ /g, '+')}&family=${((config as any).font_body || 'Assistant').replace(/ /g, '+')}&display=swap');
+        
+        h1, h2, h3, h4, h5, h6, .font-heading {
+          font-family: var(--font-heading), sans-serif !important;
+        }
+        body, p, span, div, .font-body {
+          font-family: var(--font-body), sans-serif;
+        }
+      `}</style>
       {/* Sidebar Premium */}
       <aside className="w-64 flex flex-col bg-[#050505] border-r border-gray-800/50 z-50">
         <div className="p-6">
-          <div className="flex items-center gap-3 mb-2">
+          <a href="/dashboard" className="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity">
             {config.logo_url ? (
               <img src={config.logo_url} alt="Logo" className="h-8 object-contain" />
             ) : (
@@ -112,7 +129,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {!config.logo_url && (
               <span className="font-black tracking-tighter text-xl text-white">{config.company_name}</span>
             )}
-          </div>
+          </a>
           <p className="text-[9px] text-gray-600 uppercase font-black tracking-widest leading-none">{config.company_subtitle}</p>
         </div>
 
