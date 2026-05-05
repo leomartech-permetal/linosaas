@@ -245,7 +245,6 @@ export default function SettingsPage() {
                         {p.brands?.name && <span className="text-[10px] bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded">{p.brands.name}</span>}
                         {p.is_express_eligible && <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">EXPRESS</span>}
                       </div>
-                      </div>
                       {(p.synonyms || []).length > 0 && <p className="text-[10px] text-gray-500 mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
                       {p.express_max_qty && <p className="text-[10px] text-yellow-500 mt-0.5">Limite: {p.express_max_qty}</p>}
                     </div>
