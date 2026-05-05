@@ -33,6 +33,7 @@ export default function SettingsPage() {
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const [editTeamName, setEditTeamName] = useState("");
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -79,9 +80,20 @@ export default function SettingsPage() {
     const syns = productForm.synonyms.split(",").map(s => s.trim()).filter(Boolean);
     const payload: any = { name: productForm.name, synonyms: syns, is_express_eligible: productForm.is_express_eligible, express_max_qty: productForm.express_max_qty || null };
     if (productForm.brand_id) payload.brand_id = productForm.brand_id;
-    const { error } = await supabase.from("products").insert([payload]);
-    if (error) { flash("Erro: " + error.message); return; }
-    setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); flash("✔ Produto criado!"); loadAll();
+    
+    if (editingProduct) {
+      const { error } = await supabase.from("products").update(payload).eq("id", editingProduct.id);
+      if (error) { flash("Erro: " + error.message); return; }
+      setEditingProduct(null);
+      flash("✔ Produto atualizado!");
+    } else {
+      const { error } = await supabase.from("products").insert([payload]);
+      if (error) { flash("Erro: " + error.message); return; }
+      flash("✔ Produto criado!");
+    }
+    
+    setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); 
+    loadAll();
   }
   async function deleteProduct(id: string) {
     if (!confirm("Excluir produto?")) return;
@@ -203,7 +215,7 @@ export default function SettingsPage() {
           {tab === "products" && (
             <div className="space-y-4">
               <form onSubmit={addProduct} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3">
-                <h3 className="font-bold text-sm">Novo Produto</h3>
+                <h3 className="font-bold text-sm">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
                 <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
                 <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
                 <select value={productForm.brand_id} onChange={e => setProductForm({...productForm, brand_id: e.target.value})} className={inputCls}>
@@ -219,7 +231,10 @@ export default function SettingsPage() {
                 {productForm.is_express_eligible && (
                   <input type="text" value={productForm.express_max_qty} onChange={e => setProductForm({...productForm, express_max_qty: e.target.value})} placeholder="Qtd máx EXPRESS (ex: até 10 peças ou 20m2)" className={inputCls} />
                 )}
-                <button type="submit" className={`${btnCls} bg-green-700`}>+ Criar Produto</button>
+                <div className="flex gap-3">
+                  <button type="submit" className={`${btnCls} bg-green-700 flex-1`}>{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
+                  {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
+                </div>
               </form>
               <div className="space-y-2">
                 {products.map(p => (
@@ -230,10 +245,28 @@ export default function SettingsPage() {
                         {p.brands?.name && <span className="text-[10px] bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded">{p.brands.name}</span>}
                         {p.is_express_eligible && <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">EXPRESS</span>}
                       </div>
+                      </div>
                       {(p.synonyms || []).length > 0 && <p className="text-[10px] text-gray-500 mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
                       {p.express_max_qty && <p className="text-[10px] text-yellow-500 mt-0.5">Limite: {p.express_max_qty}</p>}
                     </div>
-                    <button onClick={() => deleteProduct(p.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100 ml-2">X</button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 ml-2">
+                      <button 
+                        onClick={() => {
+                          setEditingProduct(p);
+                          setProductForm({
+                            name: p.name,
+                            synonyms: (p.synonyms || []).join(", "),
+                            brand_id: p.brand_id || "",
+                            express_max_qty: p.express_max_qty || "",
+                            is_express_eligible: p.is_express_eligible || false
+                          });
+                        }} 
+                        className="text-[10px] bg-gray-800 px-2 py-1 rounded"
+                      >
+                        Editar
+                      </button>
+                      <button onClick={() => deleteProduct(p.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded">X</button>
+                    </div>
                   </div>
                 ))}
               </div>
