@@ -174,15 +174,16 @@ export default function SettingsPage() {
         <h2 className="text-3xl font-bold">Regras Comerciais</h2>
         <p className="text-gray-400 mt-1 text-sm">Regiões, produtos, segmentos, equipes e regras de roteamento.</p>
       </header>
-      {msg && <div className="bg-green-900/30 border border-green-800 text-green-400 px-4 py-2 rounded mb-4 text-sm">{msg}</div>}
 
-      {/* TABS */}
-      <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-all ${tab === t.key ? "bg-[hsl(var(--tenant-primary))] text-black" : "bg-[#1a1a1a] text-gray-400 hover:bg-gray-800"}`}>
-            {t.icon} {t.label}
-          </button>
-        ))}
+      {/* TABS (Sticky) */}
+      <div className="sticky top-0 z-20 bg-[#0a0a0a] pt-2 pb-6 border-b border-gray-800/50 mb-6">
+        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+          {TABS.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-all ${tab === t.key ? "bg-[hsl(var(--tenant-primary))] text-black" : "bg-[#1a1a1a] text-gray-400 hover:bg-gray-800"}`}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? <p className="text-gray-500">Carregando...</p> : (
@@ -191,12 +192,15 @@ export default function SettingsPage() {
           {/* REGIÕES */}
           {tab === "regions" && (
             <div className="space-y-4">
-              <form onSubmit={addRegion} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3">
-                <h3 className="font-bold text-sm">Nova Região</h3>
-                <input type="text" value={regionForm.name} onChange={e => setRegionForm({...regionForm, name: e.target.value})} placeholder="Nome (ex: SP01, SUL, NORDESTE)" className={inputCls} required />
-                <input type="text" value={regionForm.ddd_codes} onChange={e => setRegionForm({...regionForm, ddd_codes: e.target.value})} placeholder="DDDs separados por vírgula (ex: 11,12,13,15)" className={inputCls} required />
-                <button type="submit" className={`${btnCls} bg-blue-600`}>+ Criar Região</button>
-              </form>
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addRegion} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">Nova Região</h3>
+                  <input type="text" value={regionForm.name} onChange={e => setRegionForm({...regionForm, name: e.target.value})} placeholder="Nome (ex: SP01, SUL, NORDESTE)" className={inputCls} required />
+                  <input type="text" value={regionForm.ddd_codes} onChange={e => setRegionForm({...regionForm, ddd_codes: e.target.value})} placeholder="DDDs separados por vírgula (ex: 11,12,13,15)" className={inputCls} required />
+                  <button type="submit" className={`${btnCls} bg-blue-600`}>+ Criar Região</button>
+                  {msg && tab === 'regions' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
               <div className="space-y-2">
                 {regions.map(r => (
                   <div key={r.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
@@ -214,28 +218,31 @@ export default function SettingsPage() {
           {/* PRODUTOS */}
           {tab === "products" && (
             <div className="space-y-4">
-              <form onSubmit={addProduct} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3">
-                <h3 className="font-bold text-sm">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
-                <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
-                <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
-                <select value={productForm.brand_id} onChange={e => setProductForm({...productForm, brand_id: e.target.value})} className={inputCls}>
-                  <option value="">Marca (automática)</option>
-                  {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-                <div className="flex gap-3 items-center">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" checked={productForm.is_express_eligible} onChange={e => setProductForm({...productForm, is_express_eligible: e.target.checked})} className="accent-green-500" />
-                    Elegível para EXPRESS
-                  </label>
-                </div>
-                {productForm.is_express_eligible && (
-                  <input type="text" value={productForm.express_max_qty} onChange={e => setProductForm({...productForm, express_max_qty: e.target.value})} placeholder="Qtd máx EXPRESS (ex: até 10 peças ou 20m2)" className={inputCls} />
-                )}
-                <div className="flex gap-3">
-                  <button type="submit" className={`${btnCls} bg-green-700 flex-1`}>{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
-                  {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
-                </div>
-              </form>
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addProduct} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
+                  <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
+                  <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
+                  <select value={productForm.brand_id} onChange={e => setProductForm({...productForm, brand_id: e.target.value})} className={inputCls}>
+                    <option value="">Marca (automática)</option>
+                    {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                  <div className="flex gap-3 items-center">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={productForm.is_express_eligible} onChange={e => setProductForm({...productForm, is_express_eligible: e.target.checked})} className="accent-green-500" />
+                      Elegível para EXPRESS
+                    </label>
+                  </div>
+                  {productForm.is_express_eligible && (
+                    <input type="text" value={productForm.express_max_qty} onChange={e => setProductForm({...productForm, express_max_qty: e.target.value})} placeholder="Qtd máx EXPRESS (ex: até 10 peças ou 20m2)" className={inputCls} />
+                  )}
+                  <div className="flex gap-3">
+                    <button type="submit" className={`${btnCls} bg-green-700 flex-1`}>{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
+                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
+                  </div>
+                  {msg && tab === 'products' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
               <div className="space-y-2">
                 {products.map(p => (
                   <div key={p.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-start group">
@@ -275,16 +282,19 @@ export default function SettingsPage() {
           {/* SEGMENTOS */}
           {tab === "segments" && (
             <div className="space-y-4">
-              <form onSubmit={addSegment} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3">
-                <h3 className="font-bold text-sm">Novo Segmento</h3>
-                <input type="text" value={segmentForm.name} onChange={e => setSegmentForm({...segmentForm, name: e.target.value})} placeholder="Nome (ex: Indústria, Construção)" className={inputCls} required />
-                <input type="text" value={segmentForm.keywords} onChange={e => setSegmentForm({...segmentForm, keywords: e.target.value})} placeholder="Keywords separadas por vírgula" className={inputCls} />
-                <select value={segmentForm.collection_type} onChange={e => setSegmentForm({...segmentForm, collection_type: e.target.value})} className={inputCls}>
-                  <option value="normal">Coleta Normal (todos os campos)</option>
-                  <option value="short">Coleta Curta (nome, email, produto)</option>
-                </select>
-                <button type="submit" className={`${btnCls} bg-purple-700`}>+ Criar Segmento</button>
-              </form>
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addSegment} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">Novo Segmento</h3>
+                  <input type="text" value={segmentForm.name} onChange={e => setSegmentForm({...segmentForm, name: e.target.value})} placeholder="Nome (ex: Indústria, Construção)" className={inputCls} required />
+                  <input type="text" value={segmentForm.keywords} onChange={e => setSegmentForm({...segmentForm, keywords: e.target.value})} placeholder="Keywords separadas por vírgula" className={inputCls} />
+                  <select value={segmentForm.collection_type} onChange={e => setSegmentForm({...segmentForm, collection_type: e.target.value})} className={inputCls}>
+                    <option value="normal">Coleta Normal (todos os campos)</option>
+                    <option value="short">Coleta Curta (nome, email, produto)</option>
+                  </select>
+                  <button type="submit" className={`${btnCls} bg-purple-700`}>+ Criar Segmento</button>
+                  {msg && tab === 'segments' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
               <div className="space-y-2">
                 {segments.map(s => (
                   <div key={s.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-start group">
@@ -305,10 +315,13 @@ export default function SettingsPage() {
           {/* EQUIPES */}
           {tab === "teams" && (
             <div className="space-y-4">
-              <form onSubmit={addTeam} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 flex gap-2">
-                <input type="text" value={teamForm} onChange={e => setTeamForm(e.target.value)} placeholder="Nome da equipe" className={`flex-1 ${inputCls}`} required />
-                <button type="submit" className="bg-blue-600 px-4 rounded font-bold text-sm">+</button>
-              </form>
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addTeam} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 flex gap-2 shadow-xl">
+                  <input type="text" value={teamForm} onChange={e => setTeamForm(e.target.value)} placeholder="Nome da equipe" className={`flex-1 ${inputCls}`} required />
+                  <button type="submit" className="bg-blue-600 px-4 rounded font-bold text-sm">+</button>
+                </form>
+                {msg && tab === 'teams' && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
+              </div>
               <div className="space-y-2">
                 {teams.map(t => (
                   <div key={t.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
@@ -336,21 +349,24 @@ export default function SettingsPage() {
           {/* VENDEDORES */}
           {tab === "sellers" && (
             <div className="space-y-4">
-              <form onSubmit={addUser} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3">
-                <h3 className="font-bold text-sm">{editingUser ? "Editar Vendedor" : "Novo Vendedor"}</h3>
-                <input type="text" value={userForm.name} onChange={e => setUserForm({...userForm, name: e.target.value})} placeholder="Nome" className={inputCls} required />
-                <input type="text" value={userForm.whatsapp_number} onChange={e => setUserForm({...userForm, whatsapp_number: e.target.value})} placeholder="WhatsApp (5511...)" className={inputCls} required />
-                <select value={userForm.team_id} onChange={e => setUserForm({...userForm, team_id: e.target.value})} className={inputCls}>
-                  <option value="">Sem equipe</option>
-                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-                <select value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})} className={inputCls}>
-                  <option value="seller">Vendedor</option>
-                  <option value="manager">Gestor</option>
-                </select>
-                <button type="submit" className={`${btnCls} bg-green-700`}>{editingUser ? "Atualizar" : "Cadastrar"}</button>
-                {editingUser && <button type="button" onClick={() => { setEditingUser(null); setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); }} className={`${btnCls} border border-gray-700`}>Cancelar</button>}
-              </form>
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addUser} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">{editingUser ? "Editar Vendedor" : "Novo Vendedor"}</h3>
+                  <input type="text" value={userForm.name} onChange={e => setUserForm({...userForm, name: e.target.value})} placeholder="Nome" className={inputCls} required />
+                  <input type="text" value={userForm.whatsapp_number} onChange={e => setUserForm({...userForm, whatsapp_number: e.target.value})} placeholder="WhatsApp (5511...)" className={inputCls} required />
+                  <select value={userForm.team_id} onChange={e => setUserForm({...userForm, team_id: e.target.value})} className={inputCls}>
+                    <option value="">Sem equipe</option>
+                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                  <select value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})} className={inputCls}>
+                    <option value="seller">Vendedor</option>
+                    <option value="manager">Gestor</option>
+                  </select>
+                  <button type="submit" className={`${btnCls} bg-green-700`}>{editingUser ? "Atualizar" : "Cadastrar"}</button>
+                  {editingUser && <button type="button" onClick={() => { setEditingUser(null); setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); }} className={`${btnCls} border border-gray-700`}>Cancelar</button>}
+                  {msg && tab === 'sellers' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
               <div className="space-y-2">
                 {users.map(u => (
                   <div key={u.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
@@ -371,30 +387,33 @@ export default function SettingsPage() {
           {/* REGRAS */}
           {tab === "rules" && (
             <div className="space-y-4">
-              <form onSubmit={addRule} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3">
-                <h3 className="font-bold text-sm">Nova Regra de Roteamento</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <select value={ruleForm.team_id} onChange={e => setRuleForm({...ruleForm, team_id: e.target.value})} className={inputCls}>
-                    <option value="">Equipe (qualquer)</option>
-                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
-                  <input type="text" value={ruleForm.region} onChange={e => setRuleForm({...ruleForm, region: e.target.value})} placeholder="Região (ex: SP01, SUL)" className={inputCls} />
-                  <select value={ruleForm.product_id} onChange={e => setRuleForm({...ruleForm, product_id: e.target.value})} className={inputCls}>
-                    <option value="">Produto (qualquer)</option>
-                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  <select value={ruleForm.segment_id} onChange={e => setRuleForm({...ruleForm, segment_id: e.target.value})} className={inputCls}>
-                    <option value="">Segmento (qualquer)</option>
-                    {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                  <input type="number" value={ruleForm.priority} onChange={e => setRuleForm({...ruleForm, priority: parseInt(e.target.value) || 1})} placeholder="Prioridade" className={inputCls} min={1} />
-                  <select value={ruleForm.assigned_user_id} onChange={e => setRuleForm({...ruleForm, assigned_user_id: e.target.value})} className={inputCls}>
-                    <option value="">Vendedor (opcional)</option>
-                    {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                  </select>
-                </div>
-                <button type="submit" className={`${btnCls} bg-purple-700`}>Criar Regra</button>
-              </form>
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addRule} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">Nova Regra de Roteamento</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={ruleForm.team_id} onChange={e => setRuleForm({...ruleForm, team_id: e.target.value})} className={inputCls}>
+                      <option value="">Equipe (qualquer)</option>
+                      {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                    <input type="text" value={ruleForm.region} onChange={e => setRuleForm({...ruleForm, region: e.target.value})} placeholder="Região (ex: SP01, SUL)" className={inputCls} />
+                    <select value={ruleForm.product_id} onChange={e => setRuleForm({...ruleForm, product_id: e.target.value})} className={inputCls}>
+                      <option value="">Produto (qualquer)</option>
+                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <select value={ruleForm.segment_id} onChange={e => setRuleForm({...ruleForm, segment_id: e.target.value})} className={inputCls}>
+                      <option value="">Segmento (qualquer)</option>
+                      {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                    <input type="number" value={ruleForm.priority} onChange={e => setRuleForm({...ruleForm, priority: parseInt(e.target.value) || 1})} placeholder="Prioridade" className={inputCls} min={1} />
+                    <select value={ruleForm.assigned_user_id} onChange={e => setRuleForm({...ruleForm, assigned_user_id: e.target.value})} className={inputCls}>
+                      <option value="">Vendedor (opcional)</option>
+                      {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    </select>
+                  </div>
+                  <button type="submit" className={`${btnCls} bg-purple-700`}>Criar Regra</button>
+                  {msg && tab === 'rules' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
               <div className="space-y-2">
                 {rules.map(r => (
                   <div key={r.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">

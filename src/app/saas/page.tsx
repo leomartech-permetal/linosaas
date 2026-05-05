@@ -165,7 +165,7 @@ export default function SaaSPage() {
 
   return (
     <div className="p-6 md:p-10 w-full h-full text-white overflow-y-auto">
-      <header className="mb-8 border-b border-gray-800 pb-6 flex justify-between items-start">
+      <header className="sticky top-[-40px] z-20 bg-[#0a0a0a] pt-10 mb-8 border-b border-gray-800 pb-6 flex justify-between items-start">
         <div>
           <h2 className="text-3xl font-bold">Configurações SaaS</h2>
           <p className="text-gray-400 mt-2">Personalize a marca, gerencie conexões e segurança.</p>
@@ -200,8 +200,6 @@ export default function SaaSPage() {
           </button>
         </div>
       </header>
-
-      {msg && <div className="bg-green-900/30 border border-green-800 text-green-400 px-4 py-2 rounded mb-6 text-sm font-bold">{msg}</div>}
 
       {loading ? <p className="text-gray-500">Carregando...</p> : (
         <div className="space-y-8">
@@ -285,6 +283,7 @@ export default function SaaSPage() {
                   </div>
                 </div>
                 <button type="submit" className="w-full bg-[hsl(var(--tenant-primary))] py-2 rounded font-bold text-black hover:opacity-90">Aplicar Design</button>
+                {msg && msg.includes("Design") && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
               </form>
             </div>
 
@@ -310,6 +309,7 @@ export default function SaaSPage() {
                     <input type="password" value={openaiKey} onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
                   </div>
                   <button type="submit" className="w-full bg-orange-600 py-2 rounded font-bold text-white hover:bg-orange-700">Salvar Credenciais</button>
+                  {msg && msg.includes("Credenciais") && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
                 </form>
               </div>
 
@@ -326,6 +326,7 @@ export default function SaaSPage() {
                     <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
                   </div>
                   <button type="submit" className="w-full bg-red-700 py-2 rounded font-bold text-white hover:bg-red-800">Atualizar Senha</button>
+                  {msg && msg.includes("Senha") && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
                 </form>
               </div>
             </div>
@@ -377,6 +378,7 @@ export default function SaaSPage() {
                     <button type="submit" className="flex-1 bg-green-700 py-2 rounded font-bold text-sm hover:bg-green-800">{editingInstance ? "Salvar Alterações" : "Criar Instância"}</button>
                     <button type="button" onClick={() => { setShowInstForm(false); setEditingInstance(null); setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" }); }} className="flex-1 border border-gray-700 py-2 rounded text-sm hover:bg-gray-800">Cancelar</button>
                   </div>
+                  {msg && msg.includes("Instância") && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
                 </form>
               </div>
             )}
