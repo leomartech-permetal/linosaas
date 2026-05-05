@@ -47,6 +47,20 @@ export default function EquipesPage() {
     e.preventDefault();
     if (!form.name) return;
 
+    // Validação de WhatsApp (deve começar com + e ter apenas números)
+    const phoneRegex = /^\+\d{10,15}$/;
+    if (form.supervisor_phone && !phoneRegex.test(form.supervisor_phone)) {
+      flash("❌ Formato de WhatsApp inválido! Use: +5516999999999");
+      return;
+    }
+
+    // Validação de E-mail
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (form.supervisor_email && !emailRegex.test(form.supervisor_email)) {
+      flash("❌ E-mail do supervisor inválido!");
+      return;
+    }
+
     if (editing) {
       const { error } = await supabase.from("teams").update({
         name: form.name,
@@ -163,7 +177,8 @@ export default function EquipesPage() {
                     </div>
                     <div>
                       <label className="block text-[10px] text-gray-400 mb-1">WhatsApp do Supervisor *</label>
-                      <input type="text" value={form.supervisor_phone} onChange={(e) => setForm({ ...form, supervisor_phone: e.target.value })} placeholder="5511999999999" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                      <input type="text" value={form.supervisor_phone} onChange={(e) => setForm({ ...form, supervisor_phone: e.target.value })} placeholder="+5516999999999" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                      <p className="text-[9px] text-gray-500 mt-1">Obrigatório o sinal de + e código do país (ex: +55)</p>
                     </div>
                     <div>
                       <label className="block text-[10px] text-gray-400 mb-1">E-mail do Supervisor</label>
