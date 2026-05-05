@@ -44,7 +44,7 @@ export default function SaaSPage() {
     const [cfgRes, instRes, usersRes] = await Promise.all([
       supabase.from("tenant_config").select("*").limit(1).single(),
       supabase.from("instances").select("*").order("created_at"),
-      supabase.from("users").select("*").order("name"),
+      supabase.from("admin_users").select("*").order("name"),
     ]);
     if (cfgRes.data) {
       const d = cfgRes.data;

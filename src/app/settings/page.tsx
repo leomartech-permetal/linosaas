@@ -43,7 +43,7 @@ export default function SettingsPage() {
       supabase.from("products").select("*, brands(name)").order("name"),
       supabase.from("segments").select("*").order("name"),
       supabase.from("teams").select("*").order("created_at"),
-      supabase.from("users").select("*").order("created_at"),
+      supabase.from("admin_users").select("*").order("created_at"),
       supabase.from("brands").select("*").order("name"),
       supabase.from("routing_rules").select("*").order("priority"),
     ]);
@@ -124,16 +124,16 @@ export default function SettingsPage() {
     const payload: any = { name: userForm.name, whatsapp_number: userForm.whatsapp_number, role: userForm.role };
     if (userForm.team_id) payload.team_id = userForm.team_id;
     if (editingUser) {
-      await supabase.from("users").update(payload).eq("id", editingUser.id);
+      await supabase.from("admin_users").update(payload).eq("id", editingUser.id);
       setEditingUser(null); flash("✔ Atualizado!");
     } else {
-      await supabase.from("users").insert([payload]); flash("✔ Cadastrado!");
+      await supabase.from("admin_users").insert([payload]); flash("✔ Cadastrado!");
     }
     setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); loadAll();
   }
   async function deleteUser(id: string) {
     if (!confirm("Excluir vendedor?")) return;
-    await supabase.from("users").delete().eq("id", id); flash("✔ Excluído!"); loadAll();
+    await supabase.from("admin_users").delete().eq("id", id); flash("✔ Excluído!"); loadAll();
   }
 
   // RULES
