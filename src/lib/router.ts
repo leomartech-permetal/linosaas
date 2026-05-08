@@ -145,17 +145,60 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
   // 5. Buscar equipe pela marca
   const { data: brand } = await supabase.from('brands').select('id').ilike('name', finalBrand || 'PERMETAL').single();
 
-  // 6. Buscar regra de roteamento (cruzando região + produto + segmento)
-  let query = supabase.from('routing_rules').select('assigned_user_id').order('priority', { ascending: true }).limit(1);
+  // 6. Buscar regra de roteamento — prioriza novos campos array, fallback legado
+  const { data: allRules } = await supabase
+    .from('routing_rules')
+    .select('id, assigned_user_id, seller_ids, last_seller_index, region_ids, product_ids, segment_id, region, product_id, priority')
+    .order('priority', { ascending: true });
 
-  if (region) query = query.or(`region.ilike.%${region.name}%,region.eq.*,region.is.null`);
-  if (product) query = query.or(`product_id.eq.${product.id},product_id.is.null`);
-  if (segment) query = query.or(`segment_id.eq.${segment.id},segment_id.is.null`);
+  let matchedRule: any = null;
+  if (allRules) {
+    for (const r of allRules) {
+      // --- Critério: Região ---
+      const hasRegionFilter = (r.region_ids?.length > 0) || r.region;
+      if (hasRegionFilter && region) {
+        const inNewIds = r.region_ids?.length > 0 && r.region_ids.includes(region.id);
+        const inLegacy = r.region && (region.name.toLowerCase().includes(r.region.toLowerCase()) || r.region === '*');
+        if (!inNewIds && !inLegacy) continue;
+      } else if (hasRegionFilter && !region) continue; // regra exige região mas lead não tem
 
-  const { data: rule } = await query.single();
-  let assignedUserId = rule?.assigned_user_id || null;
+      // --- Critério: Produto ---
+      const hasProductFilter = (r.product_ids?.length > 0) || r.product_id;
+      if (hasProductFilter && product) {
+        const inNewIds = r.product_ids?.length > 0 && r.product_ids.includes(product.id);
+        const inLegacy = r.product_id === product.id;
+        if (!inNewIds && !inLegacy) continue;
+      } else if (hasProductFilter && !product) continue;
 
-  // 7. Fallback: buscar qualquer vendedor da equipe via team
+      // --- Critério: Segmento ---
+      if (r.segment_id && segment?.id !== r.segment_id) continue;
+
+      matchedRule = r;
+      break;
+    }
+  }
+
+  // 7. Selecionar vendedor: round-robin ou legado
+  let assignedUserId: string | null = null;
+  if (matchedRule) {
+    const sellerIds: string[] = matchedRule.seller_ids || [];
+    if (sellerIds.length > 0) {
+      // ROUND-ROBIN: seleciona o próximo da fila
+      const idx = (matchedRule.last_seller_index || 0) % sellerIds.length;
+      assignedUserId = sellerIds[idx];
+      // Incrementa índice no banco (não aguarda para não bloquear)
+      supabase
+        .from('routing_rules')
+        .update({ last_seller_index: idx + 1 })
+        .eq('id', matchedRule.id)
+        .then(() => console.log(`[Roteador] Round-robin: vendedor idx ${idx} de ${sellerIds.length}`));
+    } else {
+      // Fallback legado
+      assignedUserId = matchedRule.assigned_user_id || null;
+    }
+  }
+
+  // 8. Fallback: buscar qualquer vendedor da equipe via team
   if (!assignedUserId) {
     const teamName = finalBrand || 'Construção';
     const { data: team } = await supabase.from('teams').select('id').ilike('name', `%${teamName}%`).limit(1).single();

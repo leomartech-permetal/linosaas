@@ -29,7 +29,10 @@ export default function SettingsPage() {
   const [segmentForm, setSegmentForm] = useState({ name: "", keywords: "", collection_type: "normal" });
   const [teamForm, setTeamForm] = useState("");
   const [userForm, setUserForm] = useState({ name: "", whatsapp_number: "", team_id: "", role: "seller" });
-  const [ruleForm, setRuleForm] = useState({ team_id: "", region: "", product_id: "", segment_id: "", priority: 1, assigned_user_id: "" });
+  const [ruleForm, setRuleForm] = useState({ team_id: "", segment_id: "", priority: 1 });
+  const [ruleRegionIds, setRuleRegionIds] = useState<string[]>([]);
+  const [ruleProductIds, setRuleProductIds] = useState<string[]>([]);
+  const [ruleSellerIds, setRuleSellerIds] = useState<string[]>([]);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const [editTeamName, setEditTeamName] = useState("");
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -159,16 +162,32 @@ export default function SettingsPage() {
   }
 
   // RULES
+  function toggleChip<T>(arr: T[], val: T): T[] {
+    return arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val];
+  }
+
   async function addRule(e: React.FormEvent) {
     e.preventDefault();
-    const payload: any = { region: ruleForm.region || null, priority: ruleForm.priority };
+    if (ruleRegionIds.length === 0 && ruleProductIds.length === 0) {
+      flash("⚠️ Selecione ao menos uma região ou produto!"); return;
+    }
+    if (ruleSellerIds.length === 0) {
+      flash("⚠️ Selecione ao menos um vendedor!"); return;
+    }
+    const payload: any = {
+      priority: ruleForm.priority,
+      region_ids: ruleRegionIds,
+      product_ids: ruleProductIds,
+      seller_ids: ruleSellerIds,
+      last_seller_index: 0,
+    };
     if (ruleForm.team_id) payload.team_id = ruleForm.team_id;
-    if (ruleForm.product_id) payload.product_id = ruleForm.product_id;
     if (ruleForm.segment_id) payload.segment_id = ruleForm.segment_id;
-    if (ruleForm.assigned_user_id) payload.assigned_user_id = ruleForm.assigned_user_id;
     const { error } = await supabase.from("routing_rules").insert([payload]);
     if (error) { flash("Erro: " + error.message); return; }
-    setRuleForm({ team_id: "", region: "", product_id: "", segment_id: "", priority: 1, assigned_user_id: "" }); flash("✔ Regra criada!"); loadAll();
+    setRuleForm({ team_id: "", segment_id: "", priority: 1 });
+    setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
+    flash("✔ Regra criada!"); loadAll();
   }
   async function deleteRule(id: string) {
     if (!confirm("Excluir regra?")) return;
@@ -398,47 +417,180 @@ export default function SettingsPage() {
           {tab === "rules" && (
             <div className="space-y-4">
               <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
-                <form onSubmit={addRule} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                <form onSubmit={addRule} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-4 shadow-xl">
                   <h3 className="font-bold text-sm">Nova Regra de Roteamento</h3>
+
+                  {/* Equipe + Segmento */}
                   <div className="grid grid-cols-2 gap-3">
-                    <select value={ruleForm.team_id} onChange={e => setRuleForm({...ruleForm, team_id: e.target.value})} className={inputCls}>
-                      <option value="">Equipe (qualquer)</option>
-                      {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                    </select>
-                    <input type="text" value={ruleForm.region} onChange={e => setRuleForm({...ruleForm, region: e.target.value})} placeholder="Região (ex: SP01, SUL)" className={inputCls} />
-                    <select value={ruleForm.product_id} onChange={e => setRuleForm({...ruleForm, product_id: e.target.value})} className={inputCls}>
-                      <option value="">Produto (qualquer)</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                    <select value={ruleForm.segment_id} onChange={e => setRuleForm({...ruleForm, segment_id: e.target.value})} className={inputCls}>
-                      <option value="">Segmento (qualquer)</option>
-                      {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                    <input type="number" value={ruleForm.priority} onChange={e => setRuleForm({...ruleForm, priority: parseInt(e.target.value) || 1})} placeholder="Prioridade" className={inputCls} min={1} />
-                    <select value={ruleForm.assigned_user_id} onChange={e => setRuleForm({...ruleForm, assigned_user_id: e.target.value})} className={inputCls}>
-                      <option value="">Vendedor (opcional)</option>
-                      {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                    </select>
+                    <div>
+                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Equipe</label>
+                      <select value={ruleForm.team_id} onChange={e => setRuleForm({...ruleForm, team_id: e.target.value})} className={inputCls}>
+                        <option value="">Qualquer equipe</option>
+                        {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Segmento</label>
+                      <select value={ruleForm.segment_id} onChange={e => setRuleForm({...ruleForm, segment_id: e.target.value})} className={inputCls}>
+                        <option value="">Qualquer segmento</option>
+                        {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
                   </div>
+
+                  {/* Multi-select: REGIÕES */}
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">
+                      Regiões <span className="text-gray-600 normal-case font-normal">(selecione uma ou mais)</span>
+                    </label>
+                    {regions.length === 0 && <p className="text-[10px] text-gray-600">Nenhuma região cadastrada</p>}
+                    <div className="flex flex-wrap gap-2">
+                      {regions.map(r => {
+                        const sel = ruleRegionIds.includes(r.id);
+                        return (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setRuleRegionIds(toggleChip(ruleRegionIds, r.id))}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                              sel
+                                ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_8px_rgba(37,99,235,0.5)]'
+                                : 'bg-[#111] border-gray-700 text-gray-400 hover:border-blue-700 hover:text-blue-400'
+                            }`}
+                          >
+                            {sel ? '✓ ' : ''}{r.name}
+                            {(r.ddd_codes || []).length > 0 && <span className="ml-1 opacity-60 font-normal">({r.ddd_codes.slice(0,2).join(',')}…)</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Multi-select: PRODUTOS */}
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">
+                      Produtos <span className="text-gray-600 normal-case font-normal">(selecione um ou mais)</span>
+                    </label>
+                    {products.length === 0 && <p className="text-[10px] text-gray-600">Nenhum produto cadastrado</p>}
+                    <div className="flex flex-wrap gap-2">
+                      {products.map(p => {
+                        const sel = ruleProductIds.includes(p.id);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setRuleProductIds(toggleChip(ruleProductIds, p.id))}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                              sel
+                                ? 'bg-green-700 border-green-600 text-white shadow-[0_0_8px_rgba(21,128,61,0.5)]'
+                                : 'bg-[#111] border-gray-700 text-gray-400 hover:border-green-800 hover:text-green-400'
+                            }`}
+                          >
+                            {sel ? '✓ ' : ''}{p.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Multi-select: VENDEDORES (Roleta) */}
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">
+                      🎰 Roleta de Vendedores <span className="text-gray-600 normal-case font-normal">(leads alternados automaticamente)</span>
+                    </label>
+                    <p className="text-[10px] text-gray-600 mb-2">Se mais de um vendedor atende a mesma região/produto/segmento, selecione todos — o sistema fará rodízio automático.</p>
+                    {users.filter(u => u.role === 'seller').length === 0 && <p className="text-[10px] text-gray-600">Nenhum vendedor cadastrado</p>}
+                    <div className="flex flex-wrap gap-2">
+                      {users.filter(u => u.role === 'seller').map(u => {
+                        const sel = ruleSellerIds.includes(u.id);
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => setRuleSellerIds(toggleChip(ruleSellerIds, u.id))}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                              sel
+                                ? 'bg-purple-700 border-purple-600 text-white shadow-[0_0_8px_rgba(126,34,206,0.5)]'
+                                : 'bg-[#111] border-gray-700 text-gray-400 hover:border-purple-800 hover:text-purple-400'
+                            }`}
+                          >
+                            {sel ? `✓ ${u.name}` : u.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {ruleSellerIds.length > 1 && (
+                      <p className="text-[10px] text-purple-400 mt-2 font-bold animate-pulse">
+                        🎰 {ruleSellerIds.length} vendedores em rodízio — o sistema vai alternar automaticamente
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Prioridade */}
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">
+                      Prioridade
+                      <span className="ml-2 text-gray-600 normal-case font-normal">
+                        — menor número = maior prioridade (1 = primeira a ser testada)
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      value={ruleForm.priority}
+                      onChange={e => setRuleForm({...ruleForm, priority: parseInt(e.target.value) || 1})}
+                      className={`${inputCls} w-24`}
+                      min={1}
+                    />
+                  </div>
+
                   <button type="submit" className={`${btnCls} bg-purple-700`}>Criar Regra</button>
                   {msg && tab === 'rules' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
+
+              {/* LISTAGEM DE REGRAS */}
               <div className="space-y-2">
-                {rules.map(r => (
-                  <div key={r.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
-                    <div>
-                      <p className="font-medium text-sm">
-                        {getName(teams, r.team_id)} → {getName(users, r.assigned_user_id)}
-                      </p>
-                      <p className="text-[10px] text-gray-500">
-                        Região: {r.region || "Todas"} • Produto: {getName(products, r.product_id)} • Segmento: {getName(segments, r.segment_id)} • Prioridade: {r.priority}
-                      </p>
+                {rules.map(r => {
+                  // Suporte a ambos os formatos (legado e novo)
+                  const regionNames = (r.region_ids || []).map((rid: string) => regions.find(x => x.id === rid)?.name || rid);
+                  const productNames = (r.product_ids || []).map((pid: string) => products.find(x => x.id === pid)?.name || pid);
+                  const sellerNames = (r.seller_ids || []).map((sid: string) => users.find(x => x.id === sid)?.name || sid);
+                  // fallback legado
+                  const regionDisplay = regionNames.length > 0 ? regionNames.join(', ') : (r.region || 'Todas');
+                  const productDisplay = productNames.length > 0 ? productNames.join(', ') : getName(products, r.product_id);
+                  const sellerDisplay = sellerNames.length > 0 ? sellerNames : [getName(users, r.assigned_user_id)];
+
+                  return (
+                    <div key={r.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-start group">
+                      <div className="flex-1 min-w-0">
+                        {/* Vendedores */}
+                        <div className="flex flex-wrap gap-1 mb-1">
+                          {sellerDisplay.filter(Boolean).map((name: string) => (
+                            <span key={name} className="text-[10px] bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded font-bold">{name}</span>
+                          ))}
+                          {sellerDisplay.filter(Boolean).length > 1 && (
+                            <span className="text-[10px] text-purple-500 px-1">🎰 rodízio</span>
+                          )}
+                        </div>
+                        {/* Região e Produto */}
+                        <div className="flex flex-wrap gap-1 mb-1">
+                          {regionDisplay !== 'Todas' && regionDisplay.split(', ').map((n: string) => (
+                            <span key={n} className="text-[10px] bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded">{n}</span>
+                          ))}
+                          {productDisplay !== '—' && productDisplay.split(', ').map((n: string) => (
+                            <span key={n} className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">{n}</span>
+                          ))}
+                          {getName(segments, r.segment_id) !== '—' && (
+                            <span className="text-[10px] bg-orange-900/30 text-orange-400 px-1.5 py-0.5 rounded">{getName(segments, r.segment_id)}</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-gray-600">Prioridade {r.priority} • {getName(teams, r.team_id) !== '—' ? `Equipe: ${getName(teams, r.team_id)}` : 'Qualquer equipe'}</p>
+                      </div>
+                      <button onClick={() => deleteRule(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100 ml-2 shrink-0">X</button>
                     </div>
-                    <button onClick={() => deleteRule(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100">X</button>
-                  </div>
-                ))}
-                {rules.length === 0 && <p className="text-gray-600 text-xs text-center py-4">Nenhuma regra</p>}
+                  );
+                })}
+                {rules.length === 0 && <p className="text-gray-600 text-xs text-center py-4">Nenhuma regra cadastrada</p>}
               </div>
             </div>
           )}
