@@ -499,9 +499,9 @@ export default function SettingsPage() {
                       🎰 Roleta de Vendedores <span className="text-gray-600 normal-case font-normal">(leads alternados automaticamente)</span>
                     </label>
                     <p className="text-[10px] text-gray-600 mb-2">Se mais de um vendedor atende a mesma região/produto/segmento, selecione todos — o sistema fará rodízio automático.</p>
-                    {users.filter(u => u.role === 'seller').length === 0 && <p className="text-[10px] text-gray-600">Nenhum vendedor cadastrado</p>}
+                    {users.length === 0 && <p className="text-[10px] text-gray-600">Nenhum vendedor cadastrado</p>}
                     <div className="flex flex-wrap gap-2">
-                      {users.filter(u => u.role === 'seller').map(u => {
+                      {users.map(u => {
                         const sel = ruleSellerIds.includes(u.id);
                         return (
                           <button
