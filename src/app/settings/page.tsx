@@ -27,8 +27,7 @@ export default function SettingsPage() {
   const [regionForm, setRegionForm] = useState({ name: "", ddd_codes: "" });
   const [productForm, setProductForm] = useState({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false });
   const [segmentForm, setSegmentForm] = useState({ name: "", keywords: "", collection_type: "normal" });
-  const [teamForm, setTeamForm] = useState("");
-  const [userForm, setUserForm] = useState({ name: "", whatsapp_number: "", team_id: "", role: "seller" });
+  const [teamForm, setTeamForm] = useState({ name: "", manager_id: "" });
   const [ruleForm, setRuleForm] = useState({ team_id: "", segment_id: "", priority: 1 });
   const [ruleRegionIds, setRuleRegionIds] = useState<string[]>([]);
   const [ruleProductIds, setRuleProductIds] = useState<string[]>([]);
@@ -123,22 +122,42 @@ export default function SettingsPage() {
   // TEAMS
   async function addTeam(e: React.FormEvent) {
     e.preventDefault();
-    const finalName = editingTeam ? editTeamName : teamForm;
-    if (!finalName.trim()) return;
+    const isEdit = !!editingTeam;
+    const finalName = isEdit ? editTeamName : teamForm.name;
+    const finalManagerId = isEdit ? editingTeam.manager_id : teamForm.manager_id;
     
-    const payload: any = { name: finalName };
-    if (editingTeam) {
-      payload.manager_id = editingTeam.manager_id || null;
+    if (!finalName.trim()) {
+      flash("⚠️ Digite o nome da equipe");
+      return;
+    }
+    
+    const payload: any = { 
+      name: finalName,
+      manager_id: finalManagerId || null
+    };
+
+    if (isEdit) {
+      console.log("Atualizando equipe:", editingTeam.id, payload);
       const { error } = await supabase.from("teams").update(payload).eq("id", editingTeam.id);
-      if (error) { flash("Erro: " + error.message); return; }
+      if (error) { 
+        console.error("Erro Supabase:", error);
+        flash("Erro: " + error.message); 
+        return; 
+      }
       setEditingTeam(null);
+      setEditTeamName("");
       flash("✔ Equipe atualizada!");
     } else {
+      console.log("Criando nova equipe:", payload);
       const { error } = await supabase.from("teams").insert([payload]);
-      if (error) { flash("Erro: " + error.message); return; }
+      if (error) { 
+        console.error("Erro Supabase:", error);
+        flash("Erro: " + error.message); 
+        return; 
+      }
+      setTeamForm({ name: "", manager_id: "" });
       flash("✔ Equipe criada!");
     }
-    setTeamForm(""); setEditTeamName("");
     loadAll();
   }
   async function deleteTeam(id: string) {
@@ -376,10 +395,17 @@ export default function SettingsPage() {
                 <form onSubmit={addTeam} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
                   <h3 className="font-bold text-sm">{editingTeam ? "Editar Equipe" : "Nova Equipe"}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input type="text" value={editingTeam ? editTeamName : teamForm} onChange={e => editingTeam ? setEditTeamName(e.target.value) : setTeamForm(e.target.value)} placeholder="Nome da equipe (ex: Indústria)" className={inputCls} required />
+                    <input 
+                      type="text" 
+                      value={editingTeam ? editTeamName : teamForm.name} 
+                      onChange={e => editingTeam ? setEditTeamName(e.target.value) : setTeamForm({...teamForm, name: e.target.value})} 
+                      placeholder="Nome da equipe (ex: Indústria)" 
+                      className={inputCls} 
+                      required 
+                    />
                     <select 
-                      value={editingTeam?.manager_id || ""} 
-                      onChange={e => setEditingTeam({...editingTeam, manager_id: e.target.value})}
+                      value={editingTeam ? (editingTeam.manager_id || "") : (teamForm.manager_id || "")} 
+                      onChange={e => editingTeam ? setEditingTeam({...editingTeam, manager_id: e.target.value}) : setTeamForm({...teamForm, manager_id: e.target.value})}
                       className={inputCls}
                     >
                       <option value="">Atribuir Gestor Responsável</option>
