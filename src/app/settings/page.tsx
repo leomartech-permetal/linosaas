@@ -275,7 +275,7 @@ export default function SettingsPage() {
                   </form>
                 ) : (
                   <div className="bg-blue-900/10 border border-blue-900/30 p-4 rounded-lg text-xs text-blue-300">
-                    💡 <strong>Dica:</strong> Para cadastrar novos usuários, use a aba <strong>Configurações > Usuários</strong>. Aqui você gerencia o vínculo comercial (WhatsApp e Equipe) de quem já tem acesso.
+                    💡 <strong>Dica:</strong> Para cadastrar novos usuários, use a aba <strong>Configurações &gt; Usuários</strong>. Aqui você gerencia o vínculo comercial (WhatsApp e Equipe) de quem já tem acesso.
                   </div>
                 )}
                 {msg && tab === 'sellers' && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
