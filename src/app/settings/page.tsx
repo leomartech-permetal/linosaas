@@ -37,6 +37,7 @@ export default function SettingsPage() {
   const [editTeamName, setEditTeamName] = useState("");
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingRule, setEditingRule] = useState<any>(null);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -58,6 +59,9 @@ export default function SettingsPage() {
     if (u.data) setUsers(u.data);
     if (b.data) setBrands(b.data);
     if (rl.data) setRules(rl.data);
+    
+    if (rl.error) console.error("Erro ao carregar regras:", rl.error);
+    if (rl.data?.length === 0) console.log("Nenhuma regra encontrada no banco.");
     setLoading(false);
   }
 
@@ -179,15 +183,27 @@ export default function SettingsPage() {
       region_ids: ruleRegionIds,
       product_ids: ruleProductIds,
       seller_ids: ruleSellerIds,
-      last_seller_index: 0,
+      last_seller_index: editingRule ? editingRule.last_seller_index : 0,
     };
     if (ruleForm.team_id) payload.team_id = ruleForm.team_id;
+    else payload.team_id = null;
     if (ruleForm.segment_id) payload.segment_id = ruleForm.segment_id;
-    const { error } = await supabase.from("routing_rules").insert([payload]);
-    if (error) { flash("Erro: " + error.message); return; }
+    else payload.segment_id = null;
+
+    if (editingRule) {
+      const { error } = await supabase.from("routing_rules").update(payload).eq("id", editingRule.id);
+      if (error) { flash("Erro: " + error.message); return; }
+      setEditingRule(null);
+      flash("✔ Regra atualizada!");
+    } else {
+      const { error } = await supabase.from("routing_rules").insert([payload]);
+      if (error) { flash("Erro: " + error.message); return; }
+      flash("✔ Regra criada!");
+    }
+    
     setRuleForm({ team_id: "", segment_id: "", priority: 1 });
     setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
-    flash("✔ Regra criada!"); loadAll();
+    loadAll();
   }
   async function deleteRule(id: string) {
     if (!confirm("Excluir regra?")) return;
@@ -418,7 +434,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
                 <form onSubmit={addRule} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-4 shadow-xl">
-                  <h3 className="font-bold text-sm">Nova Regra de Roteamento</h3>
+                  <h3 className="font-bold text-sm">{editingRule ? "Editar Regra" : "Nova Regra de Roteamento"}</h3>
 
                   {/* Equipe + Segmento */}
                   <div className="grid grid-cols-2 gap-3">
@@ -543,7 +559,22 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <button type="submit" className={`${btnCls} bg-purple-700`}>Criar Regra</button>
+                  <div className="flex gap-3">
+                    <button type="submit" className={`${btnCls} bg-purple-700 flex-1`}>{editingRule ? "Atualizar Regra" : "Criar Regra"}</button>
+                    {editingRule && (
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setEditingRule(null);
+                          setRuleForm({ team_id: "", segment_id: "", priority: 1 });
+                          setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
+                        }} 
+                        className={`${btnCls} border border-gray-700 flex-1`}
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
                   {msg && tab === 'rules' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
@@ -586,7 +617,26 @@ export default function SettingsPage() {
                         </div>
                         <p className="text-[10px] text-gray-600">Prioridade {r.priority} • {getName(teams, r.team_id) !== '—' ? `Equipe: ${getName(teams, r.team_id)}` : 'Qualquer equipe'}</p>
                       </div>
-                      <button onClick={() => deleteRule(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100 ml-2 shrink-0">X</button>
+                      <div className="flex gap-1 ml-2 shrink-0">
+                        <button 
+                          onClick={() => {
+                            setEditingRule(r);
+                            setRuleForm({
+                              team_id: r.team_id || "",
+                              segment_id: r.segment_id || "",
+                              priority: r.priority || 1
+                            });
+                            setRuleRegionIds(r.region_ids || []);
+                            setRuleProductIds(r.product_ids || []);
+                            setRuleSellerIds(r.seller_ids || []);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }} 
+                          className="text-[10px] bg-gray-800 px-2 py-1 rounded"
+                        >
+                          Editar
+                        </button>
+                        <button onClick={() => deleteRule(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded">X</button>
+                      </div>
                     </div>
                   );
                 })}
