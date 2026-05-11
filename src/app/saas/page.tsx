@@ -116,18 +116,27 @@ export default function SaaSPage() {
   async function addInstance(e: React.FormEvent) {
     e.preventDefault();
     if (!instForm.name) { flash("Erro: nome da instância é obrigatório."); return; }
-    const payload: any = { name: instForm.name, phone_number: instForm.phone_number, evolution_instance_name: instForm.evolution_instance_name, evolution_url: instForm.evolution_url, evolution_key: instForm.evolution_key };
+    if (!config?.tenant_id) { flash("Erro: tenant_id não identificado. Recarregue a página."); return; }
+    
+    const payload: any = { 
+      tenant_id: config.tenant_id,
+      name: instForm.name, 
+      phone_number: instForm.phone_number, 
+      evolution_instance_name: instForm.evolution_instance_name, 
+      evolution_url: instForm.evolution_url, 
+      evolution_key: instForm.evolution_key 
+    };
+    
     if (instForm.assigned_user_id) payload.assigned_user_id = instForm.assigned_user_id;
+    else payload.assigned_user_id = null;
     
     if (editingInstance) {
       const { error } = await supabase.from("instances").update(payload).eq("id", editingInstance.id);
-      console.log("Update result:", { error, payload });
       if (error) { flash("Erro ao atualizar: " + error.message); return; }
       setEditingInstance(null);
       flash("✔ Instância atualizada!");
     } else {
       const { error } = await supabase.from("instances").insert([payload]);
-      console.log("Insert result:", { error, payload });
       if (error) { flash("Erro ao criar: " + error.message); return; }
       flash("✔ Instância criada!");
     }
