@@ -170,14 +170,56 @@ export default function SettingsPage() {
     loadAll();
   }
 
-  // ... (deleteUser permanece igual)
+  async function deleteUser(id: string) {
+    if (!confirm("Excluir vendedor?")) return;
+    await supabase.from("admin_users").delete().eq("id", id); flash("✔ Excluído!"); loadAll();
+  }
 
   // RULES
-  // ... (toggleChip permanece igual)
+  function toggleChip<T>(arr: T[], val: T): T[] {
+    return arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val];
+  }
 
-  // ... (addRule permanece igual)
+  async function addRule(e: React.FormEvent) {
+    e.preventDefault();
+    if (ruleRegionIds.length === 0 && ruleProductIds.length === 0) {
+      flash("⚠️ Selecione ao menos uma região ou produto!"); return;
+    }
+    if (ruleSellerIds.length === 0) {
+      flash("⚠️ Selecione ao menos um vendedor!"); return;
+    }
+    const payload: any = {
+      priority: ruleForm.priority,
+      region_ids: ruleRegionIds,
+      product_ids: ruleProductIds,
+      seller_ids: ruleSellerIds,
+      last_seller_index: editingRule ? editingRule.last_seller_index : 0,
+    };
+    if (ruleForm.team_id) payload.team_id = ruleForm.team_id;
+    else payload.team_id = null;
+    if (ruleForm.segment_id) payload.segment_id = ruleForm.segment_id;
+    else payload.segment_id = null;
 
-  // ... (deleteRule permanece igual)
+    if (editingRule) {
+      const { error } = await supabase.from("routing_rules").update(payload).eq("id", editingRule.id);
+      if (error) { flash("Erro: " + error.message); return; }
+      setEditingRule(null);
+      flash("✔ Regra atualizada!");
+    } else {
+      const { error } = await supabase.from("routing_rules").insert([payload]);
+      if (error) { flash("Erro: " + error.message); return; }
+      flash("✔ Regra criada!");
+    }
+    
+    setRuleForm({ team_id: "", segment_id: "", priority: 1 });
+    setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
+    loadAll();
+  }
+
+  async function deleteRule(id: string) {
+    if (!confirm("Excluir regra?")) return;
+    await supabase.from("routing_rules").delete().eq("id", id); flash("✔ Excluída!"); loadAll();
+  }
 
   const inputCls = "w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none focus:border-[hsl(var(--tenant-primary))]";
   const btnCls = "w-full py-2 rounded font-bold text-sm hover:opacity-90";
@@ -203,7 +245,128 @@ export default function SettingsPage() {
       {loading ? <p className="text-gray-500">Carregando...</p> : (
         <div className="max-w-4xl">
           
-          {/* ... REGIÕES, PRODUTOS, SEGMENTOS (OMITIDOS PARA BREVIDADE) ... */}
+          {/* REGIÕES */}
+          {tab === "regions" && (
+            <div className="space-y-4">
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addRegion} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">Nova Região</h3>
+                  <input type="text" value={regionForm.name} onChange={e => setRegionForm({...regionForm, name: e.target.value})} placeholder="Nome (ex: SP01, SUL, NORDESTE)" className={inputCls} required />
+                  <input type="text" value={regionForm.ddd_codes} onChange={e => setRegionForm({...regionForm, ddd_codes: e.target.value})} placeholder="DDDs separados por vírgula (ex: 11,12,13,15)" className={inputCls} required />
+                  <button type="submit" className={`${btnCls} bg-blue-600`}>+ Criar Região</button>
+                  {msg && tab === 'regions' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
+              <div className="space-y-2">
+                {regions.map(r => (
+                  <div key={r.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
+                    <div>
+                      <h4 className="font-bold text-sm">{r.name}</h4>
+                      <div className="flex flex-wrap gap-1 mt-1">{(r.ddd_codes || []).map((d: string) => <span key={d} className="text-[10px] bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded">{d}</span>)}</div>
+                    </div>
+                    <button onClick={() => deleteRegion(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100">X</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* PRODUTOS */}
+          {tab === "products" && (
+            <div className="space-y-4">
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addProduct} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
+                  <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
+                  <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
+                  <select value={productForm.brand_id} onChange={e => setProductForm({...productForm, brand_id: e.target.value})} className={inputCls}>
+                    <option value="">Marca (automática)</option>
+                    {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                  <div className="flex gap-3 items-center">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={productForm.is_express_eligible} onChange={e => setProductForm({...productForm, is_express_eligible: e.target.checked})} className="accent-green-500" />
+                      Elegível para EXPRESS
+                    </label>
+                  </div>
+                  {productForm.is_express_eligible && (
+                    <input type="text" value={productForm.express_max_qty} onChange={e => setProductForm({...productForm, express_max_qty: e.target.value})} placeholder="Qtd máx EXPRESS (ex: até 10 peças ou 20m2)" className={inputCls} />
+                  )}
+                  <div className="flex gap-3">
+                    <button type="submit" className={`${btnCls} bg-green-700 flex-1`}>{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
+                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
+                  </div>
+                  {msg && tab === 'products' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
+              <div className="space-y-2">
+                {products.map(p => (
+                  <div key={p.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-start group">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-sm">{p.name}</h4>
+                        {p.brands?.name && <span className="text-[10px] bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded">{p.brands.name}</span>}
+                        {p.is_express_eligible && <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">EXPRESS</span>}
+                      </div>
+                      {(p.synonyms || []).length > 0 && <p className="text-[10px] text-gray-500 mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
+                      {p.express_max_qty && <p className="text-[10px] text-yellow-500 mt-0.5">Limite: {p.express_max_qty}</p>}
+                    </div>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 ml-2">
+                      <button 
+                        onClick={() => {
+                          setEditingProduct(p);
+                          setProductForm({
+                            name: p.name,
+                            synonyms: (p.synonyms || []).join(", "),
+                            brand_id: p.brand_id || "",
+                            express_max_qty: p.express_max_qty || "",
+                            is_express_eligible: p.is_express_eligible || false
+                          });
+                        }} 
+                        className="text-[10px] bg-gray-800 px-2 py-1 rounded"
+                      >
+                        Editar
+                      </button>
+                      <button onClick={() => deleteProduct(p.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded">X</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SEGMENTOS */}
+          {tab === "segments" && (
+            <div className="space-y-4">
+              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+                <form onSubmit={addSegment} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
+                  <h3 className="font-bold text-sm">Novo Segmento</h3>
+                  <input type="text" value={segmentForm.name} onChange={e => setSegmentForm({...segmentForm, name: e.target.value})} placeholder="Nome (ex: Indústria, Construção)" className={inputCls} required />
+                  <input type="text" value={segmentForm.keywords} onChange={e => setSegmentForm({...segmentForm, keywords: e.target.value})} placeholder="Keywords separadas por vírgula" className={inputCls} />
+                  <select value={segmentForm.collection_type} onChange={e => setSegmentForm({...segmentForm, collection_type: e.target.value})} className={inputCls}>
+                    <option value="normal">Coleta Normal (todos os campos)</option>
+                    <option value="short">Coleta Curta (nome, email, produto)</option>
+                  </select>
+                  <button type="submit" className={`${btnCls} bg-purple-700`}>+ Criar Segmento</button>
+                  {msg && tab === 'segments' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                </form>
+              </div>
+              <div className="space-y-2">
+                {segments.map(s => (
+                  <div key={s.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-start group">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-sm">{s.name}</h4>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${s.collection_type === 'short' ? 'bg-yellow-900/30 text-yellow-400' : 'bg-gray-800 text-gray-400'}`}>{s.collection_type === 'short' ? 'Coleta Curta' : 'Coleta Normal'}</span>
+                      </div>
+                      {(s.keywords || []).length > 0 && <p className="text-[10px] text-gray-500 mt-1">Keywords: {s.keywords.join(", ")}</p>}
+                    </div>
+                    <button onClick={() => deleteSegment(s.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100">X</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* EQUIPES */}
           {tab === "teams" && (
