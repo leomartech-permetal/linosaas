@@ -115,18 +115,22 @@ export default function SaaSPage() {
   // === INSTÂNCIAS ===
   async function addInstance(e: React.FormEvent) {
     e.preventDefault();
-    if (!instForm.name) return;
+    if (!instForm.name) { flash("Erro: nome da instância é obrigatório."); return; }
     const payload: any = { name: instForm.name, phone_number: instForm.phone_number, evolution_instance_name: instForm.evolution_instance_name, evolution_url: instForm.evolution_url, evolution_key: instForm.evolution_key };
     if (instForm.assigned_user_id) payload.assigned_user_id = instForm.assigned_user_id;
     
     if (editingInstance) {
-      const { error } = await supabase.from("instances").update(payload).eq("id", editingInstance.id);
-      if (error) { flash("Erro: " + error.message); return; }
+      const { error, data } = await supabase.from("instances").update(payload).eq("id", editingInstance.id).select();
+      console.log("Update result:", { error, data });
+      if (error) { flash("Erro ao atualizar: " + error.message); return; }
+      if (!data || data.length === 0) { flash("Erro: instância não foi atualizada."); return; }
       setEditingInstance(null);
       flash("✔ Instância atualizada!");
     } else {
-      const { error } = await supabase.from("instances").insert([payload]);
-      if (error) { flash("Erro: " + error.message); return; }
+      const { error, data } = await supabase.from("instances").insert([payload]).select();
+      console.log("Insert result:", { error, data, payload });
+      if (error) { flash("Erro ao criar: " + error.message); return; }
+      if (!data || data.length === 0) { flash("Erro: instância não foi criada. Verifique as permissões (RLS) no Supabase."); return; }
       flash("✔ Instância criada!");
     }
     
