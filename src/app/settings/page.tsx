@@ -123,12 +123,13 @@ export default function SettingsPage() {
   // TEAMS
   async function addTeam(e: React.FormEvent) {
     e.preventDefault();
-    if (!teamForm.trim()) return;
-    const payload: any = { name: teamForm };
-    if (editingTeam?.manager_id) payload.manager_id = editingTeam.manager_id;
+    const finalName = editingTeam ? editTeamName : teamForm;
+    if (!finalName.trim()) return;
     
+    const payload: any = { name: finalName };
     if (editingTeam) {
-      const { error } = await supabase.from("teams").update({ name: editTeamName, manager_id: editingTeam.manager_id }).eq("id", editingTeam.id);
+      payload.manager_id = editingTeam.manager_id || null;
+      const { error } = await supabase.from("teams").update(payload).eq("id", editingTeam.id);
       if (error) { flash("Erro: " + error.message); return; }
       setEditingTeam(null);
       flash("✔ Equipe atualizada!");
@@ -137,7 +138,7 @@ export default function SettingsPage() {
       if (error) { flash("Erro: " + error.message); return; }
       flash("✔ Equipe criada!");
     }
-    setTeamForm(""); 
+    setTeamForm(""); setEditTeamName("");
     loadAll();
   }
   async function deleteTeam(id: string) {
