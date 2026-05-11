@@ -115,6 +115,7 @@ export default function SaaSPage() {
   // === INSTÂNCIAS ===
   async function addInstance(e: React.FormEvent) {
     e.preventDefault();
+    console.log("Iniciando salvamento de instância...", instForm);
     if (!instForm.name) { flash("Erro: nome da instância é obrigatório."); return; }
     
     const payload: any = { 
@@ -132,20 +133,27 @@ export default function SaaSPage() {
     if (instForm.assigned_user_id) payload.assigned_user_id = instForm.assigned_user_id;
     else payload.assigned_user_id = null;
     
-    if (editingInstance) {
-      const { error } = await supabase.from("instances").update(payload).eq("id", editingInstance.id);
-      if (error) { flash("Erro ao atualizar: " + error.message); return; }
-      setEditingInstance(null);
-      flash("✔ Instância atualizada!");
-    } else {
-      const { error } = await supabase.from("instances").insert([payload]);
-      if (error) { flash("Erro ao criar: " + error.message); return; }
-      flash("✔ Instância criada!");
+    try {
+      if (editingInstance) {
+        const { error } = await supabase.from("instances").update(payload).eq("id", editingInstance.id);
+        console.log("Resultado Update:", { error, payload });
+        if (error) { flash("Erro ao atualizar: " + error.message); return; }
+        setEditingInstance(null);
+        flash("✔ Instância atualizada!");
+      } else {
+        const { error } = await supabase.from("instances").insert([payload]);
+        console.log("Resultado Insert:", { error, payload });
+        if (error) { flash("Erro ao criar: " + error.message); return; }
+        flash("✔ Instância criada!");
+      }
+      
+      setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" });
+      setShowInstForm(false);
+      loadAll();
+    } catch (err: any) {
+      console.error("Erro crítico no salvamento:", err);
+      flash("Erro crítico: " + err.message);
     }
-    
-    setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" });
-    setShowInstForm(false);
-    loadAll();
   }
 
   function startEditInstance(inst: any) {
@@ -391,7 +399,7 @@ export default function SaaSPage() {
                     <button type="submit" className="flex-1 bg-green-700 py-2 rounded font-bold text-sm hover:bg-green-800">{editingInstance ? "Salvar Alterações" : "Criar Instância"}</button>
                     <button type="button" onClick={() => { setShowInstForm(false); setEditingInstance(null); setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" }); }} className="flex-1 border border-gray-700 py-2 rounded text-sm hover:bg-gray-800">Cancelar</button>
                   </div>
-                  {msg && msg.includes("Instância") && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
+                  {msg && <p className={`text-[10px] font-bold animate-pulse mt-2 ${msg.includes('Erro') ? 'text-red-400' : 'text-green-400'}`}>{msg}</p>}
                 </form>
               </div>
             )}
