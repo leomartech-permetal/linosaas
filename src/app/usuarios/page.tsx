@@ -16,7 +16,7 @@ export default function UsuariosPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "vendedor" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "vendedor", whatsapp_number: "" });
 
   useEffect(() => { loadUsers(); }, []);
 
@@ -34,25 +34,31 @@ export default function UsuariosPage() {
     if (!form.name || !form.email) return;
 
     if (editing) {
-      const payload: any = { name: form.name, email: form.email, role: form.role };
+      const payload: any = { name: form.name, email: form.email, role: form.role, whatsapp_number: form.whatsapp_number };
       if (form.password) payload.password = form.password;
       await supabase.from("admin_users").update(payload).eq("id", editing.id);
       setEditing(null);
       flash("✔ Usuário atualizado!");
     } else {
       if (!form.password) { flash("Senha é obrigatória para novos usuários"); return; }
-      const { error } = await supabase.from("admin_users").insert([{ name: form.name, email: form.email, password: form.password, role: form.role }]);
+      const { error } = await supabase.from("admin_users").insert([{ 
+        name: form.name, 
+        email: form.email, 
+        password: form.password, 
+        role: form.role,
+        whatsapp_number: form.whatsapp_number 
+      }]);
       if (error) { flash("Erro: " + error.message); return; }
       flash("✔ Usuário criado!");
     }
-    setForm({ name: "", email: "", password: "", role: "vendedor" });
+    setForm({ name: "", email: "", password: "", role: "vendedor", whatsapp_number: "" });
     setShowForm(false);
     loadUsers();
   }
 
   function startEdit(u: any) {
     setEditing(u);
-    setForm({ name: u.name, email: u.email, password: "", role: u.role });
+    setForm({ name: u.name, email: u.email, password: "", role: u.role, whatsapp_number: u.whatsapp_number || "" });
     setShowForm(true);
   }
 
@@ -108,7 +114,7 @@ export default function UsuariosPage() {
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold">Usuários Cadastrados ({users.length})</h3>
           <button
-            onClick={() => { setEditing(null); setForm({ name: "", email: "", password: "", role: "vendedor" }); setShowForm(true); }}
+            onClick={() => { setEditing(null); setForm({ name: "", email: "", password: "", role: "vendedor", whatsapp_number: "" }); setShowForm(true); }}
             className="bg-[hsl(var(--tenant-primary))] px-4 py-2 rounded text-sm font-bold text-black hover:opacity-90"
           >
             + Novo Usuário
@@ -121,7 +127,10 @@ export default function UsuariosPage() {
             <h4 className="font-bold mb-4">{editing ? "Editar Usuário" : "Novo Usuário"}</h4>
             <form onSubmit={saveUser} className="space-y-3">
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="E-mail" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="E-mail" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+                <input type="text" value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} placeholder="WhatsApp (5511...)" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+              </div>
               <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={editing ? "Nova senha (deixe vazio para manter)" : "Senha *"} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
                 <option value="admin">Administrador</option>
@@ -149,7 +158,7 @@ export default function UsuariosPage() {
                       <span className="text-[10px] px-2 py-0.5 rounded font-bold" style={{ background: role.color + "22", color: role.color }}>{role.label}</span>
                       {!u.active && <span className="text-[10px] text-red-400">(inativo)</span>}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{u.email}</p>
+                    <p className="text-xs text-gray-500 mt-1">{u.email} • {u.whatsapp_number || "Sem WhatsApp"}</p>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => toggleActive(u)} className={`text-[10px] px-2 py-1 rounded ${u.active ? "bg-yellow-900/50 text-yellow-400" : "bg-green-900/50 text-green-400"}`}>

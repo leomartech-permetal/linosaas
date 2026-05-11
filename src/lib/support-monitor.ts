@@ -95,10 +95,21 @@ async function processLead(
   const waitingSince = new Date(lead.updated_at || lead.created_at);
   const minutesWaiting = (Date.now() - waitingSince.getTime()) / 60000;
 
-  // Buscar dados do vendedor
+  // Buscar dados do vendedor e do gestor da equipe
   const { data: seller } = await supabase
     .from('admin_users')
-    .select('*, teams(supervisor_name, supervisor_phone, supervisor_email)')
+    .select(`
+      *,
+      teams (
+        id,
+        name,
+        manager:admin_users!teams_manager_id_fkey (
+          name,
+          email,
+          whatsapp_number
+        )
+      )
+    `)
     .eq('id', assignedUserId)
     .single();
 
@@ -165,8 +176,8 @@ async function processLead(
 
   // Verificar se precisa escalar ao supervisor (2h+)
   if (minutesWaiting >= ESCALATION_MINUTES && existingAttempts >= 3) {
-    const supervisorData = seller.teams;
-    const supervisorPhone = supervisorData?.supervisor_phone;
+    const supervisor = (seller.teams as any)?.manager;
+    const supervisorPhone = supervisor?.whatsapp_number;
 
     if (supervisorPhone) {
       const sent = await notifySupervisor(
@@ -188,7 +199,7 @@ async function processLead(
           status: 'ESCALATED',
         }]);
 
-        console.log(`[Lino Suporte] 🚨 Lead ${leadName} ESCALADO para supervisor ${supervisorData.supervisor_name}`);
+        console.log(`[Lino Suporte] 🚨 Lead ${leadName} ESCALADO para supervisor ${supervisor.name}`);
         result.escalated++;
       }
     } else {
@@ -248,7 +259,16 @@ export async function handleClientReturn(
     .from('leads')
     .select(`
       *,
-      current_owner:admin_users(name, whatsapp_number, team_id, teams(supervisor_name, supervisor_phone))
+      current_owner:admin_users(
+        name, 
+        whatsapp_number, 
+        team_id, 
+        teams(
+          id,
+          name,
+          manager:admin_users!teams_manager_id_fkey(name, whatsapp_number)
+        )
+      )
     `)
     .eq('whatsapp_number', whatsappNumber)
     .single();
@@ -477,10 +497,11 @@ async function notifySellerUrgent(lead: any, returnCount: number): Promise<void>
  * Notifica supervisor urgentemente (quando vendedor não atende após múltiplas tentativas)
  */
 async function notifySupervisorUrgent(lead: any): Promise<void> {
-  if (!lead.current_owner?.teams?.supervisor_phone) return;
+  const supervisor = (lead.current_owner?.teams as any)?.manager;
+  if (!supervisor?.whatsapp_number) return;
 
   await notifySupervisor(
-    lead.current_owner.teams.supervisor_phone,
+    supervisor.whatsapp_number,
     lead.current_owner?.name || 'Vendedor',
     lead.name || 'Lead',
     lead.whatsapp_number || ''

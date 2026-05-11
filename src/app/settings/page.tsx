@@ -375,15 +375,15 @@ export default function SettingsPage() {
                 <form onSubmit={addTeam} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
                   <h3 className="font-bold text-sm">{editingTeam ? "Editar Equipe" : "Nova Equipe"}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input type="text" value={editingTeam ? editTeamName : teamForm} onChange={e => editingTeam ? setEditTeamName(e.target.value) : setTeamForm(e.target.value)} placeholder="Nome da equipe" className={inputCls} required />
+                    <input type="text" value={editingTeam ? editTeamName : teamForm} onChange={e => editingTeam ? setEditTeamName(e.target.value) : setTeamForm(e.target.value)} placeholder="Nome da equipe (ex: Indústria)" className={inputCls} required />
                     <select 
                       value={editingTeam?.manager_id || ""} 
                       onChange={e => setEditingTeam({...editingTeam, manager_id: e.target.value})}
                       className={inputCls}
                     >
-                      <option value="">Selecionar Gestor</option>
+                      <option value="">Atribuir Gestor Responsável</option>
                       {users.filter(u => u.role === 'gestor' || u.role === 'admin').map(u => (
-                        <option key={u.id} value={u.id}>{u.name}</option>
+                        <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                       ))}
                     </select>
                   </div>
@@ -395,18 +395,24 @@ export default function SettingsPage() {
                 {msg && tab === 'teams' && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
               </div>
               <div className="space-y-2">
-                {teams.map(t => (
-                  <div key={t.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
-                    <div>
-                      <span className="font-bold text-sm">{t.name}</span>
-                      <p className="text-[10px] text-gray-500 mt-1">Gestor: {users.find(u => u.id === t.manager_id)?.name || "Não atribuído"}</p>
+                {teams.map(t => {
+                  const manager = users.find(u => u.id === t.manager_id);
+                  return (
+                    <div key={t.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
+                      <div>
+                        <span className="font-bold text-sm">{t.name}</span>
+                        <div className="flex flex-col gap-1 mt-1">
+                          <p className="text-[10px] text-gray-500">Gestor: <span className="text-gray-300">{manager?.name || "Não atribuído"}</span></p>
+                          {manager?.whatsapp_number && <p className="text-[10px] text-gray-600">WhatsApp: {manager.whatsapp_number}</p>}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                        <button onClick={() => { setEditingTeam(t); setEditTeamName(t.name); }} className="text-[10px] bg-gray-800 px-2 py-1 rounded">Editar</button>
+                        <button onClick={() => deleteTeam(t.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded">X</button>
+                      </div>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                      <button onClick={() => { setEditingTeam(t); setEditTeamName(t.name); }} className="text-[10px] bg-gray-800 px-2 py-1 rounded">Editar</button>
-                      <button onClick={() => deleteTeam(t.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded">X</button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -417,53 +423,51 @@ export default function SettingsPage() {
               <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
                 {editingUser ? (
                   <form onSubmit={addUser} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
-                    <h3 className="font-bold text-sm text-blue-400">Configurar Perfil Comercial: {editingUser.name}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-gray-500 mb-1">WhatsApp de Vendas</label>
-                        <input type="text" value={userForm.whatsapp_number} onChange={e => setUserForm({...userForm, whatsapp_number: e.target.value})} placeholder="5511..." className={inputCls} required />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-gray-500 mb-1">Equipe</label>
-                        <select value={userForm.team_id} onChange={e => setUserForm({...userForm, team_id: e.target.value})} className={inputCls}>
-                          <option value="">Sem equipe</option>
-                          {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                        </select>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-sm text-blue-400">Vincular Vendedor: {editingUser.name}</h3>
+                      <a href="/usuarios" className="text-[10px] text-gray-500 hover:text-white underline">Editar dados cadastrais</a>
                     </div>
-                    <div className="flex gap-3">
-                      <button type="submit" className={`${btnCls} bg-green-700`}>Salvar Perfil Comercial</button>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-1">Equipe</label>
+                      <select value={userForm.team_id} onChange={e => setUserForm({...userForm, team_id: e.target.value})} className={inputCls}>
+                        <option value="">Sem equipe (Inativo no roteamento)</option>
+                        {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button type="submit" className={`${btnCls} bg-green-700`}>Salvar Atribuição</button>
                       <button type="button" onClick={() => { setEditingUser(null); setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); }} className={`${btnCls} border border-gray-700`}>Cancelar</button>
                     </div>
                   </form>
                 ) : (
                   <div className="bg-blue-900/10 border border-blue-900/30 p-4 rounded-lg text-xs text-blue-300">
-                    💡 <strong>Dica:</strong> Para cadastrar novos usuários, use a aba <strong>Configurações &gt; Usuários</strong>. Aqui você gerencia o vínculo comercial (WhatsApp e Equipe) de quem já tem acesso.
+                    💡 <strong>Entidade Usuário:</strong> Todas as informações de nome, e-mail e whatsapp são gerenciadas em <strong>Configurações &gt; Usuários</strong>. Aqui você apenas atribui cada vendedor à sua equipe.
                   </div>
                 )}
                 {msg && tab === 'sellers' && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
               </div>
               <div className="space-y-2">
-                {users.map(u => (
-                  <div key={u.id} className={`bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group ${u.role !== 'seller' && u.role !== 'gestor' ? 'opacity-70' : ''}`}>
+                {users.filter(u => u.role === 'vendedor' || u.role === 'seller').map(u => (
+                  <div key={u.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-center group">
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-sm">{u.name}</p>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${u.role === 'admin' ? 'bg-red-900/30 text-red-400' : u.role === 'gestor' ? 'bg-yellow-900/30 text-yellow-400' : 'bg-blue-900/30 text-blue-400'}`}>
-                          {u.role.toUpperCase()}
-                        </span>
+                        <span className="text-[10px] bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded font-bold uppercase">Vendedor</span>
                       </div>
                       <p className="text-[10px] text-gray-500 mt-1">
-                        {u.whatsapp_number ? `📞 ${u.whatsapp_number}` : "🚫 Sem WhatsApp"} • 👥 {getName(teams, u.team_id)}
+                        {u.whatsapp_number ? `📞 ${u.whatsapp_number}` : "🚫 Sem WhatsApp"} • 👥 Equipe: {getName(teams, u.team_id)}
                       </p>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => { setEditingUser(u); setUserForm({ name: u.name, whatsapp_number: u.whatsapp_number || "", team_id: u.team_id || "", role: u.role }); }} className="text-[10px] bg-[hsl(var(--tenant-primary))] text-black font-bold px-3 py-1 rounded">
-                        Configurar Comercial
+                        Mudar Equipe
                       </button>
                     </div>
                   </div>
                 ))}
+                {users.filter(u => u.role === 'vendedor' || u.role === 'seller').length === 0 && (
+                  <p className="text-gray-600 text-xs text-center py-8">Nenhum vendedor cadastrado em Usuários.</p>
+                )}
               </div>
             </div>
           )}
