@@ -126,10 +126,6 @@ export default function SaaSPage() {
       evolution_key: instForm.evolution_key || null 
     };
     
-    // Adiciona tenant_id apenas se existir no config (compatibilidade)
-    if (config?.tenant_id) payload.tenant_id = config.tenant_id;
-    else if (config?.id) payload.tenant_id = config.id; 
-
     if (instForm.assigned_user_id) payload.assigned_user_id = instForm.assigned_user_id;
     else payload.assigned_user_id = null;
     
