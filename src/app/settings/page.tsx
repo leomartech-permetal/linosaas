@@ -241,6 +241,18 @@ export default function SettingsPage() {
     await supabase.from("routing_rules").delete().eq("id", id); flash("✔ Excluída!"); loadAll();
   }
 
+  async function duplicateRule(rule: any) {
+    const { id, created_at, ...cleanRule } = rule;
+    const payload = {
+      ...cleanRule,
+      priority: (rule.priority || 0) + 1 // Sugere uma prioridade próxima
+    };
+    const { error } = await supabase.from("routing_rules").insert([payload]);
+    if (error) { flash("Erro ao duplicar: " + error.message); return; }
+    flash("✔ Regra duplicada com sucesso!");
+    loadAll();
+  }
+
   const inputCls = "w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none focus:border-[hsl(var(--tenant-primary))]";
   const btnCls = "w-full py-2 rounded font-bold text-sm hover:opacity-90";
 
@@ -688,6 +700,13 @@ export default function SettingsPage() {
                         <p className="text-[10px] text-gray-600">Prioridade {r.priority} • {getName(teams, r.team_id) !== '—' ? `Equipe: ${getName(teams, r.team_id)}` : 'Qualquer equipe'}</p>
                       </div>
                       <div className="flex gap-1 ml-2 shrink-0">
+                        <button 
+                          onClick={() => duplicateRule(r)} 
+                          className="text-[10px] bg-blue-900/50 text-blue-300 px-2 py-1 rounded hover:bg-blue-900"
+                          title="Duplicar esta regra"
+                        >
+                          Duplicar
+                        </button>
                         <button 
                           onClick={() => {
                             setEditingRule(r);
