@@ -116,17 +116,19 @@ export default function SaaSPage() {
   async function addInstance(e: React.FormEvent) {
     e.preventDefault();
     if (!instForm.name) { flash("Erro: nome da instância é obrigatório."); return; }
-    if (!config?.tenant_id) { flash("Erro: tenant_id não identificado. Recarregue a página."); return; }
     
     const payload: any = { 
-      tenant_id: config.tenant_id,
       name: instForm.name, 
-      phone_number: instForm.phone_number, 
-      evolution_instance_name: instForm.evolution_instance_name, 
-      evolution_url: instForm.evolution_url, 
-      evolution_key: instForm.evolution_key 
+      phone_number: instForm.phone_number || null, 
+      evolution_instance_name: instForm.evolution_instance_name || null, 
+      evolution_url: instForm.evolution_url || null, 
+      evolution_key: instForm.evolution_key || null 
     };
     
+    // Adiciona tenant_id apenas se existir no config (compatibilidade)
+    if (config?.tenant_id) payload.tenant_id = config.tenant_id;
+    else if (config?.id) payload.tenant_id = config.id; 
+
     if (instForm.assigned_user_id) payload.assigned_user_id = instForm.assigned_user_id;
     else payload.assigned_user_id = null;
     
