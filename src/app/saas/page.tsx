@@ -120,17 +120,15 @@ export default function SaaSPage() {
     if (instForm.assigned_user_id) payload.assigned_user_id = instForm.assigned_user_id;
     
     if (editingInstance) {
-      const { error, data } = await supabase.from("instances").update(payload).eq("id", editingInstance.id).select();
-      console.log("Update result:", { error, data });
+      const { error } = await supabase.from("instances").update(payload).eq("id", editingInstance.id);
+      console.log("Update result:", { error, payload });
       if (error) { flash("Erro ao atualizar: " + error.message); return; }
-      if (!data || data.length === 0) { flash("Erro: instância não foi atualizada."); return; }
       setEditingInstance(null);
       flash("✔ Instância atualizada!");
     } else {
-      const { error, data } = await supabase.from("instances").insert([payload]).select();
-      console.log("Insert result:", { error, data, payload });
+      const { error } = await supabase.from("instances").insert([payload]);
+      console.log("Insert result:", { error, payload });
       if (error) { flash("Erro ao criar: " + error.message); return; }
-      if (!data || data.length === 0) { flash("Erro: instância não foi criada. Verifique as permissões (RLS) no Supabase."); return; }
       flash("✔ Instância criada!");
     }
     
