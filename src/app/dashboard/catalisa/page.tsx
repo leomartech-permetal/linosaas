@@ -137,7 +137,7 @@ export default function CatalisaDashboard() {
                 <h3 className="text-xs font-bold uppercase tracking-widest text-[#8892b0]">Próximo Passo</h3>
               </div>
               <div className="space-y-3">
-                {(metrics[metrics.length - 1]?.next_steps || "Escalar campanha vencedora;Testar novo criativo de oferta").split(';').map((step, i) => (
+                {(metrics[metrics.length - 1]?.next_steps || "Escalar campanha vencedora;Testar novo criativo de oferta").split(';').map((step: string, i: number) => (
                   <div key={i} className="flex items-start gap-3">
                     <div className="bg-gradient-to-br from-purple-600 to-green-500 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
                       {i + 1}
