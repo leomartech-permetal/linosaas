@@ -432,7 +432,7 @@ export default function SettingsPage() {
           {/* REGRAS */}
           {tab === "rules" && (
             <div className="space-y-4">
-              <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
+              <div className="bg-[#0a0a0a] pb-4">
                 <form onSubmit={addRule} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-4 shadow-xl">
                   <h3 className="font-bold text-sm">{editingRule ? "Editar Regra" : "Nova Regra de Roteamento"}</h3>
 
