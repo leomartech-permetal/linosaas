@@ -28,6 +28,7 @@ export default function SettingsPage() {
   const [productForm, setProductForm] = useState({ name: "", synonyms: "", brand_id: "" });
   const [segmentForm, setSegmentForm] = useState({ name: "", keywords: "", collection_type: "normal" });
   const [teamForm, setTeamForm] = useState({ name: "", manager_id: "" });
+  const [userForm, setUserForm] = useState({ name: "", whatsapp_number: "", team_id: "", role: "seller" });
   const [ruleForm, setRuleForm] = useState({ team_id: "", segment_id: "", priority: 1, is_express: false });
   const [ruleRegionIds, setRuleRegionIds] = useState<string[]>([]);
   const [ruleProductIds, setRuleProductIds] = useState<string[]>([]);
