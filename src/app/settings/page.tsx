@@ -38,6 +38,11 @@ export default function SettingsPage() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingRule, setEditingRule] = useState<any>(null);
+  
+  // Filtros de Regras
+  const [filterSegmentId, setFilterSegmentId] = useState("");
+  const [filterTeamId, setFilterTeamId] = useState("");
+  const [filterRegionId, setFilterRegionId] = useState("");
 
   useEffect(() => { loadAll(); }, []);
 
@@ -662,9 +667,59 @@ export default function SettingsPage() {
                 </form>
               </div>
 
+              {/* Barra de Filtros */}
+              <div className="bg-[#111] p-4 rounded-xl border border-gray-800 mb-6 flex flex-wrap gap-4 items-end">
+                <div className="flex-1 min-w-[150px]">
+                  <label className="block text-[10px] text-gray-500 mb-1 uppercase font-bold">Segmento</label>
+                  <select 
+                    value={filterSegmentId} 
+                    onChange={(e) => setFilterSegmentId(e.target.value)}
+                    className="w-full bg-black border border-gray-700 rounded-lg p-2 text-xs text-gray-300 outline-none focus:border-[#0ecab2]"
+                  >
+                    <option value="">Todos</option>
+                    {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[150px]">
+                  <label className="block text-[10px] text-gray-500 mb-1 uppercase font-bold">Equipe</label>
+                  <select 
+                    value={filterTeamId} 
+                    onChange={(e) => setFilterTeamId(e.target.value)}
+                    className="w-full bg-black border border-gray-700 rounded-lg p-2 text-xs text-gray-300 outline-none focus:border-[#0ecab2]"
+                  >
+                    <option value="">Todas</option>
+                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[150px]">
+                  <label className="block text-[10px] text-gray-500 mb-1 uppercase font-bold">Região</label>
+                  <select 
+                    value={filterRegionId} 
+                    onChange={(e) => setFilterRegionId(e.target.value)}
+                    className="w-full bg-black border border-gray-700 rounded-lg p-2 text-xs text-gray-300 outline-none focus:border-[#0ecab2]"
+                  >
+                    <option value="">Todas</option>
+                    {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                </div>
+
+                <button 
+                  onClick={() => { setFilterSegmentId(""); setFilterTeamId(""); setFilterRegionId(""); }}
+                  className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg text-xs transition-colors h-[34px]"
+                >
+                  Limpar
+                </button>
+              </div>
+
               {/* LISTAGEM DE REGRAS */}
               <div className="space-y-2">
-                {rules.map(r => {
+                {rules
+                  .filter(r => !filterSegmentId || r.segment_id === filterSegmentId)
+                  .filter(r => !filterTeamId || r.team_id === filterTeamId)
+                  .filter(r => !filterRegionId || (r.region_ids && r.region_ids.includes(filterRegionId)))
+                  .map(r => {
                   // Suporte a ambos os formatos (legado e novo)
                   const regionNames = (r.region_ids || []).map((rid: string) => regions.find(x => x.id === rid)?.name || rid);
                   const productNames = (r.product_ids || []).map((pid: string) => products.find(x => x.id === pid)?.name || pid);
@@ -734,7 +789,16 @@ export default function SettingsPage() {
                     </div>
                   );
                 })}
-                {rules.length === 0 && <p className="text-gray-600 text-xs text-center py-4">Nenhuma regra cadastrada</p>}
+                {rules
+                  .filter(r => !filterSegmentId || r.segment_id === filterSegmentId)
+                  .filter(r => !filterTeamId || r.team_id === filterTeamId)
+                  .filter(r => !filterRegionId || (r.region_ids && r.region_ids.includes(filterRegionId)))
+                  .length === 0 && (
+                    <p className="text-gray-600 text-xs text-center py-8 bg-[#111] rounded-xl border border-dashed border-gray-800">
+                      Nenhuma regra encontrada com os filtros selecionados.
+                    </p>
+                  )
+                }
               </div>
             </div>
           )}
