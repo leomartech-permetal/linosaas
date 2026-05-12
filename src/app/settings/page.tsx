@@ -215,14 +215,15 @@ export default function SettingsPage() {
       flash("⚠️ Selecione ao menos um vendedor!"); return;
     }
     const payload: any = {
-      seller_ids: ruleSellerIds,
+      priority: ruleForm.priority,
       is_express: ruleForm.is_express,
+      region_ids: ruleRegionIds,
+      product_ids: ruleProductIds,
+      seller_ids: ruleSellerIds,
       last_seller_index: editingRule ? editingRule.last_seller_index : 0,
+      team_id: ruleForm.team_id || null,
+      segment_id: ruleForm.segment_id || null
     };
-    if (ruleForm.team_id) payload.team_id = ruleForm.team_id;
-    else payload.team_id = null;
-    if (ruleForm.segment_id) payload.segment_id = ruleForm.segment_id;
-    else payload.segment_id = null;
 
     if (editingRule) {
       const { error } = await supabase.from("routing_rules").update(payload).eq("id", editingRule.id);
