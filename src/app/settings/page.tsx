@@ -230,7 +230,7 @@ export default function SettingsPage() {
       flash("✔ Regra criada!");
     }
     
-    setRuleForm({ team_id: "", segment_id: "", priority: 1 });
+    setRuleForm({ team_id: "", segment_id: "", priority: 1, is_express: false });
     setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
     loadAll();
   }
@@ -649,7 +649,7 @@ export default function SettingsPage() {
                         type="button" 
                         onClick={() => {
                           setEditingRule(null);
-                          setRuleForm({ team_id: "", segment_id: "", priority: 1 });
+                          setRuleForm({ team_id: "", segment_id: "", priority: 1, is_express: false });
                           setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
                         }} 
                         className={`${btnCls} border border-gray-700 flex-1`}
