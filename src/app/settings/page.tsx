@@ -25,10 +25,10 @@ export default function SettingsPage() {
 
   // Forms
   const [regionForm, setRegionForm] = useState({ name: "", ddd_codes: "" });
-  const [productForm, setProductForm] = useState({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false });
+  const [productForm, setProductForm] = useState({ name: "", synonyms: "", brand_id: "" });
   const [segmentForm, setSegmentForm] = useState({ name: "", keywords: "", collection_type: "normal" });
   const [teamForm, setTeamForm] = useState({ name: "", manager_id: "" });
-  const [ruleForm, setRuleForm] = useState({ team_id: "", segment_id: "", priority: 1 });
+  const [ruleForm, setRuleForm] = useState({ team_id: "", segment_id: "", priority: 1, is_express: false });
   const [ruleRegionIds, setRuleRegionIds] = useState<string[]>([]);
   const [ruleProductIds, setRuleProductIds] = useState<string[]>([]);
   const [ruleSellerIds, setRuleSellerIds] = useState<string[]>([]);
@@ -84,7 +84,7 @@ export default function SettingsPage() {
   async function addProduct(e: React.FormEvent) {
     e.preventDefault();
     const syns = productForm.synonyms.split(",").map(s => s.trim()).filter(Boolean);
-    const payload: any = { name: productForm.name, synonyms: syns, is_express_eligible: productForm.is_express_eligible, express_max_qty: productForm.express_max_qty || null };
+    const payload: any = { name: productForm.name, synonyms: syns };
     if (productForm.brand_id) payload.brand_id = productForm.brand_id;
     
     if (editingProduct) {
@@ -98,7 +98,7 @@ export default function SettingsPage() {
       flash("✔ Produto criado!");
     }
     
-    setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); 
+    setProductForm({ name: "", synonyms: "", brand_id: "" }); 
     loadAll();
   }
   async function deleteProduct(id: string) {
@@ -209,10 +209,8 @@ export default function SettingsPage() {
       flash("⚠️ Selecione ao menos um vendedor!"); return;
     }
     const payload: any = {
-      priority: ruleForm.priority,
-      region_ids: ruleRegionIds,
-      product_ids: ruleProductIds,
       seller_ids: ruleSellerIds,
+      is_express: ruleForm.is_express,
       last_seller_index: editingRule ? editingRule.last_seller_index : 0,
     };
     if (ruleForm.team_id) payload.team_id = ruleForm.team_id;
@@ -309,24 +307,17 @@ export default function SettingsPage() {
               <div className="sticky top-[80px] z-10 bg-[#0a0a0a] pb-4">
                 <form onSubmit={addProduct} className="bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 space-y-3 shadow-xl">
                   <h3 className="font-bold text-sm">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
-                  <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
-                  <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
+                    <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
+                  </div>
                   <select value={productForm.brand_id} onChange={e => setProductForm({...productForm, brand_id: e.target.value})} className={inputCls}>
                     <option value="">Marca (automática)</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
-                  <div className="flex gap-3 items-center">
-                    <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input type="checkbox" checked={productForm.is_express_eligible} onChange={e => setProductForm({...productForm, is_express_eligible: e.target.checked})} className="accent-green-500" />
-                      Elegível para EXPRESS
-                    </label>
-                  </div>
-                  {productForm.is_express_eligible && (
-                    <input type="text" value={productForm.express_max_qty} onChange={e => setProductForm({...productForm, express_max_qty: e.target.value})} placeholder="Qtd máx EXPRESS (ex: até 10 peças ou 20m2)" className={inputCls} />
-                  )}
                   <div className="flex gap-3">
                     <button type="submit" className={`${btnCls} bg-green-700 flex-1`}>{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
-                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", express_max_qty: "", is_express_eligible: false }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
+                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "" }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
                   </div>
                   {msg && tab === 'products' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
                 </form>
@@ -338,10 +329,8 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-sm">{p.name}</h4>
                         {p.brands?.name && <span className="text-[10px] bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded">{p.brands.name}</span>}
-                        {p.is_express_eligible && <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">EXPRESS</span>}
                       </div>
                       {(p.synonyms || []).length > 0 && <p className="text-[10px] text-gray-500 mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
-                      {p.express_max_qty && <p className="text-[10px] text-yellow-500 mt-0.5">Limite: {p.express_max_qty}</p>}
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 ml-2">
                       <button 
@@ -350,9 +339,7 @@ export default function SettingsPage() {
                           setProductForm({
                             name: p.name,
                             synonyms: (p.synonyms || []).join(", "),
-                            brand_id: p.brand_id || "",
-                            express_max_qty: p.express_max_qty || "",
-                            is_express_eligible: p.is_express_eligible || false
+                            brand_id: p.brand_id || ""
                           });
                         }} 
                         className="text-[10px] bg-gray-800 px-2 py-1 rounded"
@@ -624,21 +611,34 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  {/* Prioridade */}
-                  <div>
-                    <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">
-                      Prioridade
-                      <span className="ml-2 text-gray-600 normal-case font-normal">
-                        — menor número = maior prioridade (1 = primeira a ser testada)
-                      </span>
-                    </label>
-                    <input
-                      type="number"
-                      value={ruleForm.priority}
-                      onChange={e => setRuleForm({...ruleForm, priority: parseInt(e.target.value) || 1})}
-                      className={`${inputCls} w-24`}
-                      min={1}
-                    />
+                  {/* Prioridade e Express */}
+                  <div className="grid grid-cols-2 gap-3 items-end">
+                    <div>
+                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">
+                        Prioridade
+                        <span className="ml-2 text-gray-600 normal-case font-normal">
+                          — menor número = maior prioridade
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        value={ruleForm.priority}
+                        onChange={e => setRuleForm({...ruleForm, priority: parseInt(e.target.value) || 1})}
+                        className={`${inputCls} w-full`}
+                        min={1}
+                      />
+                    </div>
+                    <div className="pb-2">
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          checked={ruleForm.is_express} 
+                          onChange={e => setRuleForm({...ruleForm, is_express: e.target.checked})} 
+                          className="w-4 h-4 accent-green-500" 
+                        />
+                        <span className="text-sm font-bold text-green-400 group-hover:text-green-300">Regra de Atendimento EXPRESS</span>
+                      </label>
+                    </div>
                   </div>
 
                   <div className="flex gap-3">
@@ -684,6 +684,9 @@ export default function SettingsPage() {
                           {sellerDisplay.filter(Boolean).length > 1 && (
                             <span className="text-[10px] text-purple-500 px-1">🎰 rodízio</span>
                           )}
+                          {r.is_express && (
+                            <span className="text-[10px] bg-green-900/50 text-green-400 px-2 py-0.5 rounded font-bold border border-green-500/30 ml-2">EXPRESS</span>
+                          )}
                         </div>
                         {/* Região e Produto */}
                         <div className="flex flex-wrap gap-1 mb-1">
@@ -713,7 +716,8 @@ export default function SettingsPage() {
                             setRuleForm({
                               team_id: r.team_id || "",
                               segment_id: r.segment_id || "",
-                              priority: r.priority || 1
+                              priority: r.priority || 1,
+                              is_express: r.is_express || false
                             });
                             setRuleRegionIds(r.region_ids || []);
                             setRuleProductIds(r.product_ids || []);

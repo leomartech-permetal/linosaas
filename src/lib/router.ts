@@ -67,7 +67,6 @@ export async function resolverSegmento(aplicacao: string) {
 
 /** Verifica se é EXPRESS (Regras Flexíveis via Banco de Dados) */
 export async function isExpress(product: any, variables: LeadVariables): Promise<boolean> {
-  if (!product?.is_express_eligible) return false;
 
   // 1. Buscar regras no banco
   const brand = product?.brands?.name?.toUpperCase();
@@ -148,7 +147,7 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
   // 6. Buscar regra de roteamento — prioriza novos campos array, fallback legado
   const { data: allRules } = await supabase
     .from('routing_rules')
-    .select('id, assigned_user_id, seller_ids, last_seller_index, region_ids, product_ids, segment_id, region, product_id, priority')
+    .select('id, assigned_user_id, seller_ids, last_seller_index, region_ids, product_ids, segment_id, region, product_id, priority, is_express')
     .order('priority', { ascending: true });
 
   let matchedRule: any = null;
@@ -172,6 +171,10 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
 
       // --- Critério: Segmento ---
       if (r.segment_id && segment?.id !== r.segment_id) continue;
+
+      // --- Critério: EXPRESS ---
+      // Se a regra é Express, só bate se o lead for Express
+      if (r.is_express && !express) continue;
 
       matchedRule = r;
       break;
