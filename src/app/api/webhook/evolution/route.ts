@@ -163,13 +163,31 @@ export async function POST(request: Request) {
         const aiResult = await processLeadWithSkills(history || []);
         
         if (aiResult && !aiResult.erro_openai) {
-          const { resposta_whatsapp, variaveis } = aiResult;
+          const resposta_whatsapp = aiResult.resposta_whatsapp;
+          const acao_executada = (aiResult.acao_executada || '').toLowerCase();
+          
+          const variaveis = {
+            produto: aiResult.demanda?.produto_familia || aiResult.demanda?.produto_modelo || null,
+            ddd: aiResult.cliente?.ddd_regiao || null,
+            quantidade: aiResult.demanda?.quantidade_metragem || null,
+            aplicacao: aiResult.demanda?.segmento_aplicacao || null,
+            nome_cliente: aiResult.cliente?.nome || null,
+            empresa: aiResult.cliente?.empresa || null,
+            cnpj: aiResult.cliente?.cnpj || null,
+            email: aiResult.cliente?.email || null,
+            segmento_detectado: aiResult.demanda?.segmento_aplicacao || null
+          };
           
           const leadUpdate: any = { updated_at: new Date().toISOString() };
-          if (variaveis?.produto) leadUpdate.detected_product = variaveis.produto;
-          if (variaveis?.ddd) leadUpdate.detected_ddd = variaveis.ddd;
-          if (variaveis?.empresa) leadUpdate.company = variaveis.empresa;
-          if (variaveis?.nome_cliente) leadUpdate.name = variaveis.nome_cliente;
+          if (variaveis.produto) leadUpdate.detected_product = variaveis.produto;
+          if (variaveis.ddd) leadUpdate.detected_ddd = variaveis.ddd;
+          if (variaveis.empresa) leadUpdate.company = variaveis.empresa;
+          if (variaveis.nome_cliente) leadUpdate.name = variaveis.nome_cliente;
+          
+          if (acao_executada.includes('outro_setor')) {
+            leadUpdate.status = 'CANCELED';
+          }
+          
           await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
 
           if (resposta_whatsapp) {
@@ -179,9 +197,19 @@ export async function POST(request: Request) {
             }
           }
 
-          if (!!variaveis?.produto && (variaveis?.ddd?.length >= 2 || variaveis?.cidade?.length > 3)) {
-            await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, "Estou te transferindo para o especialista agora...");
-            await routeLead(lead.id, lead.tenant_id, variaveis);
+          if (acao_executada.includes('outro_setor')) {
+            const msgSetores = "Vou te passar os contatos dos nossos outros departamentos:\n\n*COMEX:* Janaina Coelho - +55 16 3518-7115\n*Compras:* Vitor de Faria - +55 16 3518-7111\n*Logística:* André - +55 16 3518-7193\n*RH:* Margarida - +55 16 3518-7136\n*Outros:* Fabiana Martins - +55 16 99798-0918";
+            if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
+              await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgSetores);
+            }
+          } else {
+            const isRouting = acao_executada.includes('roteamento') || acao_executada.includes('encaminhar') || acao_executada.includes('transfer');
+            if (isRouting && variaveis?.produto && variaveis?.ddd) {
+              if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
+                await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, "Estou te transferindo para o especialista agora...");
+              }
+              await routeLead(lead.id, lead.tenant_id, variaveis);
+            }
           }
         }
       } else if (lead.status === 'WAITING_SELLER' || lead.status === 'SENT_TO_SELLER' || lead.status === 'SELLER_RECEIVED' || lead.status === 'ATTENDANCE_STARTED') {

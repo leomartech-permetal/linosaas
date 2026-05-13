@@ -59,46 +59,44 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
   const extractionPrompt = `${systemContext}
 
 ---
-TAREFA: Você é o Chatbot "Lino", assistente comercial da Permetal. Seu objetivo é conversar naturalmente no WhatsApp para QUALIFICAR o lead antes de passar para um vendedor.
+INSTRUÇÃO FINAL E FORMATO DE SAÍDA OBRIGATÓRIO:
+Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. Inclua sua resposta ao cliente no campo "resposta_whatsapp" (ou deixe vazio se não for responder nada), e os dados internos no formato definido no seu prompt de sistema:
 
-⚠️ REGRAS OBRIGATÓRIAS:
-
-1. **SAUDAÇÕES**: Se o usuário apenas disser "oi", "olá", "bom dia" ou similar, responda APENAS com uma saudação amigável e pergunte como pode ajudar. 
-   - EXEMPLO: "Olá! Sou o Lino, assistente da Permetal. Como posso te ajudar hoje?"
-   - NUNCA assuma que ele quer um produto específico (como chapa ou piso) se ele não disse.
-
-2. **IDENTIFICAÇÃO DE PRODUTO**: Só registre o produto se o cliente mencionar explicitamente algo do catálogo ou relacionado. Se não souber, mantenha "produto": null.
-
-3. **FLUXO DE QUALIFICAÇÃO**:
-   - Primeiro: Identifique o PRODUTO.
-   - Segundo: Identifique a REGIÃO/CIDADE/DDD.
-   - Terceiro: Pergunte a QUANTIDADE ou MEDIDAS.
-
-4. **TRANSFERÊNCIA**: Só diga que vai transferir quando tiver pelo menos o PRODUTO e a REGIÃO.
-
-5. **SUPERVISÃO INTERNA**: Antes de gerar a resposta, revise o histórico. Se o cliente disse que NÃO quer algo, nunca insista nesse item. Se ele corrigiu você, peça desculpas e siga o novo contexto.
-
-6. **RESPOSTA CURTA**: Seja direto e amigável. Use emojis moderadamente.
-
-Devolva EXCLUSIVAMENTE JSON:
 {
   "resposta_whatsapp": "sua mensagem para o cliente",
-  "variaveis": {
-    "produto": "nome do produto detectado ou null",
-    "ddd": "DDD detectado ou null",
-    "quantidade": "quantidade bruta detectada ou null",
-    "m2": "área total em metros quadrados (número ou null)",
-    "pecas_2x1": "número de peças 2x1m detectadas ou null",
-    "pecas_3x1": "número de peças 3x1m detectadas ou null",
-    "m_lineares": "metros lineares detectados (para gradil/metalgrade) ou null",
-    "cidade": "cidade detectada ou null",
-    "material": "carbono, inox, galvanizado ou null",
-    "empresa": "nome da empresa ou null",
-    "nome_cliente": "nome da pessoa ou null"
-  }
+  "intent": "",
+  "confidence": "",
+  "cliente": {
+    "nome": "",
+    "empresa": "",
+    "cnpj": "",
+    "email": "",
+    "telefone": "",
+    "ddd_regiao": "",
+    "canal_origem": ""
+  },
+  "demanda": {
+    "produto_familia": "",
+    "produto_modelo": "",
+    "marca_linha": "",
+    "segmento_aplicacao": "",
+    "quantidade_metragem": "",
+    "material": "",
+    "acabamento": "",
+    "dimensoes": "",
+    "tem_projeto_anexo": "",
+    "urgencia": ""
+  },
+  "rag": {
+    "consultado": false,
+    "fontes": [],
+    "confianca": "",
+    "observacao": ""
+  },
+  "acao_executada": "",
+  "observacoes": ""
 }
-
-⚠️ DICA: Se o cliente falar "preciso de 20m2" ou "12 chapas de 2x1", extraia o valor numérico para o campo correspondente. Se for Metalgrade/Gradil, use m_lineares.`;
+`;
 
   const messages: ChatMessage[] = [
     { role: 'system', content: extractionPrompt }
