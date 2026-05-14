@@ -204,7 +204,7 @@ export default function SaaSPage() {
               if (confirm('Tem certeza que deseja apagar o histórico de testes do número 5516991415319?')) {
                 const res = await fetch('/api/test/clear-history', {
                   method: 'POST',
-                  body: JSON.stringify({ phone: '5516991415319' }),
+                  body: JSON.stringify({ whatsapp_number: '5516991415319' }),
                   headers: { 'Content-Type': 'application/json' }
                 });
                 if (res.ok) alert('Histórico apagado! O Lino vai iniciar uma nova conversa no próximo Oi.');
