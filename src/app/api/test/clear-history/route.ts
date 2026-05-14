@@ -9,18 +9,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Número de WhatsApp é obrigatório' }, { status: 400 });
     }
 
-    // Formata o número se necessário (garante que tenha @s.whatsapp.net)
-    const remoteJid = whatsapp_number.includes('@') ? whatsapp_number : `${whatsapp_number}@s.whatsapp.net`;
+    // Tenta múltiplos formatos para achar o lead
+    const rawNumber = whatsapp_number.replace(/\D/g, ''); // só dígitos
+    const formats = [
+      `${rawNumber}@s.whatsapp.net`,
+      `55${rawNumber}@s.whatsapp.net`,
+      rawNumber,
+      `55${rawNumber}`,
+    ];
 
-    // 1. Buscar o lead
-    const { data: lead, error: leadError } = await supabase
-      .from('leads')
-      .select('id')
-      .eq('whatsapp_number', remoteJid)
-      .single();
+    let lead: any = null;
+    for (const fmt of formats) {
+      const { data } = await supabase.from('leads').select('id, whatsapp_number').eq('whatsapp_number', fmt).single();
+      if (data) { lead = data; break; }
+    }
 
-    if (leadError || !lead) {
-      return NextResponse.json({ error: 'Lead não encontrado' }, { status: 404 });
+    if (!lead) {
+      return NextResponse.json({ error: `Lead não encontrado para número: ${whatsapp_number}` }, { status: 404 });
     }
 
     // 2. Deletar interações
@@ -33,12 +38,18 @@ export async function POST(request: Request) {
       throw deleteInteractionsError;
     }
 
-    // 3. Resetar status do lead
+    // 3. Resetar status do lead e reativar bot
     const { error: updateLeadError } = await supabase
       .from('leads')
       .update({ 
         status: 'SDR_QUALIFICATION',
-        // Opcionalmente limpar outras variáveis se existirem colunas específicas
+        bot_active: true,
+        detected_product: null,
+        detected_ddd: null,
+        name: null,
+        company: null,
+        current_owner_id: null,
+        updated_at: new Date().toISOString()
       })
       .eq('id', lead.id);
 
