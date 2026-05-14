@@ -70,6 +70,13 @@ export async function POST(request: Request) {
       if (!lead) return NextResponse.json({ status: 'error', reason: 'LEAD_NOT_FOUND_AFTER_INSERT' });
       if (!lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'LEAD_BOT_PAUSED' });
 
+      // Se o lead estava cancelado ou finalizado e mandou nova mensagem, recomeça o fluxo
+      if (lead.status === 'CANCELED' || lead.status === 'FINISHED' || lead.status === 'OTHER_DEPARTMENT') {
+        console.log(`[Webhook] Reativando lead ${remoteJid} que estava ${lead.status}`);
+        await supabase.from('leads').update({ status: 'SDR_QUALIFICATION', updated_at: new Date().toISOString() }).eq('id', lead.id);
+        lead.status = 'SDR_QUALIFICATION';
+      }
+
       // 4. PROCESSAMENTO MULTIMODAL
       const openaiKey = globalConfig?.openai_key;
       const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
