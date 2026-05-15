@@ -51,12 +51,20 @@ export async function POST(request: Request) {
 
       // 3. BUSCAR/CRIAR LEAD
       let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
+      
+      // Buscar tenant_id real (não o ID da config)
+      let actualTenantId = globalConfig?.tenant_id;
+      if (!actualTenantId) {
+        const { data: tenant } = await supabase.from('tenants').select('id').limit(1).single();
+        actualTenantId = tenant?.id;
+      }
+
       if (!lead) {
         console.log('[Webhook] Criando novo lead para:', remoteJid);
         const { data: newLead, error: insertError } = await supabase.from('leads').insert([{ 
           whatsapp_number: remoteJid, 
           status: 'SDR_QUALIFICATION', 
-          tenant_id: globalConfig?.id,
+          tenant_id: actualTenantId,
           bot_active: true // Forçar ativo na criação
         }]).select().single();
         
