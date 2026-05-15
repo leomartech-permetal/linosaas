@@ -147,27 +147,30 @@ export async function POST(request: Request) {
         .from('conversation_buffers')
         .select('id')
         .eq('lead_id', lead.id)
-        .gt('created_at', bufferEntry.created_at)
+        .gt('id', bufferEntry.id)
         .eq('processed', false);
 
       if (newerMessages && newerMessages.length > 0) {
+        console.log(`[Webhook] Mensagem ${bufferEntry.id} ignorada (há mensagens mais novas)`);
         return NextResponse.json({ status: 'success', detail: 'WAITING_FOR_MORE_MESSAGES' });
       }
 
-      const { data: allUnprocessed } = await supabase
+      // Atômico: Marcar como processado e pegar todas as pendentes
+      const { data: allUnprocessed, error: updateError } = await supabase
         .from('conversation_buffers')
-        .select('*')
+        .update({ processed: true })
         .eq('lead_id', lead.id)
         .eq('processed', false)
+        .select('*')
         .order('created_at', { ascending: true });
 
-      if (!allUnprocessed || allUnprocessed.length === 0) return NextResponse.json({ status: 'ignored' });
-
-      await supabase.from('conversation_buffers').update({ processed: true }).eq('lead_id', lead.id).eq('processed', false);
+      if (updateError || !allUnprocessed || allUnprocessed.length === 0) {
+        return NextResponse.json({ status: 'ignored', reason: 'already_processed_by_another_instance' });
+      }
 
       const fullContext = allUnprocessed.map(m => m.content).filter(Boolean).join(' | ');
 
-      // 6. SALVAR INTERAÇÃO
+      // 6. SALVAR INTERAÇÃO E LOG DE DECISÃO
       await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: fullContext }]);
 
       // 7. LÓGICA DE RESPOSTA (SDR OU ESPERA)
@@ -175,11 +178,27 @@ export async function POST(request: Request) {
         const { data: historyData } = await supabase.from('interactions').select('sender_type, message_content').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(15);
         const history = (historyData || []).reverse();
 
-        const aiResult = await processLeadWithSkills(history || []);
+        const aiResult = await processLeadWithSkills(history || [], lead.id);
         
         if (aiResult && !aiResult.erro_openai) {
           const resposta_whatsapp = aiResult.resposta_whatsapp;
           const acao_executada = (aiResult.acao_executada || '').toLowerCase();
+          const skill_usada = aiResult.skill_usada || 'SDR_GENERAL';
+
+          // Log de Auditoria (Estilo n8n)
+          await supabase.from('debug_logs').insert([{
+            lead_id: lead.id,
+            level: 'DEBUG',
+            module: 'AI_SDR',
+            action: `Skill: ${skill_usada}`,
+            details: {
+              intent: aiResult.intent,
+              acao: acao_executada,
+              dados_coletados: aiResult.cliente,
+              demanda: aiResult.demanda,
+              observacoes: aiResult.observacoes
+            }
+          }]);
           
           const variaveis = {
             produto: aiResult.demanda?.produto_familia || aiResult.demanda?.produto_modelo || null,

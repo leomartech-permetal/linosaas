@@ -44,7 +44,7 @@ export interface ChatMessage {
   content: string;
 }
 
-export async function processLeadWithSkills(history: { sender_type: string, message_content: string }[]) {
+export async function processLeadWithSkills(history: { sender_type: string, message_content: string }[], leadId?: string) {
   // 1. Buscar configuração e chave
   const { data: config } = await supabase.from('tenant_config').select('*').limit(1).single();
   const apiKey = config?.openai_key || process.env.OPENAI_API_KEY;
@@ -60,10 +60,12 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
 
 ---
 INSTRUÇÃO FINAL E FORMATO DE SAÍDA OBRIGATÓRIO:
-Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. Inclua sua resposta ao cliente no campo "resposta_whatsapp" (ou deixe vazio se não for responder nada), e os dados internos no formato definido no seu prompt de sistema:
+Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. 
+IMPORTANTE: Não ofereça o roteamento ou transferência para o especialista ANTES de ter coletado os dados básicos de cadastro (Nome, Empresa, CNPJ ou E-mail), a menos que o cliente se recuse explicitamente.
 
 {
   "resposta_whatsapp": "sua mensagem para o cliente",
+  "skill_usada": "nome_da_skill_que_gerou_a_resposta",
   "intent": "",
   "confidence": "",
   "cliente": {
