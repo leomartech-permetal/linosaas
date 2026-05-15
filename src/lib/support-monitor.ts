@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { generateSupportResponse } from './openai';
 import {
   notifySellerAboutLead,
   notifySupervisor,
@@ -367,16 +368,18 @@ async function decideActionByStatus(
         };
       }
 
-      // Retornos anteriores - cobrar vendedor urgentemente
+      // Retornos anteriores ou primeiro retorno - USAR IA PARA RESPONDER
+      const { data: interactionData } = await supabase.from('interactions').select('sender_type, message_content').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(10);
+      const aiResponse = await generateSupportResponse(lead, (interactionData || []).reverse(), returnCount >= 1 ? 'COBRANÇA_URGENTE' : 'PRIMEIRO_RETORNO');
+      
       if (returnCount >= 1) {
         await notifySellerUrgent(lead, returnCount);
         return {
           action: 'NOTIFY_SELLER_URGENT',
-          message: 'Entendo sua urgência. Já notifiquei novamente o vendedor. Vou acompanhar.'
+          message: aiResponse.message
         };
       }
 
-      // Primeiro retorno - notificar vendedor
       await notifySellerAboutLead(
         lead.current_owner?.users?.phone_number || '',
         lead.name || 'Lead',
@@ -385,7 +388,7 @@ async function decideActionByStatus(
       );
       return {
         action: 'NOTIFY_SELLER',
-        message: 'Obrigado por entrar em contato. Vou verificar o andamento do seu pedido com o vendedor.'
+        message: aiResponse.message
       };
     }
 

@@ -61,7 +61,11 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
 ---
 INSTRUÃ‡ÃƒO FINAL E FORMATO DE SAÃDA OBRIGATÃ“RIO:
 VocÃª deve devolver EXCLUSIVAMENTE um JSON vÃ¡lido com a seguinte estrutura. 
-IMPORTANTE: NÃ£o ofereÃ§a o roteamento ou transferÃªncia para o especialista ANTES de ter coletado os dados bÃ¡sicos de cadastro (Nome, Empresa, CNPJ ou E-mail), a menos que o cliente se recuse explicitamente.
+
+REGRAS CRÃTICAS DE QUALIFICAÃ‡ÃƒO:
+1. NÃƒO EXECUTE a aÃ§Ã£o de "roteamento" ou "transferir" se nÃ£o tiver coletado o NOME e a EMPRESA/CNPJ do cliente.
+2. Se o cliente pedir para falar com um humano prematuramente, responda: "Com certeza! Para que o especialista jÃ¡ te atenda com os preÃ§os e prazos prontos, me informe apenas seu Nome e Empresa/CNPJ, por favor."
+3. Seja um consultor tÃ©cnico, nÃ£o apenas um coletor de dados. Mostre conhecimento sobre os produtos da Permetal.
 
 {
   "resposta_whatsapp": "sua mensagem para o cliente",
@@ -131,5 +135,47 @@ IMPORTANTE: NÃ£o ofereÃ§a o roteamento ou transferÃªncia para o especialista ANT
   } catch (error: any) {
     console.error('[OpenAI Error]', error.message || error);
     return { erro_openai: error.message || 'Erro desconhecido na OpenAI' };
+  }
+}
+
+export async function generateSupportResponse(leadData: any, history: any[], actionType: string) {
+  const { data: config } = await supabase.from('tenant_config').select('*').limit(1).single();
+  const apiKey = config?.openai_key || process.env.OPENAI_API_KEY;
+  if (!apiKey) return { message: 'Estou verificando sua situação com nossa equipe.' };
+
+  const dynamicOpenai = new OpenAI({ apiKey });
+  
+  const systemPrompt = Você é o Lino Suporte, assistente da Permetal S.A. Sua função é tranquilizar o cliente de forma HUMANA enquanto o vendedor não chega.
+  
+  CONTEXTO ATUAL:
+  - Lead: 
+  - Vendedor: 
+  - Situação: 
+  
+  REGRAS DE OURO:
+  1. NÃO SEJA UM PAPAGAIO. Não use frases como 'Entendo sua urgência' ou 'Vou verificar'.
+  2. ANALISE O HISTÓRICO: Se o cliente estiver bravo, peça desculpas sinceras e explique que o time de vendas está com alta demanda, mas que você (Lino) está aqui para ajudar com dúvidas técnicas básicas se precisar.
+  3. Seja curto e direto. Máximo 2 frases.
+  4. Use o nome do vendedor () para mostrar que você sabe quem deveria estar atendendo.
+  
+  SAÍDA: Retorne apenas o texto da mensagem para o WhatsApp.;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...history.slice(-10).map(m => ({ 
+      role: m.sender_type === 'lead' ? 'user' : 'assistant', 
+      content: m.message_content 
+    }))
+  ];
+
+  try {
+    const response = await dynamicOpenai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: messages as any,
+      max_tokens: 200
+    });
+    return { message: response.choices[0].message.content || 'Estou acompanhando seu caso.' };
+  } catch (e) {
+    return { message: 'Um momento, estou verificando com o vendedor.' };
   }
 }
