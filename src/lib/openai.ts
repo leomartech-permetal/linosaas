@@ -141,24 +141,24 @@ REGRAS CR√çTICAS DE QUALIFICA√á√ÉO:
 export async function generateSupportResponse(leadData: any, history: any[], actionType: string) {
   const { data: config } = await supabase.from('tenant_config').select('*').limit(1).single();
   const apiKey = config?.openai_key || process.env.OPENAI_API_KEY;
-  if (!apiKey) return { message: 'Estou verificando sua situaÁ„o com nossa equipe.' };
+  if (!apiKey) return { message: "Estou verificando sua situa√ß√£o com nossa equipe." };
 
   const dynamicOpenai = new OpenAI({ apiKey });
   
-  const systemPrompt = VocÍ È o Lino Suporte, assistente da Permetal S.A. Sua funÁ„o È tranquilizar o cliente de forma HUMANA enquanto o vendedor n„o chega.
+  const systemPrompt = `Voc√™ √© o Lino Suporte, assistente da Permetal S.A. Sua fun√ß√£o √© tranquilizar o cliente de forma HUMANA enquanto o vendedor n√£o chega.
   
   CONTEXTO ATUAL:
-  - Lead: 
-  - Vendedor: 
-  - SituaÁ„o: 
+  - Lead: ${leadData.name || 'Cliente'}
+  - Vendedor: ${leadData.vendedor_nome || 'um especialista'}
+  - Situa√ß√£o: ${actionType}
   
   REGRAS DE OURO:
-  1. N√O SEJA UM PAPAGAIO. N„o use frases como 'Entendo sua urgÍncia' ou 'Vou verificar'.
-  2. ANALISE O HIST”RICO: Se o cliente estiver bravo, peÁa desculpas sinceras e explique que o time de vendas est· com alta demanda, mas que vocÍ (Lino) est· aqui para ajudar com d˙vidas tÈcnicas b·sicas se precisar.
-  3. Seja curto e direto. M·ximo 2 frases.
-  4. Use o nome do vendedor () para mostrar que vocÍ sabe quem deveria estar atendendo.
+  1. N√ÉO SEJA UM PAPAGAIO. N√£o use frases como "Entendo sua urg√™ncia" ou "Vou verificar".
+  2. ANALISE O HIST√ìRICO: Se o cliente estiver bravo, pe√ßa desculpas sinceras e explique que o time de vendas est√° com alta demanda, mas que voc√™ (Lino) est√° aqui para ajudar com d√∫vidas t√©cnicas b√°sicas se precisar.
+  3. Seja curto e direto. M√°ximo 2 frases.
+  4. Use o nome do vendedor (${leadData.vendedor_nome}) para mostrar que voc√™ sabe quem deveria estar atendendo.
   
-  SAÕDA: Retorne apenas o texto da mensagem para o WhatsApp.;
+  SA√çDA: Retorne apenas o texto da mensagem para o WhatsApp.`;
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -174,8 +174,8 @@ export async function generateSupportResponse(leadData: any, history: any[], act
       messages: messages as any,
       max_tokens: 200
     });
-    return { message: response.choices[0].message.content || 'Estou acompanhando seu caso.' };
+    return { message: response.choices[0].message.content || "Estou acompanhando seu caso." };
   } catch (e) {
-    return { message: 'Um momento, estou verificando com o vendedor.' };
+    return { message: "Um momento, estou verificando com o vendedor." };
   }
 }
