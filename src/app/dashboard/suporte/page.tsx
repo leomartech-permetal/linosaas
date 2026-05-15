@@ -33,7 +33,9 @@ export default function SupportDashboard() {
     setLoading(true);
     
     // 1. Leads em espera e Críticos
-    const { data: leads } = await supabase.from('leads').select('*, admin_users(name)');
+    const { data: leads } = await supabase
+      .from('leads')
+      .select('*, admin_users:current_owner_id(name)');
     const waiting = leads?.filter(l => l.status === 'WAITING_SELLER') || [];
     
     // 2. Gargalos
@@ -58,7 +60,10 @@ export default function SupportDashboard() {
     const chartData = Object.keys(btGroups || {}).map(key => ({ name: key, value: btGroups[key] }));
 
     // Escalações
-    const { data: esc } = await supabase.from('supervisor_escalations').select('*, leads(name), admin_users(name)').order('created_at', { ascending: false });
+    const { data: esc } = await supabase
+      .from('supervisor_escalations')
+      .select('*, leads(name), admin_users:user_id(name)')
+      .order('created_at', { ascending: false });
 
     setStats({
       totalLeads: total,

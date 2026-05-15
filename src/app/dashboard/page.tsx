@@ -26,8 +26,17 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: leadsData } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
-      const { data: bData } = await supabase.from("attendance_bottlenecks").select("*, leads(name)").order("created_at", { ascending: false }).limit(5);
+      // Busca leads com join simples para o vendedor
+      const { data: leadsData } = await supabase
+        .from("leads")
+        .select("*, admin_users!leads_current_owner_id_fkey(name)")
+        .order("created_at", { ascending: false });
+
+      const { data: bData } = await supabase
+        .from("attendance_bottlenecks")
+        .select("*, leads(name)")
+        .order("created_at", { ascending: false })
+        .limit(5);
       
       if (leadsData) setLeads(leadsData);
       if (bData) setBottlenecks(bData);
@@ -197,6 +206,7 @@ export default function DashboardPage() {
                     <th className="p-6">Lead / Identidade</th>
                     <th className="p-6">Inteligência de Venda</th>
                     <th className="p-6">Status Operacional</th>
+                    <th className="p-6">Vendedor Responsável</th>
                     <th className="p-6 text-right">Data de Entrada</th>
                   </tr>
                 </thead>
@@ -228,6 +238,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="p-6 text-right text-[10px] font-black text-gray-600 uppercase">
+                        <div className="mb-1">{(lead as any).admin_users?.name || "Sem Vendedor"}</div>
                         {new Date(lead.created_at).toLocaleDateString("pt-BR")}
                       </td>
                     </tr>
