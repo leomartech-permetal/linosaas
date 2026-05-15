@@ -338,7 +338,7 @@ ${resumo}
       module: 'ROUTER',
       action: `Notificação enviada para ${seller.name}`,
       details: { seller_whatsapp: seller.whatsapp_number, status: response.status, ticket: ticketCode }
-    }]).catch(() => {});
+    }]).then(() => {});
     
   } catch (err: any) {
     console.error(`[Roteador] Erro ao enviar notificação para ${seller.name}:`, err.message);
