@@ -211,10 +211,17 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
     }
   }
 
-  // 8. Atualizar lead
+  // 8.2 Fallback de Emergência: se ainda estiver null, pega o primeiro admin/vendedor ativo
+  if (!assignedUserId) {
+    const { data: firstUser } = await supabase.from('admin_users').select('id').limit(1).single();
+    assignedUserId = firstUser?.id || null;
+  }
+
+  // 8.3 Atualizar lead com timestamp de envio
   await supabase.from('leads').update({
     current_owner_id: assignedUserId,
     status: 'WAITING_SELLER',
+    sent_to_seller_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }).eq('id', leadId);
 

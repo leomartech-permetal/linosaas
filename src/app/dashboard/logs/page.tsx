@@ -21,12 +21,23 @@ export default function LogsPage() {
 
   async function loadLogs() {
     setLoading(true);
-    const { data } = await supabase
+    // 1. Busca logs puros
+    const { data: logsData } = await supabase
       .from("debug_logs")
-      .select("*, leads(name, whatsapp_number)")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(100);
-    if (data) setLogs(data);
+    
+    // 2. Busca leads relacionados separadamente
+    const { data: leadsData } = await supabase.from("leads").select("id, name, whatsapp_number");
+    
+    if (logsData) {
+      const mapped = logsData.map(log => ({
+        ...log,
+        leads: leadsData?.find(l => l.id === log.lead_id)
+      }));
+      setLogs(mapped);
+    }
     setLoading(false);
   }
 
