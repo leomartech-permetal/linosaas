@@ -181,40 +181,63 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
     }
   }
 
-  // 7. Selecionar vendedor: round-robin ou legado
+  // 7. Selecionar vendedor via Round-Robin
+  // Critério de "ativo": ter whatsapp_number cadastrado no perfil do usuário
+  // (instâncias são apenas para monitorar o pipeline, não para roteamento)
   let assignedUserId: string | null = null;
+
+  // Buscar todos os vendedores que têm WhatsApp cadastrado (ativo para receber leads)
+  const { data: sellersWithWhatsapp } = await supabase
+    .from('admin_users')
+    .select('id')
+    .not('whatsapp_number', 'is', null)
+    .neq('whatsapp_number', '');
+  const activeSellerIds = sellersWithWhatsapp?.map(s => s.id) || [];
+
   if (matchedRule) {
     const sellerIds: string[] = matchedRule.seller_ids || [];
-    if (sellerIds.length > 0) {
+    // Filtra apenas os que têm WhatsApp cadastrado
+    const availableSellers = sellerIds.filter(id => activeSellerIds.includes(id));
+
+    if (availableSellers.length > 0) {
       // ROUND-ROBIN: seleciona o próximo da fila
-      const idx = (matchedRule.last_seller_index || 0) % sellerIds.length;
-      assignedUserId = sellerIds[idx];
-      // Incrementa índice no banco (não aguarda para não bloquear)
+      const idx = (matchedRule.last_seller_index || 0) % availableSellers.length;
+      assignedUserId = availableSellers[idx];
+      
       supabase
         .from('routing_rules')
-        .update({ last_seller_index: idx + 1 })
+        .update({ last_seller_index: (matchedRule.last_seller_index || 0) + 1 })
         .eq('id', matchedRule.id)
-        .then(() => console.log(`[Roteador] Round-robin: vendedor idx ${idx} de ${sellerIds.length}`));
-    } else {
-      // Fallback legado
-      assignedUserId = matchedRule.assigned_user_id || null;
+        .then(() => console.log(`[Roteador] Round-robin: vendedor ${assignedUserId} (idx ${idx} de ${availableSellers.length})`));
+    } else if (matchedRule.assigned_user_id) {
+      assignedUserId = matchedRule.assigned_user_id;
     }
   }
 
-  // 8. Fallback: buscar qualquer vendedor da equipe via team
+  // 8. Fallback por Equipe: qualquer um da equipe com WhatsApp cadastrado
   if (!assignedUserId) {
     const teamName = finalBrand || 'Construção';
     const { data: team } = await supabase.from('teams').select('id').ilike('name', `%${teamName}%`).limit(1).single();
     if (team) {
-      const { data: user } = await supabase.from('admin_users').select('id').eq('team_id', team.id).limit(1).single();
-      assignedUserId = user?.id || null;
+      const { data: teamUsers } = await supabase.from('admin_users').select('id').eq('team_id', team.id);
+      const available = teamUsers?.filter(u => activeSellerIds.includes(u.id));
+      if (available && available.length > 0) {
+        assignedUserId = available[0].id;
+        console.log(`[Roteador] Fallback Equipe: selecionado ${assignedUserId} com WhatsApp`);
+      }
     }
   }
 
-  // 8.2 Fallback de Emergência: se ainda estiver null, pega o primeiro admin/vendedor ativo
+  // 8.2 Fallback de Emergência: qualquer vendedor com WhatsApp ou primeiro admin
   if (!assignedUserId) {
-    const { data: firstUser } = await supabase.from('admin_users').select('id').limit(1).single();
-    assignedUserId = firstUser?.id || null;
+    if (activeSellerIds.length > 0) {
+      assignedUserId = activeSellerIds[0];
+      console.log(`[Roteador] Fallback Emergência: primeiro vendedor com WhatsApp: ${assignedUserId}`);
+    } else {
+      const { data: firstUser } = await supabase.from('admin_users').select('id').limit(1).single();
+      assignedUserId = firstUser?.id || null;
+      console.log(`[Roteador] AVISO: Nenhum vendedor com WhatsApp! Fallback estático: ${assignedUserId}`);
+    }
   }
 
   // 8.3 Atualizar lead com timestamp de envio
@@ -237,31 +260,37 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
   return { assignedUserId, product, region, segment, express, coleta, finalBrand };
 }
 
-/** Notificação de Elite para o Vendedor */
+/** Notificação de Elite para o Vendedor via Evolution API */
 async function sendSellerNotification(leadId: string, sellerId: string, variables: LeadVariables, brand: string) {
-  // 1. Buscar dados do vendedor
+  // 1. Buscar dados do vendedor — usa whatsapp_number do CADASTRO do usuário
   const { data: seller } = await supabase.from('admin_users').select('whatsapp_number, name').eq('id', sellerId).single();
-  if (!seller?.whatsapp_number) return;
+  if (!seller?.whatsapp_number) {
+    console.log(`[Roteador] Vendedor ${sellerId} sem whatsapp_number cadastrado. Notificação cancelada.`);
+    return;
+  }
 
-  // 2. Buscar dados brutos do lead
+  // 2. Buscar dados do lead
   const { data: lead } = await supabase.from('leads').select('whatsapp_number, name').eq('id', leadId).single();
   
-  // 3. Gerar código de atendimento curto
+  // 3. Buscar configurações da Evolution API
+  const { data: config } = await supabase.from('tenant_config').select('evolution_url, evolution_key, evolution_instance_name').limit(1).single();
+  if (!config?.evolution_url || !config?.evolution_key) {
+    console.log('[Roteador] Evolution API não configurada. Notificação cancelada.');
+    return;
+  }
+
   const ticketCode = `LINO.${leadId.split('-')[0].toUpperCase()}`;
-  
-  // 4. Buscar histórico resumido
   const { data: interactions } = await supabase.from('interactions')
     .select('message_content')
     .eq('lead_id', leadId)
     .order('created_at', { ascending: false })
     .limit(3);
   
-  const resumo = interactions?.reverse().map(i => i.message_content).join('\n') || 'Sem observações adicionais.';
+  const resumo = interactions?.reverse().map(i => i.message_content).join('\n') || 'Sem observações.';
   const whatsappUrl = `https://wa.me/${lead?.whatsapp_number?.replace(/\D/g, '')}`;
 
-  const message = `🔥 *NOVO LEAD* 🔥
-📌 *CÓDIGO DO ATENDIMENTO:* ${ticketCode}
-✅ Anote este código no cadastro do cliente.
+  const text = `🔥 *NOVO LEAD* 🔥
+📌 *CÓDIGO:* ${ticketCode}
 
 ━━━━━━━━━━━━━━━━━━━━
 *Cliente:* ${variables.nome_cliente || lead?.name || 'Não informado'}
@@ -272,21 +301,46 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
 
 *Produto:* ${variables.produto || 'Não informado'}
 *Segmento:* ${variables.segmento_detectado || 'Indústria'}
-*Localização:* ${variables.cidade || 'Não informado'} - ${variables.ddd || ''}
-
-*Marca (roteada):* ${brand.toUpperCase()}
+*Localização:* ${variables.cidade || 'Não informado'} (DDD ${variables.ddd || '?'})
+*Marca:* ${brand.toUpperCase()}
 ━━━━━━━━━━━━━━━━━━━━
 
-📝 *Resumo da conversa:*
+📝 *Resumo:*
 ${resumo}
 
-⏰ *Enviado em:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
-`;
+⏰ ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`;
 
-  // 5. Enviar via Evolution API
-  const { data: config } = await supabase.from('tenant_config').select('*').limit(1).single();
-  if (config?.evolution_url && config?.evolution_key) {
-    const { sendTextMessage } = require('./evolution-api');
-    await sendTextMessage(config.evolution_instance_name, config.evolution_url, config.evolution_key, seller.whatsapp_number, message);
+  // 4. Envio via HTTP POST direto na Evolution API
+  // Formato: POST {baseurl}message/sendText/{instancia}
+  // number = whatsapp_number do vendedor (cadastrado no perfil)
+  const url = `${config.evolution_url}message/sendText/${config.evolution_instance_name}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'apikey': config.evolution_key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        number: seller.whatsapp_number,
+        text
+      })
+    });
+    
+    const responseData = await response.json().catch(() => ({}));
+    console.log(`[Roteador] Notificação enviada para ${seller.name} (${seller.whatsapp_number}):`, response.status, responseData);
+    
+    // Registrar no log de auditoria
+    await supabase.from('debug_logs').insert([{
+      lead_id: leadId,
+      level: 'INFO',
+      module: 'ROUTER',
+      action: `Notificação enviada para ${seller.name}`,
+      details: { seller_whatsapp: seller.whatsapp_number, status: response.status, ticket: ticketCode }
+    }]).catch(() => {});
+    
+  } catch (err: any) {
+    console.error(`[Roteador] Erro ao enviar notificação para ${seller.name}:`, err.message);
   }
 }
