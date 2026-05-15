@@ -212,11 +212,24 @@ export async function POST(request: Request) {
             segmento_detectado: aiResult.demanda?.segmento_aplicacao || null
           };
           
-          const leadUpdate: any = { updated_at: new Date().toISOString() };
+          const leadUpdate: any = { 
+            updated_at: new Date().toISOString(),
+            last_skill_used: skill_usada
+          };
           if (variaveis.produto) leadUpdate.detected_product = variaveis.produto;
           if (variaveis.ddd) leadUpdate.detected_ddd = variaveis.ddd;
           if (variaveis.empresa) leadUpdate.company = variaveis.empresa;
           if (variaveis.nome_cliente) leadUpdate.name = variaveis.nome_cliente;
+          
+          // Novos mapeamentos para coerência total
+          if (variaveis.cnpj) leadUpdate.cnpj = variaveis.cnpj;
+          if (variaveis.email) leadUpdate.email_corporativo = variaveis.email;
+          if (aiResult.cliente?.cargo) leadUpdate.cargo = aiResult.cliente.cargo;
+          if (variaveis.quantidade) leadUpdate.quantidade = variaveis.quantidade;
+          if (aiResult.demanda?.especificacao_detalhada || aiResult.demanda?.acabamento) {
+            leadUpdate.especificacao = `${aiResult.demanda.especificacao_detalhada || ''} | ${aiResult.demanda.acabamento || ''} | ${aiResult.demanda.dimensoes || ''}`;
+          }
+          if (aiResult.cliente?.ddd_regiao) leadUpdate.detected_city = aiResult.cliente.ddd_regiao;
           
           if (acao_executada.includes('outro_setor')) {
             leadUpdate.status = 'CANCELED';
