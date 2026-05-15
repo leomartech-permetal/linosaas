@@ -95,21 +95,10 @@ async function processLead(
   const waitingSince = new Date(lead.updated_at || lead.created_at);
   const minutesWaiting = (Date.now() - waitingSince.getTime()) / 60000;
 
-  // Buscar dados do vendedor e do gestor da equipe
+  // Buscar dados do vendedor
   const { data: seller } = await supabase
     .from('admin_users')
-    .select(`
-      *,
-      teams (
-        id,
-        name,
-        manager:admin_users!teams_manager_id_fkey (
-          name,
-          email,
-          whatsapp_number
-        )
-      )
-    `)
+    .select('*')
     .eq('id', assignedUserId)
     .single();
 
@@ -254,32 +243,32 @@ export async function handleClientReturn(
 }> {
   console.log(`[Lino Suporte] 🔍 Processando retorno do cliente ${whatsappNumber}`);
 
-  // 1. Buscar lead pelo WhatsApp
+  // 1. Buscar lead pelo WhatsApp (Simples primeiro para evitar erro de join)
   const { data: lead, error: leadError } = await supabase
     .from('leads')
-    .select(`
-      *,
-      current_owner:admin_users(
-        name, 
-        whatsapp_number, 
-        team_id, 
-        teams(
-          id,
-          name,
-          manager:admin_users!teams_manager_id_fkey(name, whatsapp_number)
-        )
-      )
-    `)
+    .select('*, current_owner_id')
     .eq('whatsapp_number', whatsappNumber)
     .single();
 
   if (leadError || !lead) {
-    console.log('[Lino Suporte] Lead não encontrado — novo lead');
+    console.log('[Lino Suporte] Lead não encontrado ou erro:', leadError?.message);
     return { 
       action: 'NEW_LEAD', 
       message: 'Olá! Vou te ajudar. Para começar, me conta o que você precisa?' 
     };
   }
+
+  // Tenta buscar dados do dono separadamente
+  let currentOwner = null;
+  if (lead.current_owner_id) {
+    const { data: owner } = await supabase
+      .from('admin_users')
+      .select('name, whatsapp_number, team_id')
+      .eq('id', lead.current_owner_id)
+      .single();
+    currentOwner = owner;
+  }
+  lead.current_owner = currentOwner;
 
   // 2. Calcular tempo desde envio ao vendedor
   const sentTime = lead.sent_to_seller_at || lead.updated_at;
@@ -497,7 +486,16 @@ async function notifySellerUrgent(lead: any, returnCount: number): Promise<void>
  * Notifica supervisor urgentemente (quando vendedor não atende após múltiplas tentativas)
  */
 async function notifySupervisorUrgent(lead: any): Promise<void> {
-  const supervisor = (lead.current_owner?.teams as any)?.manager;
+  // Notificar supervisor urgentemente
+  // Busca o gerente do time de forma simples
+  const { data: team } = await supabase.from('teams').select('manager_id').eq('id', lead.current_owner?.team_id).single();
+  
+  let supervisor = null;
+  if (team?.manager_id) {
+    const { data: s } = await supabase.from('admin_users').select('name, whatsapp_number').eq('id', team.manager_id).single();
+    supervisor = s;
+  }
+
   if (!supervisor?.whatsapp_number) return;
 
   await notifySupervisor(
