@@ -9,6 +9,7 @@ const TABS = [
   { key: "teams", label: "Equipes", icon: "👥" },
   { key: "sellers", label: "Vendedores", icon: "🧑‍💼" },
   { key: "rules", label: "Regras", icon: "⚙️" },
+  { key: "cerebro", label: "Cérebro IA", icon: "🧠" },
 ];
 
 export default function SettingsPage() {
@@ -22,6 +23,16 @@ export default function SettingsPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [rules, setRules] = useState<any[]>([]);
+  const [tenantConfig, setTenantConfig] = useState<any>(null);
+  const [supportPrompt, setSupportPrompt] = useState("");
+  const [slaRules, setSlaRules] = useState({
+    max_wait_hours: 2,
+    retry_interval_minutes: 15,
+    max_retries: 3,
+    seller_notify_max: 3,
+    seller_notify_interval_minutes: 15
+  });
+  const [savingCerebro, setSavingCerebro] = useState(false);
 
   // Forms
   const [regionForm, setRegionForm] = useState({ name: "", ddd_codes: "" });
@@ -64,14 +75,33 @@ export default function SettingsPage() {
     if (u.data) setUsers(u.data);
     if (b.data) setBrands(b.data);
     if (rl.data) setRules(rl.data);
-    
     if (rl.error) console.error("Erro ao carregar regras:", rl.error);
     if (rl.data?.length === 0) console.log("Nenhuma regra encontrada no banco.");
+
+    // Carregar config do cérebro IA
+    const { data: cfg } = await supabase.from("tenant_config").select("*").limit(1).single();
+    if (cfg) {
+      setTenantConfig(cfg);
+      setSupportPrompt(cfg.support_prompt || "");
+      if (cfg.sla_rules) setSlaRules({ ...slaRules, ...cfg.sla_rules });
+    }
+
     setLoading(false);
   }
 
   function flash(t: string) { setMsg(t); setTimeout(() => setMsg(""), 3000); }
   function getName(list: any[], id: string) { return list.find(i => i.id === id)?.name || "—"; }
+
+  async function saveCerebro() {
+    if (!tenantConfig?.id) return;
+    setSavingCerebro(true);
+    const { error } = await supabase.from("tenant_config").update({
+      support_prompt: supportPrompt,
+      sla_rules: slaRules
+    }).eq("id", tenantConfig.id);
+    setSavingCerebro(false);
+    flash(error ? "Erro: " + error.message : "✔ Configurações do Cérebro IA salvas!");
+  }
 
   // REGION
   async function addRegion(e: React.FormEvent) {
@@ -800,6 +830,102 @@ export default function SettingsPage() {
                     </p>
                   )
                 }
+              </div>
+            </div>
+          {/* CÉREBRO IA */}
+          {tab === "cerebro" && (
+            <div className="space-y-6">
+              <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">🧠</span>
+                  <div>
+                    <h3 className="font-bold text-lg">Prompt do Lino Suporte</h3>
+                    <p className="text-xs text-gray-500">Define como a IA deve se comportar após o lead ser entregue ao vendedor.</p>
+                  </div>
+                </div>
+                
+                <textarea 
+                  value={supportPrompt} 
+                  onChange={e => setSupportPrompt(e.target.value)}
+                  className={`${inputCls} h-40 resize-none font-mono text-[13px] leading-relaxed mb-4`}
+                  placeholder="Ex: Você é o Lino Suporte da Permetal. Seja empático e ajude o cliente enquanto o vendedor não chega..."
+                />
+
+                <div className="border-t border-gray-800 pt-6 mt-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-2xl">🕒</span>
+                    <div>
+                      <h3 className="font-bold text-lg">Regras de SLA e Escalação</h3>
+                      <p className="text-xs text-gray-500">Configure os tempos de resposta e gatilhos de supervisão.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Tempo Máximo de Espera (Horas)</label>
+                        <input 
+                          type="number" 
+                          value={slaRules.max_wait_hours} 
+                          onChange={e => setSlaRules({...slaRules, max_wait_hours: parseInt(e.target.value)})}
+                          className={inputCls}
+                        />
+                        <p className="text-[10px] text-gray-600 mt-1">Tempo total antes de escalar para o supervisor.</p>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Intervalo de Cobrança (Minutos)</label>
+                        <input 
+                          type="number" 
+                          value={slaRules.retry_interval_minutes} 
+                          onChange={e => setSlaRules({...slaRules, retry_interval_minutes: parseInt(e.target.value)})}
+                          className={inputCls}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Máximo de Notificações ao Vendedor</label>
+                        <input 
+                          type="number" 
+                          value={slaRules.seller_notify_max} 
+                          onChange={e => setSlaRules({...slaRules, seller_notify_max: parseInt(e.target.value)})}
+                          className={inputCls}
+                        />
+                        <p className="text-[10px] text-gray-600 mt-1">Quantas vezes o Lino deve "cutucar" o vendedor.</p>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Intervalo entre Notificações (Minutos)</label>
+                        <input 
+                          type="number" 
+                          value={slaRules.seller_notify_interval_minutes} 
+                          onChange={e => setSlaRules({...slaRules, seller_notify_interval_minutes: parseInt(e.target.value)})}
+                          className={inputCls}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-gray-800">
+                  <button 
+                    onClick={saveCerebro} 
+                    disabled={savingCerebro}
+                    className={`${btnCls} bg-[hsl(var(--tenant-primary))] text-black text-base py-3 shadow-lg shadow-primary/20 flex items-center justify-center gap-2`}
+                  >
+                    {savingCerebro ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></span>
+                        Salvando...
+                      </>
+                    ) : "Salvar Configurações do Cérebro"}
+                  </button>
+                  {msg && <p className="text-center text-sm text-green-400 font-bold mt-4 animate-bounce">{msg}</p>}
+                </div>
+              </div>
+
+              <div className="bg-blue-900/10 border border-blue-900/30 p-4 rounded-lg text-xs text-blue-300 leading-relaxed">
+                <strong>💡 Como funciona:</strong> O Lino SDR qualifica o lead usando o Master Prompt e as Skills. Assim que o vendedor é atribuído, o sistema entra em modo de <strong>Monitoramento de Suporte</strong>. A IA passa a usar este Prompt de Suporte para manter o cliente engajado enquanto o vendedor não inicia o atendimento humano.
               </div>
             </div>
           )}
