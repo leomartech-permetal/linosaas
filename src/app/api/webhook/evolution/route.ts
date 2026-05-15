@@ -260,7 +260,21 @@ export async function POST(request: Request) {
           }
         }
       } else if (lead.status === 'WAITING_SELLER' || lead.status === 'SENT_TO_SELLER' || lead.status === 'SELLER_RECEIVED' || lead.status === 'ATTENDANCE_STARTED') {
-        // NOVA LÓGICA: Consultar estado REAL e decidir ação determinística
+        // LINO SUPORTE — só ativa APÓS vendedor estar realmente atribuído
+        // Regra: current_owner_id deve existir. Se não, SDR ainda não concluiu o roteamento.
+        if (!lead.current_owner_id) {
+          console.log(`[Webhook] Lead ${lead.id} em status de suporte mas SEM vendedor atribuído. Retornando ao SDR.`);
+          await supabase.from('leads').update({ status: 'SDR_QUALIFICATION', updated_at: new Date().toISOString() }).eq('id', lead.id);
+          
+          const msgSemVendedor = "Desculpe a demora! Vou verificar qual especialista está disponível agora e te aviso em breve.";
+          await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'sdr_ai', message_content: msgSemVendedor }]);
+          if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
+            await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgSemVendedor);
+          }
+          return NextResponse.json({ status: 'success', reason: 'REDIRECTED_TO_SDR_NO_SELLER' });
+        }
+
+        // Vendedor confirmado — Lino Suporte assume a conversa
         const result = await handleClientReturn(remoteJid, fullContext);
         
         console.log(`[Webhook] Lino Suporte ação: ${result.action}`);

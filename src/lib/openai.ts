@@ -144,27 +144,44 @@ export async function generateSupportResponse(leadData: any, history: any[], act
   if (!apiKey) return { message: "Estou verificando sua situação com nossa equipe." };
 
   const dynamicOpenai = new OpenAI({ apiKey });
-  
-  const systemPrompt = `Você é o Lino Suporte, assistente da Permetal S.A. Sua função é tranquilizar o cliente de forma HUMANA enquanto o vendedor não chega.
-  
-  CONTEXTO ATUAL:
-  - Lead: ${leadData.name || 'Cliente'}
-  - Vendedor: ${leadData.vendedor_nome || 'um especialista'}
-  - Situação: ${actionType}
-  
-  REGRAS DE OURO:
-  1. NÃO SEJA UM PAPAGAIO. Não use frases como "Entendo sua urgência" ou "Vou verificar".
-  2. ANALISE O HISTÓRICO: Se o cliente estiver bravo, peça desculpas sinceras e explique que o time de vendas está com alta demanda, mas que você (Lino) está aqui para ajudar com dúvidas técnicas básicas se precisar.
-  3. Seja curto e direto. Máximo 2 frases.
-  4. Use o nome do vendedor (${leadData.vendedor_nome}) para mostrar que você sabe quem deveria estar atendendo.
-  
-  SAÍDA: Retorne apenas o texto da mensagem para o WhatsApp.`;
+
+  // Buscar nome real do vendedor no banco
+  let vendedorNome = 'o especialista';
+  if (leadData.current_owner_id) {
+    const { data: seller } = await supabase
+      .from('admin_users')
+      .select('name')
+      .eq('id', leadData.current_owner_id)
+      .single();
+    if (seller?.name) vendedorNome = seller.name;
+  }
+
+  // Prompt separado de Suporte (lê do campo support_prompt da config, ou usa padrão)
+  const supportPromptBase = config?.support_prompt || `Você é o Lino Suporte, assistente da Permetal S.A.
+Você atua como ponte entre o cliente e o vendedor responsável pelo atendimento.
+Tom: humano, empático, direto. Máximo 2 frases por mensagem.`;
+
+  const systemPrompt = `${supportPromptBase}
+
+CONTEXTO DO ATENDIMENTO ATUAL:
+- Cliente: ${leadData.name || 'Cliente'}
+- Vendedor responsável: ${vendedorNome}
+- Situação: ${actionType}
+
+REGRAS OBRIGATÓRIAS:
+1. Nunca diga que não sabe quem é o vendedor — o vendedor é ${vendedorNome}.
+2. Nunca use frases prontas como "Entendo sua urgência" ou "Vou verificar".
+3. Se o cliente estiver bravo, reconheça o problema sem inventar justificativas.
+4. Nunca diga "alta demanda" sem ter certeza do contexto real.
+5. Não prometa prazos específicos.
+
+SAÍDA: Apenas o texto da mensagem para o WhatsApp.`;
 
   const messages = [
     { role: 'system', content: systemPrompt },
-    ...history.slice(-10).map(m => ({ 
-      role: m.sender_type === 'lead' ? 'user' : 'assistant', 
-      content: m.message_content 
+    ...history.slice(-10).map(m => ({
+      role: m.sender_type === 'lead' ? 'user' : 'assistant',
+      content: m.message_content
     }))
   ];
 
@@ -179,3 +196,4 @@ export async function generateSupportResponse(leadData: any, history: any[], act
     return { message: "Um momento, estou verificando com o vendedor." };
   }
 }
+
