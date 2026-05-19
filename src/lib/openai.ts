@@ -63,6 +63,7 @@ INSTRUÇÃO FINAL E FORMATO DE SAÍDA OBRIGATÓRIO:
 Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. O seu comportamento, as perguntas obrigatórias e as regras de transição devem obedecer ESTRITAMENTE o que foi configurado no Master Prompt e nas Skills acima. Não invente regras.
 
 {
+  "pensamento_critico": "<OBRIGATÓRIO: 1. Qual o produto? 2. Existe uma Habilidade Ativa (Skill) para este produto? 3. Eu JÁ acionei as perguntas técnicas dessa Skill? 4. Faltam especificações técnicas (furo, malha, espessura)?>",
   "resposta_whatsapp": "<sua mensagem para o cliente>",
   "skill_usada": "<nome_da_skill_que_gerou_a_resposta>",
   "intent": "<classificação da intenção>",
