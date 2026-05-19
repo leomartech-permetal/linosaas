@@ -832,6 +832,7 @@ export default function SettingsPage() {
                 }
               </div>
             </div>
+          )}
           {/* CÉREBRO IA */}
           {tab === "cerebro" && (
             <div className="space-y-6">
