@@ -125,7 +125,7 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. O s
   try {
     console.log(`[OpenAI] Enviando requisição com ${messages.length} mensagens.`);
     const response = await dynamicOpenai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: messages as any,
       response_format: { type: 'json_object' }
     });
@@ -189,7 +189,7 @@ SAÍDA: Apenas o texto da mensagem para o WhatsApp.`;
 
   try {
     const response = await dynamicOpenai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: messages as any,
       max_tokens: 200
     });
