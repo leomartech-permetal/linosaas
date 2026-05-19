@@ -17,11 +17,23 @@ export async function POST(request: Request) {
 
     // Tenta múltiplos formatos para achar o lead
     const rawNumber = whatsapp_number.replace(/\D/g, ''); // só dígitos
+    const withoutCountry = rawNumber.replace(/^55/, '');
+    const without9 = rawNumber.replace(/(\d{2})9(\d{8})/, '$1$2');
+    const withoutCountryAnd9 = withoutCountry.replace(/(\d{2})9(\d{8})/, '$1$2');
+
     const formats = [
       `${rawNumber}@s.whatsapp.net`,
       `55${rawNumber}@s.whatsapp.net`,
       rawNumber,
       `55${rawNumber}`,
+      `${withoutCountry}@s.whatsapp.net`,
+      withoutCountry,
+      `${without9}@s.whatsapp.net`,
+      without9,
+      `${withoutCountryAnd9}@s.whatsapp.net`,
+      withoutCountryAnd9,
+      `55${withoutCountryAnd9}@s.whatsapp.net`,
+      `55${withoutCountryAnd9}`
     ];
 
     let lead: any = null;
@@ -31,18 +43,21 @@ export async function POST(request: Request) {
     }
 
     if (!lead) {
-      return NextResponse.json({ error: `Lead não encontrado para número: ${whatsapp_number}` }, { status: 404 });
+      // Como último recurso, tenta usar ilike
+      const { data } = await supabase.from('leads').select('id, whatsapp_number').ilike('whatsapp_number', `%${withoutCountryAnd9}%`).limit(1).single();
+      if (data) {
+        lead = data;
+      } else {
+        return NextResponse.json({ error: `Lead não encontrado para número: ${whatsapp_number}` }, { status: 404 });
+      }
     }
 
-    // 2. Deletar interações
-    const { error: deleteInteractionsError } = await supabase
-      .from('interactions')
-      .delete()
-      .eq('lead_id', lead.id);
-
-    if (deleteInteractionsError) {
-      throw deleteInteractionsError;
-    }
+    // 2. Deletar histórico em todas as tabelas relacionadas
+    await supabase.from('interactions').delete().eq('lead_id', lead.id);
+    await supabase.from('lead_status_history').delete().eq('lead_id', lead.id);
+    await supabase.from('lead_follow_ups').delete().eq('lead_id', lead.id);
+    await supabase.from('attendance_bottlenecks').delete().eq('lead_id', lead.id);
+    await supabase.from('supervisor_escalations').delete().eq('lead_id', lead.id);
 
     // 3. Resetar status do lead e reativar bot
     const { error: updateLeadError } = await supabase
@@ -55,6 +70,9 @@ export async function POST(request: Request) {
         name: null,
         company: null,
         current_owner_id: null,
+        sent_to_seller_at: null,
+        seller_confirmed_at: null,
+        attendance_started_at: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', lead.id);
