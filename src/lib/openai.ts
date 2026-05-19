@@ -77,10 +77,12 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. O s
     "canal_origem": "<whatsapp>"
   },
   "demanda": {
+    "produto_normalizado": "<Chapa Expandida, Chapa Perfurada, Grade de Piso, etc ou null>",
     "produto_familia": "<produto principal ou null>",
     "produto_modelo": "<modelo específico ou null>",
     "marca_linha": "<marca ou null>",
-    "segmento_aplicacao": "<segmento ou null>",
+    "segmento_normalizado": "<industria, construcao ou revenda ou null>",
+    "segmento_aplicacao": "<aplicacao descrita pelo cliente ou null>",
     "quantidade_metragem": "<quantidade ou null>",
     "material": "<material ou null>",
     "acabamento": "<acabamento ou null>",
@@ -88,13 +90,17 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. O s
     "tem_projeto_anexo": "<boolean>",
     "urgencia": "<alta, media, baixa ou null>"
   },
+  "estado_lead": {
+    "dados_minimos_completos": "<true se produto, aplicação, quantidade E especificações técnicas estiverem coletados, senao false>",
+    "motivo_faltante": "<o que falta perguntar, ex: faltando_furo, faltando_aplicacao, etc>"
+  },
   "rag": {
     "consultado": false,
     "fontes": [],
     "confianca": "",
     "observacao": ""
   },
-  "acao_executada": "<roteamento, coleta_dados, duvida, etc>",
+  "acao_executada": "<roteamento_comercial, coleta_dados, duvida, etc>",
   "observacoes": "<notas internas>"
 }
 `;
