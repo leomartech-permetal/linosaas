@@ -63,30 +63,30 @@ INSTRUÇÃO FINAL E FORMATO DE SAÍDA OBRIGATÓRIO:
 Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. O seu comportamento, as perguntas obrigatórias e as regras de transição devem obedecer ESTRITAMENTE o que foi configurado no Master Prompt e nas Skills acima. Não invente regras.
 
 {
-  "resposta_whatsapp": "sua mensagem para o cliente",
-  "skill_usada": "nome_da_skill_que_gerou_a_resposta",
-  "intent": "",
-  "confidence": "",
+  "resposta_whatsapp": "<sua mensagem para o cliente>",
+  "skill_usada": "<nome_da_skill_que_gerou_a_resposta>",
+  "intent": "<classificação da intenção>",
+  "confidence": "<0 a 100>",
   "cliente": {
-    "nome": "",
-    "empresa": "",
-    "cnpj": "",
-    "email": "",
-    "telefone": "",
-    "ddd_regiao": "",
-    "canal_origem": ""
+    "nome": "<extraia o nome ou null>",
+    "empresa": "<extraia a empresa ou null>",
+    "cnpj": "<extraia o cnpj ou null>",
+    "email": "<extraia o email ou null>",
+    "telefone": "<extraia o telefone ou null>",
+    "ddd_regiao": "<extraia o ddd ou null>",
+    "canal_origem": "<whatsapp>"
   },
   "demanda": {
-    "produto_familia": "",
-    "produto_modelo": "",
-    "marca_linha": "",
-    "segmento_aplicacao": "",
-    "quantidade_metragem": "",
-    "material": "",
-    "acabamento": "",
-    "dimensoes": "",
-    "tem_projeto_anexo": "",
-    "urgencia": ""
+    "produto_familia": "<produto principal ou null>",
+    "produto_modelo": "<modelo específico ou null>",
+    "marca_linha": "<marca ou null>",
+    "segmento_aplicacao": "<segmento ou null>",
+    "quantidade_metragem": "<quantidade ou null>",
+    "material": "<material ou null>",
+    "acabamento": "<acabamento ou null>",
+    "dimensoes": "<dimensões ou null>",
+    "tem_projeto_anexo": "<boolean>",
+    "urgencia": "<alta, media, baixa ou null>"
   },
   "rag": {
     "consultado": false,
@@ -94,8 +94,8 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. O s
     "confianca": "",
     "observacao": ""
   },
-  "acao_executada": "",
-  "observacoes": ""
+  "acao_executada": "<roteamento, coleta_dados, duvida, etc>",
+  "observacoes": "<notas internas>"
 }
 `;
 

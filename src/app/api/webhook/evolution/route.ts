@@ -200,9 +200,14 @@ export async function POST(request: Request) {
             }
           }]);
           
+          // Garantir extração de DDD via número de telefone
+          const rawPhone = remoteJid.replace(/\D/g, '');
+          const systemDdd = rawPhone.length >= 12 && rawPhone.startsWith('55') ? rawPhone.substring(2, 4) : null;
+          const dddToUse = aiResult.cliente?.ddd_regiao || systemDdd || null;
+
           const variaveis = {
             produto: aiResult.demanda?.produto_familia || aiResult.demanda?.produto_modelo || null,
-            ddd: aiResult.cliente?.ddd_regiao || null,
+            ddd: dddToUse,
             quantidade: aiResult.demanda?.quantidade_metragem || null,
             aplicacao: aiResult.demanda?.segmento_aplicacao || null,
             nome_cliente: aiResult.cliente?.nome || null,
