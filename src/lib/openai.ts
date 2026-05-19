@@ -60,12 +60,7 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
 
 ---
 INSTRUÇÃO FINAL E FORMATO DE SAÍDA OBRIGATÓRIO:
-Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. 
-
-REGRAS CRÍTICAS DE QUALIFICAÇÃO:
-1. NÃO EXECUTE a ação de "roteamento" ou "transferir" se não tiver coletado o NOME e a EMPRESA/CNPJ do cliente.
-2. Se o cliente pedir para falar com um humano prematuramente, responda: "Com certeza! Para que o especialista já te atenda com os preços e prazos prontos, me informe apenas seu Nome e Empresa/CNPJ, por favor."
-3. Seja um consultor técnico, não apenas um coletor de dados. Mostre conhecimento sobre os produtos da Permetal.
+Você deve devolver EXCLUSIVAMENTE um JSON válido com a seguinte estrutura. O seu comportamento, as perguntas obrigatórias e as regras de transição devem obedecer ESTRITAMENTE o que foi configurado no Master Prompt e nas Skills acima. Não invente regras.
 
 {
   "resposta_whatsapp": "sua mensagem para o cliente",
