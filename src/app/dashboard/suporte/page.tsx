@@ -65,12 +65,41 @@ export default function SupportDashboard() {
       .select('*, leads(name), admin_users:user_id(name)')
       .order('created_at', { ascending: false });
 
+    // 4. Calcular Tempo Médio de Resposta via Histórico
+    let avgResponse = 0;
+    const { data: history } = await supabase
+      .from('lead_status_history')
+      .select('lead_id, to_status, created_at')
+      .order('created_at', { ascending: true });
+
+    if (history && history.length > 0) {
+      const waitStarts: Record<string, number> = {};
+      const responseTimes: number[] = [];
+
+      history.forEach(h => {
+        if (h.to_status === 'WAITING_SELLER' || h.to_status === 'SENT_TO_SELLER') {
+          waitStarts[h.lead_id] = new Date(h.created_at).getTime();
+        } else if (h.to_status === 'IN_NEGOTIATION' || h.to_status === 'ATTENDANCE_STARTED' || h.to_status === 'SELLER_RECEIVED') {
+          if (waitStarts[h.lead_id]) {
+            const diffMin = (new Date(h.created_at).getTime() - waitStarts[h.lead_id]) / (1000 * 60);
+            if (diffMin >= 0) responseTimes.push(diffMin);
+            delete waitStarts[h.lead_id];
+          }
+        }
+      });
+
+      if (responseTimes.length > 0) {
+        const sum = responseTimes.reduce((acc, val) => acc + val, 0);
+        avgResponse = Math.round(sum / responseTimes.length);
+      }
+    }
+
     setStats({
       totalLeads: total,
       waitingSeller: waiting.length,
       criticalSLA: critical,
       slaCompliance: total > 0 ? Math.round(((total - critical) / total) * 100) : 100,
-      avgResponseMinutes: 28, // Mock inicial, ideal calcular via lead_status_history
+      avgResponseMinutes: avgResponse,
       bottlenecksByType: chartData,
       sellerPerformance: users?.map(u => ({
         name: u.name,
