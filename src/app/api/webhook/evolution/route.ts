@@ -255,14 +255,29 @@ export async function POST(request: Request) {
               await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgSetores);
             }
           } else {
-            const isRouting = acao_executada.includes('roteamento') || acao_executada.includes('encaminhar') || acao_executada.includes('transfer');
-            if (isRouting && variaveis?.produto && variaveis?.ddd) {
+            // --- ROTEAMENTO ROBUSTO ---
+            // Dispara se: (1) IA marcou dados_minimos_completos=true  OU  (2) acao_executada contém "roteamento"
+            const dadosCompletos = aiResult.estado_lead?.dados_minimos_completos === true 
+                                || aiResult.estado_lead?.dados_minimos_completos === 'true';
+            const acaoEhRoteamento = acao_executada.includes('roteamento') 
+                                  || acao_executada.includes('encaminhar') 
+                                  || acao_executada.includes('transfer');
+
+            const deveRotear = (dadosCompletos || acaoEhRoteamento) && variaveis?.produto && variaveis?.ddd;
+
+            console.log(`[Webhook] Roteamento check — dadosCompletos: ${dadosCompletos}, acaoEhRoteamento: ${acaoEhRoteamento}, produto: ${variaveis?.produto}, ddd: ${variaveis?.ddd}`);
+
+            if (deveRotear) {
+              console.log(`[Webhook] ✅ Roteando lead ${lead.id} para vendedor...`);
               if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
                 await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, "Estou te transferindo para o especialista agora...");
               }
               await routeLead(lead.id, lead.tenant_id, variaveis);
+            } else {
+              console.log(`[Webhook] ⏳ Ainda coletando dados — motivo: ${aiResult.estado_lead?.motivo_faltante || 'não informado'}`);
             }
           }
+
         }
       } else if (lead.status === 'WAITING_SELLER' || lead.status === 'SENT_TO_SELLER' || lead.status === 'SELLER_RECEIVED' || lead.status === 'ATTENDANCE_STARTED') {
         // LINO SUPORTE — só ativa APÓS vendedor estar realmente atribuído
