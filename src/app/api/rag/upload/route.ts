@@ -139,3 +139,70 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message || 'Erro ao processar arquivo' }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const formData = await request.formData();
+    const id = formData.get('id') as string;
+    const file = formData.get('file') as File | null;
+    const name = formData.get('name') as string || '';
+    const manualText = formData.get('text') as string || '';
+
+    if (!id) return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 });
+
+    let updateData: any = { name };
+
+    if (file) {
+      // Validar tamanho (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Arquivo muito grande. Máximo: 10MB' }, { status: 400 });
+      }
+
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      const allowedTypes: Record<string, string> = {
+        'pdf': 'pdf', 'docx': 'docx', 'doc': 'docx', 'xlsx': 'xlsx', 'xls': 'xlsx', 'csv': 'xlsx', 'txt': 'text',
+      };
+      const sourceType = allowedTypes[ext];
+      if (!sourceType) return NextResponse.json({ error: `Tipo não suportado: .${ext}` }, { status: 400 });
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      let content = '';
+
+      switch (sourceType) {
+        case 'pdf': content = await extractPDF(buffer); break;
+        case 'docx': content = await extractDOCX(buffer); break;
+        case 'xlsx': content = await extractXLSX(buffer); break;
+        case 'text': content = buffer.toString('utf-8'); break;
+      }
+
+      const MAX_CHARS = 50000;
+      if (content.length > MAX_CHARS) {
+        content = content.substring(0, MAX_CHARS) + '\n\n[... Conteúdo truncado por exceder o limite ...]';
+      }
+
+      const fileName = `rag/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('rag-files').upload(fileName, buffer, { contentType: file.type });
+      let fileUrl = '';
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('rag-files').getPublicUrl(fileName);
+        fileUrl = urlData.publicUrl;
+      }
+
+      updateData.content = content;
+      updateData.source_type = sourceType;
+      updateData.file_url = fileUrl;
+      updateData.file_size = file.size;
+    } else if (manualText) {
+      updateData.content = manualText;
+    }
+
+    const { data, error } = await supabase.from('rag_documents').update(updateData).eq('id', id).select().single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({ success: true, document: data, extracted_chars: updateData.content?.length || 0 });
+
+  } catch (error: any) {
+    console.error('[RAG Update Error]', error);
+    return NextResponse.json({ error: error.message || 'Erro ao atualizar documento' }, { status: 500 });
+  }
+}

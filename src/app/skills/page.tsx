@@ -57,6 +57,11 @@ export default function SkillsPage() {
   const [ragText, setRagText] = useState("");
   const [ragFile, setRagFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [editingRag, setEditingRag] = useState<any>(null);
+
+  // Pesquisas
+  const [skillSearch, setSkillSearch] = useState("");
+  const [ragSearch, setRagSearch] = useState("");
 
   // Skill-RAG links
   const [skillRagLinks, setSkillRagLinks] = useState<any[]>([]);
@@ -148,12 +153,21 @@ export default function SkillsPage() {
   }
 
   // === RAG ===
+  function startEditRag(doc: any) {
+    setEditingRag(doc);
+    setRagName(doc.name);
+    setRagText(doc.content || "");
+    setRagFile(null);
+    setShowRagForm(true);
+  }
+
   async function uploadRag(e: React.FormEvent) {
     e.preventDefault();
     setUploading(true);
 
     try {
       const formData = new FormData();
+      if (editingRag) formData.append("id", editingRag.id);
       formData.append("name", ragName);
       if (ragFile) {
         formData.append("file", ragFile);
@@ -161,12 +175,14 @@ export default function SkillsPage() {
         formData.append("text", ragText);
       }
 
-      const res = await fetch("/api/rag/upload", { method: "POST", body: formData });
+      const method = editingRag ? "PUT" : "POST";
+      const res = await fetch("/api/rag/upload", { method, body: formData });
       const data = await res.json();
 
       if (!res.ok) { flash("Erro: " + data.error); setUploading(false); return; }
-      flash(`✔ Documento "${ragName}" adicionado! (${data.extracted_chars || 0} caracteres extraídos)`);
-      setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(false);
+      
+      flash(editingRag ? `✔ Documento "${ragName}" atualizado!` : `✔ Documento "${ragName}" adicionado! (${data.extracted_chars || 0} caracteres extraídos)`);
+      setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(false); setEditingRag(null);
       loadAll();
     } catch (err: any) {
       flash("Erro: " + err.message);
@@ -274,14 +290,23 @@ export default function SkillsPage() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setShowRagForm(!showRagForm)} className="bg-purple-700 px-4 py-2 rounded text-sm font-bold hover:bg-purple-800">
-                + Novo Documento
-              </button>
+              <div className="flex items-center gap-3">
+                <input 
+                  type="text" 
+                  value={ragSearch} 
+                  onChange={(e) => setRagSearch(e.target.value)} 
+                  placeholder="Pesquisar RAG (nome ou conteúdo)..." 
+                  className="bg-black border border-gray-700 rounded px-3 py-2 text-sm text-white outline-none w-64"
+                />
+                <button onClick={() => { setEditingRag(null); setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(!showRagForm); }} className="bg-purple-700 px-4 py-2 rounded text-sm font-bold hover:bg-purple-800">
+                  + Novo Documento
+                </button>
+              </div>
             </div>
 
             {showRagForm && (
               <div className="bg-black p-4 rounded-lg border border-gray-700 mb-4">
-                <h4 className="font-bold text-sm mb-3">Adicionar Documento RAG</h4>
+                <h4 className="font-bold text-sm mb-3">{editingRag ? "✏️ Editar Documento RAG" : "Adicionar Documento RAG"}</h4>
                 <form onSubmit={uploadRag} className="space-y-3">
                   <input type="text" value={ragName} onChange={(e) => setRagName(e.target.value)} placeholder="Nome do documento (ex: Catálogo Chapas 2026)" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
 
@@ -320,17 +345,17 @@ export default function SkillsPage() {
 
                   <div className="flex gap-3">
                     <button type="submit" disabled={uploading || (!ragFile && !ragText)} className="flex-1 bg-purple-700 py-2 rounded font-bold text-sm hover:bg-purple-800 disabled:opacity-50">
-                      {uploading ? "Processando..." : "Adicionar Documento"}
+                      {uploading ? "Processando..." : (editingRag ? "Atualizar Documento" : "Adicionar Documento")}
                     </button>
-                    <button type="button" onClick={() => { setShowRagForm(false); setRagFile(null); setRagText(""); }} className="flex-1 border border-gray-700 py-2 rounded text-sm hover:bg-gray-800">Cancelar</button>
+                    <button type="button" onClick={() => { setShowRagForm(false); setRagFile(null); setRagText(""); setEditingRag(null); }} className="flex-1 border border-gray-700 py-2 rounded text-sm hover:bg-gray-800">Cancelar</button>
                   </div>
                 </form>
               </div>
             )}
 
             {/* Lista RAG */}
-            <div className="space-y-2">
-              {ragDocs.map(doc => (
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+              {ragDocs.filter(doc => (doc.name || "").toLowerCase().includes(ragSearch.toLowerCase()) || (doc.content || "").toLowerCase().includes(ragSearch.toLowerCase())).map(doc => (
                 <div key={doc.id} className="bg-black p-3 rounded border border-gray-800 flex justify-between items-center group">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -341,9 +366,15 @@ export default function SkillsPage() {
                       {doc.content?.substring(0, 100)}... • {formatSize(doc.file_size || 0)} • {doc.content?.length || 0} chars
                     </p>
                   </div>
-                  <button onClick={() => deleteRag(doc.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded hover:bg-red-900 opacity-0 group-hover:opacity-100 transition-opacity ml-2">Excluir</button>
+                  <div className="flex opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                    <button onClick={() => startEditRag(doc)} className="text-[10px] bg-blue-900/50 text-blue-400 px-2 py-1 rounded hover:bg-blue-900 mr-2">Editar</button>
+                    <button onClick={() => deleteRag(doc.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded hover:bg-red-900">Excluir</button>
+                  </div>
                 </div>
               ))}
+              {ragDocs.length > 0 && ragDocs.filter(doc => (doc.name || "").toLowerCase().includes(ragSearch.toLowerCase()) || (doc.content || "").toLowerCase().includes(ragSearch.toLowerCase())).length === 0 && (
+                <div className="text-center text-gray-500 text-sm py-4">Nenhum RAG encontrado na pesquisa.</div>
+              )}
               {ragDocs.length === 0 && !showRagForm && (
                 <div className="border border-dashed border-gray-700 rounded-lg p-6 text-center text-gray-600 text-sm">
                   Nenhum documento RAG. Clique em &quot;+ Novo Documento&quot; acima.
@@ -386,12 +417,21 @@ export default function SkillsPage() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => { setEditing(null); setForm({ name: "", type: "product", prompt: "" }); setSelectedRags([]); setShowForm(true); }}
-                className="bg-[hsl(var(--tenant-primary))] px-4 py-2 rounded text-sm font-bold text-black hover:opacity-90"
-              >
-                + Adicionar Skill
-              </button>
+              <div className="flex items-center gap-3">
+                <input 
+                  type="text" 
+                  value={skillSearch} 
+                  onChange={(e) => setSkillSearch(e.target.value)} 
+                  placeholder="Pesquisar Skills..." 
+                  className="bg-black border border-gray-700 rounded px-3 py-2 text-sm text-white outline-none w-64"
+                />
+                <button
+                  onClick={() => { setEditing(null); setForm({ name: "", type: "product", prompt: "" }); setSelectedRags([]); setShowForm(true); }}
+                  className="bg-[hsl(var(--tenant-primary))] px-4 py-2 rounded text-sm font-bold text-black hover:opacity-90"
+                >
+                  + Adicionar Skill
+                </button>
+              </div>
             </div>
 
             {/* Form Skill */}
@@ -459,7 +499,7 @@ export default function SkillsPage() {
 
             {/* Lista Skills */}
             <div className="grid grid-cols-1 gap-4">
-              {skills.map((s) => {
+              {skills.filter(s => (s.name || "").toLowerCase().includes(skillSearch.toLowerCase()) || (s.prompt || "").toLowerCase().includes(skillSearch.toLowerCase())).map((s) => {
                 const info = getTypeInfo(s.type);
                 const linked = getLinkedRags(s.id);
                 return (
@@ -493,6 +533,9 @@ export default function SkillsPage() {
                   </div>
                 );
               })}
+              {skills.length > 0 && skills.filter(s => (s.name || "").toLowerCase().includes(skillSearch.toLowerCase()) || (s.prompt || "").toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
+                <div className="text-center text-gray-500 py-8">Nenhuma skill encontrada na pesquisa.</div>
+              )}
               {skills.length === 0 && !showForm && (
                 <div className="border border-dashed border-gray-800 rounded-xl p-12 text-center">
                   <div className="text-4xl mb-4 opacity-20">🧠</div>
