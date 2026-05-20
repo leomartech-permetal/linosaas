@@ -26,14 +26,16 @@ async function buildContext(detectedProduct?: string | null): Promise<string> {
       .from('skills')
       .select('*')
       .eq('active', true)
-      .or(`product_tag.ilike.%${detectedProduct}%,product_tag.is.null`);
+      .or(`product_tag.ilike.%${detectedProduct}%,product_tag.is.null`)
+      .limit(6); // Max 6 skills: 1 do produto + 5 genéricas
   } else {
-    // Sem produto: carrega apenas skills genéricas (sem product_tag) para não poluir o contexto
+    // Sem produto: carrega apenas skills genéricas (sem product_tag)
     skillQuery = supabase
       .from('skills')
       .select('*')
       .eq('active', true)
-      .is('product_tag', null);
+      .is('product_tag', null)
+      .limit(5); // Max 5 skills genéricas na fase inicial
   }
 
   const { data: skills } = await skillQuery;
