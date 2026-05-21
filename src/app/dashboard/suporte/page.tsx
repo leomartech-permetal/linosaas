@@ -22,6 +22,55 @@ export default function SupportDashboard() {
     escalations: [] as any[],
     bottlenecks: [] as any[]
   });
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [msg, setMsg] = useState("");
+
+  function flash(t: string) { setMsg(t); setTimeout(() => setMsg(""), 4000); }
+
+  async function handleNotify(leadId: string) {
+    setActionLoading(`notify-${leadId}`);
+    try {
+      const res = await fetch('/api/support/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert('Erro: ' + (data.error || 'Falha ao notificar'));
+      } else {
+        flash('✔ Vendedor notificado com sucesso!');
+        loadData();
+      }
+    } catch (err: any) {
+      alert('Erro de conexão: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleEscalate(leadId: string) {
+    if (!confirm('Deseja realmente escalar este lead para o supervisor?')) return;
+    setActionLoading(`escalate-${leadId}`);
+    try {
+      const res = await fetch('/api/support/escalate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert('Erro: ' + (data.error || 'Falha ao escalar'));
+      } else {
+        flash('✔ Lead escalado para supervisor com sucesso!');
+        loadData();
+      }
+    } catch (err: any) {
+      alert('Erro de conexão: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  }
 
   useEffect(() => {
     loadData();
@@ -122,6 +171,11 @@ export default function SupportDashboard() {
 
   return (
     <div className="p-6 md:p-10 bg-[#0a0a0a] min-h-screen text-white overflow-y-auto">
+      {msg && (
+        <div className="fixed bottom-5 right-5 z-50 bg-green-900/90 backdrop-blur-sm border border-green-700 text-green-300 font-bold px-4 py-3 rounded-xl shadow-2xl animate-bounce">
+          {msg}
+        </div>
+      )}
       <header className="mb-8">
         <h1 className="text-3xl font-black tracking-tighter">LINO SUPORTE 🚨</h1>
         <p className="text-gray-400">Monitoramento de Fiscalização e Gargalos de Atendimento B2B</p>
@@ -212,8 +266,20 @@ export default function SupportDashboard() {
                           </div>
                         </td>
                         <td className="py-4 text-right space-x-2">
-                           <button className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-all">Notificar</button>
-                           <button className="text-[10px] bg-red-600/20 text-red-400 px-2 py-1 rounded border border-red-500/20 hover:bg-red-600 hover:text-white transition-all">Escalar</button>
+                           <button 
+                             onClick={() => handleNotify(l.id)} 
+                             disabled={actionLoading === `notify-${l.id}` || actionLoading === `escalate-${l.id}`}
+                             className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
+                           >
+                             {actionLoading === `notify-${l.id}` ? 'Enviando...' : 'Notificar'}
+                           </button>
+                           <button 
+                             onClick={() => handleEscalate(l.id)} 
+                             disabled={actionLoading === `notify-${l.id}` || actionLoading === `escalate-${l.id}`}
+                             className="text-[10px] bg-red-600/20 text-red-400 px-2 py-1 rounded border border-red-500/20 hover:bg-red-600 hover:text-white transition-all disabled:opacity-50"
+                           >
+                             {actionLoading === `escalate-${l.id}` ? 'Escalando...' : 'Escalar'}
+                           </button>
                         </td>
                       </tr>
                     );

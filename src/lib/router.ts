@@ -25,16 +25,34 @@ export interface LeadVariables {
   m_lineares?: number;
 }
 
+function normalizar(str: string): string {
+  if (!str) return '';
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 /** Resolve produto pelo nome ou sinônimo */
 export async function resolverProduto(texto: string) {
   const { data: products } = await supabase.from('products').select('*, brands(name)');
   if (!products) return null;
-  const lower = texto.toLowerCase();
+  const cleanText = normalizar(texto);
+  
+  // Passo 1: Match exato pelo nome (já que a IA retorna o nome normalizado)
   for (const p of products) {
-    if (p.name.toLowerCase().includes(lower) || lower.includes(p.name.toLowerCase())) return p;
+    if (normalizar(p.name) === cleanText) return p;
+  }
+  
+  // Passo 2: Match contido pelo nome
+  for (const p of products) {
+    const pName = normalizar(p.name);
+    if (pName.includes(cleanText) || cleanText.includes(pName)) return p;
+  }
+  
+  // Passo 3: Match por sinônimos (apenas unidirecional: texto do lead deve conter o sinônimo completo)
+  for (const p of products) {
     const syns: string[] = p.synonyms || [];
     for (const s of syns) {
-      if (lower.includes(s.toLowerCase()) || s.toLowerCase().includes(lower)) return p;
+      const cleanSyn = normalizar(s);
+      if (cleanText.includes(cleanSyn) || cleanSyn === cleanText) return p;
     }
   }
   return null;
@@ -55,11 +73,11 @@ export async function resolverRegiao(ddd: string) {
 export async function resolverSegmento(aplicacao: string) {
   const { data: segments } = await supabase.from('segments').select('*');
   if (!segments) return null;
-  const lower = aplicacao.toLowerCase();
+  const cleanApp = normalizar(aplicacao);
   for (const seg of segments) {
     const kws: string[] = seg.keywords || [];
     for (const kw of kws) {
-      if (lower.includes(kw.toLowerCase())) return seg;
+      if (cleanApp.includes(normalizar(kw))) return seg;
     }
   }
   return null;

@@ -36,7 +36,7 @@ export default function SettingsPage() {
 
   // Forms
   const [regionForm, setRegionForm] = useState({ name: "", ddd_codes: "" });
-  const [productForm, setProductForm] = useState({ name: "", synonyms: "", brand_id: "" });
+  const [productForm, setProductForm] = useState({ name: "", synonyms: "", brand_id: "", is_express_eligible: false, express_max_qty: "" });
   const [segmentForm, setSegmentForm] = useState({ name: "", keywords: "", collection_type: "normal" });
   const [teamForm, setTeamForm] = useState({ name: "", manager_id: "" });
   const [userForm, setUserForm] = useState({ name: "", whatsapp_number: "", team_id: "", role: "seller" });
@@ -120,7 +120,12 @@ export default function SettingsPage() {
   async function addProduct(e: React.FormEvent) {
     e.preventDefault();
     const syns = productForm.synonyms.split(",").map(s => s.trim()).filter(Boolean);
-    const payload: any = { name: productForm.name, synonyms: syns };
+    const payload: any = { 
+      name: productForm.name, 
+      synonyms: syns,
+      is_express_eligible: productForm.is_express_eligible,
+      express_max_qty: productForm.express_max_qty || null
+    };
     if (productForm.brand_id) payload.brand_id = productForm.brand_id;
     
     if (editingProduct) {
@@ -134,7 +139,7 @@ export default function SettingsPage() {
       flash("✔ Produto criado!");
     }
     
-    setProductForm({ name: "", synonyms: "", brand_id: "" }); 
+    setProductForm({ name: "", synonyms: "", brand_id: "", is_express_eligible: false, express_max_qty: "" }); 
     loadAll();
   }
   async function deleteProduct(id: string) {
@@ -352,9 +357,31 @@ export default function SettingsPage() {
                     <option value="">Marca (automática)</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
+                  
+                  <div className="flex flex-col md:flex-row gap-4 items-center">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={productForm.is_express_eligible} 
+                        onChange={e => setProductForm({...productForm, is_express_eligible: e.target.checked})} 
+                        className="w-4 h-4 accent-green-500" 
+                      />
+                      <span className="text-sm font-bold text-green-400">Elegível para Express</span>
+                    </label>
+                    {productForm.is_express_eligible && (
+                      <input 
+                        type="text" 
+                        value={productForm.express_max_qty} 
+                        onChange={e => setProductForm({...productForm, express_max_qty: e.target.value})} 
+                        placeholder="Qtd Máxima (ex: até 20m2)" 
+                        className={`${inputCls} flex-1`} 
+                      />
+                    )}
+                  </div>
+
                   <div className="flex gap-3">
                     <button type="submit" className={`${btnCls} bg-green-700 flex-1`}>{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
-                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "" }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
+                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", is_express_eligible: false, express_max_qty: "" }); }} className={`${btnCls} border border-gray-700 flex-1`}>Cancelar</button>}
                   </div>
                   {msg && tab === 'products' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
                 </form>
@@ -363,9 +390,14 @@ export default function SettingsPage() {
                 {products.map(p => (
                   <div key={p.id} className="bg-[#1a1a1a] p-3 rounded border border-gray-800 flex justify-between items-start group">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-bold text-sm">{p.name}</h4>
                         {p.brands?.name && <span className="text-[10px] bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded">{p.brands.name}</span>}
+                        {p.is_express_eligible && (
+                          <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded border border-green-500/20 font-bold">
+                            Express ({p.express_max_qty || "Qtd ilimitada"})
+                          </span>
+                        )}
                       </div>
                       {(p.synonyms || []).length > 0 && <p className="text-[10px] text-gray-500 mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
                     </div>
@@ -376,7 +408,9 @@ export default function SettingsPage() {
                           setProductForm({
                             name: p.name,
                             synonyms: (p.synonyms || []).join(", "),
-                            brand_id: p.brand_id || ""
+                            brand_id: p.brand_id || "",
+                            is_express_eligible: !!p.is_express_eligible,
+                            express_max_qty: p.express_max_qty || ""
                           });
                         }} 
                         className="text-[10px] bg-gray-800 px-2 py-1 rounded"

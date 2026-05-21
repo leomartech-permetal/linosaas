@@ -169,7 +169,7 @@ export async function POST(request: Request) {
         .from('conversation_buffers')
         .select('id')
         .eq('lead_id', lead.id)
-        .gt('id', bufferEntry.id)
+        .gt('created_at', bufferEntry.created_at)
         .eq('processed', false);
 
       if (newerMessages && newerMessages.length > 0) {
@@ -228,7 +228,7 @@ export async function POST(request: Request) {
           const dddToUse = aiResult.cliente?.ddd_regiao || systemDdd || null;
 
           const variaveis = {
-            produto: aiResult.demanda?.produto_familia || aiResult.demanda?.produto_modelo || null,
+            produto: aiResult.demanda?.produto_normalizado || aiResult.demanda?.produto_familia || aiResult.demanda?.produto_modelo || null,
             ddd: dddToUse,
             quantidade: aiResult.demanda?.quantidade_metragem || null,
             aplicacao: aiResult.demanda?.segmento_aplicacao || null,
