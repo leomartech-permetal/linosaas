@@ -174,12 +174,14 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
     }
 
     async function fetchLogs() {
+      if (!leadId) return;
       let finalLeadId = leadId;
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(leadId.trim());
+      const safeLeadId = leadId as string;
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(safeLeadId.trim());
 
       if (!isUUID) {
         // Tenta buscar por telefone primeiro (removendo caracteres não numéricos, se houver, ou usando ilike)
-        const cleanPhone = leadId.replace(/[^0-9]/g, '');
+        const cleanPhone = safeLeadId.replace(/[^0-9]/g, '');
         let leads;
         if (cleanPhone.length > 5) {
           const res = await supabase.from('leads').select('id').ilike('phone', `%${cleanPhone}%`).limit(1);
@@ -190,7 +192,7 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
           finalLeadId = leads[0].id;
         } else {
           // Tenta por nome
-          const resName = await supabase.from('leads').select('id').ilike('name', `%${leadId.trim()}%`).limit(1);
+          const resName = await supabase.from('leads').select('id').ilike('name', `%${safeLeadId.trim()}%`).limit(1);
           if (resName.data && resName.data.length > 0) {
             finalLeadId = resName.data[0].id;
           } else {
