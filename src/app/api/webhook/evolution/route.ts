@@ -16,6 +16,8 @@ export async function POST(request: Request) {
     const messageData = body.data?.messages?.[0] || body.data;
     const remoteJid = messageData?.key?.remoteJid || messageData?.remoteJid || body.data?.key?.remoteJid || body.sender;
     const messageId = messageData?.key?.id || messageData?.id;
+    // Captura nome real do WhatsApp (pushName)
+    const pushName: string | null = messageData?.pushName || body.data?.pushName || null;
 
     if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
       if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
@@ -60,12 +62,13 @@ export async function POST(request: Request) {
       }
 
       if (!lead) {
-        console.log('[Webhook] Criando novo lead para:', remoteJid);
+        console.log('[Webhook] Criando novo lead para:', remoteJid, '| pushName:', pushName);
         const { data: newLead, error: insertError } = await supabase.from('leads').insert([{ 
           whatsapp_number: remoteJid, 
+          name: pushName || null,  // salva nome real do WhatsApp
           status: 'SDR_QUALIFICATION', 
           tenant_id: actualTenantId,
-          bot_active: true // Forçar ativo na criação
+          bot_active: true
         }]).select().single();
         
         if (insertError) {
@@ -73,6 +76,11 @@ export async function POST(request: Request) {
           return NextResponse.json({ status: 'error', reason: 'LEAD_INSERT_FAILED', detail: insertError });
         }
         lead = newLead;
+      } else if (!lead.name && pushName) {
+        // Lead já existe mas ainda sem nome — atualiza com pushName
+        await supabase.from('leads').update({ name: pushName }).eq('id', lead.id);
+        lead.name = pushName;
+        console.log('[Webhook] pushName atualizado para lead existente:', pushName);
       }
 
       if (!lead) return NextResponse.json({ status: 'error', reason: 'LEAD_NOT_FOUND_AFTER_INSERT' });

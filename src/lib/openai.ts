@@ -7,49 +7,63 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
  * buildContext — Inteligente e Seletivo
  * 
  * Quando `detectedProduct` é passado:
- *   → carrega APENAS a skill vinculada àquele produto + seu RAG específico
- *   → evita conflito de instruções e overflow de tokens
+ *   → carrega a skill vinculada àquele produto + seu RAG específico
+ *   → completa com skills genéricas para preencher até o limite de 6
  * 
  * Quando `detectedProduct` é null/undefined:
- *   → carrega skills genéricas (sem product_tag) para a fase inicial de coleta
+ *   → carrega apenas skills genéricas (sem product_tag) para a fase inicial de coleta
  */
 async function buildContext(detectedProduct?: string | null): Promise<string> {
   const { data: config } = await supabase.from('tenant_config').select('master_prompt').limit(1).single();
   let context = config?.master_prompt || 'Você é Lino, um assistente SDR comercial focado em qualificar leads e prepará-los para o atendimento com um vendedor humano.';
 
-  // --- Seleção inteligente de skills ---
-  let skillQuery = supabase.from('skills').select('*').eq('active', true);
+  let selectedSkills: any[] = [];
+  const processedIds = new Set<string>();
 
   if (detectedProduct) {
-    // Produto detectado: busca skill específica do produto OU skills sem filtro de produto (genéricas)
-    skillQuery = supabase
+    // --- QUERY 1: Skill específica do produto (sempre entra primeiro) ---
+    const { data: productSkills } = await supabase
       .from('skills')
       .select('*')
       .eq('active', true)
-      .or(`product_tag.ilike.%${detectedProduct}%,product_tag.is.null`)
-      .limit(6); // Max 6 skills: 1 do produto + 5 genéricas
+      .ilike('product_tag', `%${detectedProduct}%`);
+
+    if (productSkills && productSkills.length > 0) {
+      for (const s of productSkills) {
+        selectedSkills.push(s);
+        processedIds.add(s.id);
+      }
+      console.log(`[buildContext] Skill de produto carregada: ${productSkills.map((s: any) => s.name).join(', ')}`);
+    } else {
+      console.log(`[buildContext] Nenhuma skill de produto encontrada para: "${detectedProduct}"`);
+    }
+
+    // --- QUERY 2: Skills genéricas para complementar ---
+    let genericQuery = supabase.from('skills').select('*').eq('active', true).is('product_tag', null);
+    // Excluir IDs já carregados (apenas se houver)
+    if (processedIds.size > 0) {
+      genericQuery = genericQuery.not('id', 'in', `(${Array.from(processedIds).join(',')})`);
+    }
+    const { data: genericSkills } = await genericQuery.limit(4);
+    if (genericSkills) selectedSkills.push(...genericSkills);
+
   } else {
-    // Sem produto: carrega apenas skills genéricas (sem product_tag)
-    skillQuery = supabase
+    // Sem produto: apenas skills genéricas
+    const { data: genericSkills } = await supabase
       .from('skills')
       .select('*')
       .eq('active', true)
       .is('product_tag', null)
-      .limit(5); // Max 5 skills genéricas na fase inicial
+      .limit(5);
+    if (genericSkills) selectedSkills = genericSkills;
+    console.log(`[buildContext] Fase inicial (sem produto) — ${genericSkills?.length || 0} skills genéricas carregadas`);
   }
 
-  const { data: skills } = await skillQuery;
-
-  if (skills && skills.length > 0) {
-    const skillLabel = detectedProduct
-      ? `=== HABILIDADES ATIVAS PARA: ${detectedProduct.toUpperCase()} ===`
-      : '=== HABILIDADES GERAIS ===';
-    context += `\n\n${skillLabel}`;
-
-    for (const skill of skills) {
+  if (selectedSkills && selectedSkills.length > 0) {
+    context += `\n\n=== HABILIDADES ATIVAS ===`;
+    for (const skill of selectedSkills) {
       context += `\n\n### ${skill.name} (${skill.type})\n${(skill.prompt || '').substring(0, 10000)}`;
 
-      // Carrega RAG apenas da skill selecionada (não de todos os produtos)
       const { data: links } = await supabase.from('skill_rag_links').select('rag_document_id').eq('skill_id', skill.id);
       if (links && links.length > 0) {
         const ragIds = links.map(l => l.rag_document_id);

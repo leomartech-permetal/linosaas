@@ -22,7 +22,10 @@ export default function PipelinePage() {
 
   async function carregarLeads() {
     setLoading(true);
-    const { data } = await supabase.from("leads").select("*").order("updated_at", { ascending: false });
+    const { data } = await supabase
+      .from("leads")
+      .select("*, seller:current_owner_id(name, whatsapp_number)")
+      .order("updated_at", { ascending: false });
     if (data) setLeads(data);
     setLoading(false);
   }
@@ -161,8 +164,8 @@ export default function PipelinePage() {
       {/* Modal Detalhes (Dark) */}
       {selectedLead && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={() => setSelectedLead(null)}>
-          <div className="bg-[#0f0f0f] p-8 rounded-3xl border border-gray-800 w-full max-w-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-8">
+          <div className="bg-[#0f0f0f] p-8 rounded-3xl border border-gray-800 w-full max-w-xl shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="text-2xl font-black tracking-tighter">{selectedLead.name || "Interesse Anônimo"}</h3>
                 <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{selectedLead.whatsapp_number}</p>
@@ -172,22 +175,74 @@ export default function PipelinePage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Status Atual</p>
+            {/* Seção: Qualificação Profissional */}
+            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Qualificação Profissional</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Nome</p>
+                <p className="text-xs font-bold text-white">{selectedLead.name || "—"}</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Cargo</p>
+                <p className="text-xs font-bold text-white">{selectedLead.cargo || "—"}</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Empresa</p>
+                <p className="text-xs font-bold text-white">{selectedLead.company || selectedLead.empresa || "—"}</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">CNPJ</p>
+                <p className="text-xs font-bold text-white">{selectedLead.cnpj || "—"}</p>
+              </div>
+              <div className="col-span-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">E-mail Corporativo</p>
+                <p className="text-xs font-bold text-white">{selectedLead.email_corporativo || "—"}</p>
+              </div>
+            </div>
+
+            {/* Seção: Interesse de Produto */}
+            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Interesse de Produto</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="col-span-2 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                <p className="text-[9px] font-black text-blue-400 uppercase mb-1">Produto Detectado</p>
+                <p className="text-xs font-bold text-white">{selectedLead.detected_product || selectedLead.produto || "—"}</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Quantidade</p>
+                <p className="text-xs font-bold text-white">{selectedLead.quantidade || "—"}</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Cidade / DDD</p>
+                <p className="text-xs font-bold text-white">{selectedLead.detected_city || (selectedLead.detected_ddd ? `DDD ${selectedLead.detected_ddd}` : "—")}</p>
+              </div>
+              <div className="col-span-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Especificação Detalhada</p>
+                <p className="text-xs font-bold text-white">{selectedLead.especificacao || "—"}</p>
+              </div>
+            </div>
+
+            {/* Seção: Atribuição e SLA */}
+            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Atribuição e SLA</p>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Status</p>
                 <p className="text-xs font-bold text-blue-400">{COLUMNS.find(c => c.key === selectedLead.status)?.label || selectedLead.status}</p>
               </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Empresa</p>
-                <p className="text-xs font-bold text-white">{selectedLead.empresa || selectedLead.company || "—"}</p>
-              </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Produto</p>
-                <p className="text-xs font-bold text-white">{selectedLead.produto || selectedLead.detected_product || "—"}</p>
-              </div>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
                 <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Intervenção (SLA)</p>
-                <p className={`text-xs font-bold ${selectedLead.support_attempts > 0 ? 'text-red-500' : 'text-green-500'}`}>{selectedLead.support_attempts} Tentativas</p>
+                <p className={`text-xs font-bold ${selectedLead.support_attempts > 0 ? 'text-red-500' : 'text-green-500'}`}>{selectedLead.support_attempts || 0} tentativas</p>
+              </div>
+              <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                <p className="text-[9px] font-black text-amber-400 uppercase mb-1">Vendedor Atribuído</p>
+                <p className="text-xs font-bold text-white">{(selectedLead.seller as any)?.name || "—"}</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Notificado em</p>
+                <p className="text-xs font-bold text-white">
+                  {selectedLead.sent_to_seller_at
+                    ? new Date(selectedLead.sent_to_seller_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+                    : "—"}
+                </p>
               </div>
             </div>
 
@@ -200,6 +255,7 @@ export default function PipelinePage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

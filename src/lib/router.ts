@@ -269,6 +269,11 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
     return;
   }
 
+  // Normalizar número: garantir que começa com 55 (DDI Brasil)
+  let sellerPhone = seller.whatsapp_number.replace(/\D/g, '');
+  if (!sellerPhone.startsWith('55')) sellerPhone = '55' + sellerPhone;
+  console.log(`[Roteador] Número vendedor normalizado: ${sellerPhone}`);
+
   // 2. Buscar dados do lead
   const { data: lead } = await supabase.from('leads').select('whatsapp_number, name').eq('id', leadId).single();
   
@@ -323,13 +328,13 @@ ${resumo}
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        number: seller.whatsapp_number,
+        number: sellerPhone,
         text
       })
     });
     
     const responseData = await response.json().catch(() => ({}));
-    console.log(`[Roteador] Notificação enviada para ${seller.name} (${seller.whatsapp_number}):`, response.status, responseData);
+    console.log(`[Roteador] Notificação enviada para ${seller.name} (${sellerPhone}):`, response.status, responseData);
     
     // Registrar no log de auditoria
     await supabase.from('debug_logs').insert([{
@@ -337,7 +342,7 @@ ${resumo}
       level: 'INFO',
       module: 'ROUTER',
       action: `Notificação enviada para ${seller.name}`,
-      details: { seller_whatsapp: seller.whatsapp_number, status: response.status, ticket: ticketCode }
+      details: { seller_whatsapp: sellerPhone, status: response.status, ticket: ticketCode }
     }]).then(() => {});
     
   } catch (err: any) {
