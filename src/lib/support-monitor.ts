@@ -28,6 +28,81 @@ const FOLLOW_UP_SCHEDULE = [
 const ESCALATION_MINUTES = 120; // 2h → escalar supervisor
 
 /**
+ * Busca o supervisor de uma equipe de forma robusta.
+ * Tenta buscar campos supervisor_phone/supervisor_name da tabela teams, ou gerente manager_id.
+ */
+async function getTeamSupervisor(teamId: string | null): Promise<{ name: string; phone: string } | null> {
+  if (!teamId) return null;
+
+  try {
+    const { data: team } = await supabase
+      .from('teams')
+      .select('manager_id, supervisor_name, supervisor_phone')
+      .eq('id', teamId)
+      .single();
+
+    if (!team) return null;
+
+    if (team.supervisor_phone) {
+      return {
+        name: team.supervisor_name || 'Supervisor',
+        phone: team.supervisor_phone
+      };
+    }
+
+    if (team.manager_id) {
+      const { data: manager } = await supabase
+        .from('admin_users')
+        .select('name, whatsapp_number')
+        .eq('id', team.manager_id)
+        .single();
+
+      if (manager?.whatsapp_number) {
+        return {
+          name: manager.name || 'Supervisor',
+          phone: manager.whatsapp_number
+        };
+      }
+    }
+  } catch (e) {
+    console.error('[Lino Suporte] Erro ao buscar supervisor:', e);
+  }
+
+  return null;
+}
+
+/**
+ * Busca o telefone ativo do vendedor.
+ * Tenta obter da tabela de instâncias ativas, ou whatsapp_number de admin_users.
+ */
+async function getSellerPhone(sellerId: string): Promise<string> {
+  try {
+    const { data: sellerInstance } = await supabase
+      .from('instances')
+      .select('phone_number')
+      .eq('assigned_user_id', sellerId)
+      .eq('active', true)
+      .limit(1)
+      .single();
+
+    if (sellerInstance?.phone_number) {
+      return sellerInstance.phone_number;
+    }
+
+    const { data: seller } = await supabase
+      .from('admin_users')
+      .select('whatsapp_number')
+      .eq('id', sellerId)
+      .single();
+
+    return seller?.whatsapp_number || '';
+  } catch (e) {
+    console.error('[Lino Suporte] Erro ao buscar telefone do vendedor:', e);
+    return '';
+  }
+}
+
+/**
  * Função principal do Lino Suporte.
  * Deve ser chamada periodicamente (a cada 5 min) pelo cron.
  */
@@ -146,16 +221,8 @@ async function processLead(
     return;
   }
 
-  // Buscar telefone do vendedor via instância
-  const { data: sellerInstance } = await supabase
-    .from('instances')
-    .select('phone_number')
-    .eq('assigned_user_id', assignedUserId)
-    .eq('active', true)
-    .limit(1)
-    .single();
-
-  const sellerPhone = sellerInstance?.phone_number || '';
+  // Buscar telefone do vendedor via helper
+  const sellerPhone = await getSellerPhone(assignedUserId);
 
   if (!sellerPhone) {
     result.errors.push(`Sem telefone para vendedor ${seller.name} (lead ${leadName})`);
@@ -164,10 +231,20 @@ async function processLead(
 
   // === LÓGICA DE ESCALONAMENTO ===
 
-  // Verificar se precisa escalar ao supervisor (2h+)
-  if (minutesWaiting >= ESCALATION_MINUTES && existingAttempts >= 3) {
-    const supervisor = (seller.teams as any)?.manager;
-    const supervisorPhone = supervisor?.whatsapp_number;
+  // Buscar regras de SLA no tenant_config
+  const { data: globalConfig } = await supabase
+    .from('tenant_config')
+    .select('sla_rules')
+    .limit(1)
+    .single();
+  const slaRules = globalConfig?.sla_rules || {};
+  const maxWaitHours = slaRules.max_wait_hours || 2;
+  const escalationMinutes = maxWaitHours * 60;
+
+  // Verificar se precisa escalar ao supervisor
+  if (minutesWaiting >= escalationMinutes && existingAttempts >= 3) {
+    const supervisor = await getTeamSupervisor(seller.team_id);
+    const supervisorPhone = supervisor?.phone;
 
     if (supervisorPhone) {
       const sent = await notifySupervisor(
@@ -189,7 +266,7 @@ async function processLead(
           status: 'ESCALATED',
         }]);
 
-        console.log(`[Lino Suporte] 🚨 Lead ${leadName} ESCALADO para supervisor ${supervisor.name}`);
+        console.log(`[Lino Suporte] 🚨 Lead ${leadName} ESCALADO para supervisor ${supervisor?.name || 'Supervisor'}`);
         result.escalated++;
       }
     } else {
@@ -358,13 +435,22 @@ async function decideActionByStatus(
     // Vendedor NÃO iniciou conversa ainda
     if (!sellerResponded) {
       
-      // 3+ retornos sem resposta = escalar supervisor
-      if (returnCount >= 3) {
+      // Buscar regras de SLA no tenant_config
+      const { data: globalConfig } = await supabase
+        .from('tenant_config')
+        .select('sla_rules')
+        .limit(1)
+        .single();
+      const slaRules = globalConfig?.sla_rules || {};
+      const maxWaitHours = slaRules.max_wait_hours || 2;
+
+      // Se os tempos (prazo SLA) estão estourados
+      if (hoursSinceSent >= maxWaitHours) {
         // Notificar supervisor urgentemente
         await notifySupervisorUrgent(lead);
         return {
           action: 'ESCALATE_SUPERVISOR',
-          message: 'Entendo sua urgência. Vou acionar nosso supervisor para verificar o que aconteceu.'
+          message: 'Entendo sua urgência. Já acionei o supervisor de equipe para verificar seu atendimento imediatamente.'
         };
       }
 
@@ -380,12 +466,16 @@ async function decideActionByStatus(
         };
       }
 
-      await notifySellerAboutLead(
-        lead.current_owner?.users?.phone_number || '',
-        lead.name || 'Lead',
-        lead.whatsapp_number || '',
-        3 // Mensagem de urgência
-      );
+      // Buscar telefone do vendedor via helper de forma segura
+      const sellerPhone = await getSellerPhone(lead.current_owner_id);
+      if (sellerPhone) {
+        await notifySellerAboutLead(
+          sellerPhone,
+          lead.name || 'Lead',
+          lead.whatsapp_number || '',
+          3 // Mensagem de urgência
+        );
+      }
       return {
         action: 'NOTIFY_SELLER',
         message: aiResponse.message
@@ -485,24 +575,16 @@ async function notifySellerUrgent(lead: any, returnCount: number): Promise<void>
   }
 }
 
-/**
- * Notifica supervisor urgentemente (quando vendedor não atende após múltiplas tentativas)
- */
 async function notifySupervisorUrgent(lead: any): Promise<void> {
-  // Notificar supervisor urgentemente
-  // Busca o gerente do time de forma simples
-  const { data: team } = await supabase.from('teams').select('manager_id').eq('id', lead.current_owner?.team_id).single();
-  
-  let supervisor = null;
-  if (team?.manager_id) {
-    const { data: s } = await supabase.from('admin_users').select('name, whatsapp_number').eq('id', team.manager_id).single();
-    supervisor = s;
+  const supervisor = await getTeamSupervisor(lead.current_owner?.team_id);
+
+  if (!supervisor?.phone) {
+    console.log(`[Lino Suporte] Sem supervisor configurado para equipe do lead ${lead.id}`);
+    return;
   }
 
-  if (!supervisor?.whatsapp_number) return;
-
   await notifySupervisor(
-    supervisor.whatsapp_number,
+    supervisor.phone,
     lead.current_owner?.name || 'Vendedor',
     lead.name || 'Lead',
     lead.whatsapp_number || ''
@@ -513,7 +595,7 @@ async function notifySupervisorUrgent(lead: any): Promise<void> {
     lead_id: lead.id,
     user_id: lead.current_owner_id,
     team_id: lead.current_owner?.team_id,
-    escalation_reason: 'Cliente voltou 3x sem resposta do vendedor'
+    escalation_reason: 'Cliente voltou com prazo de SLA estourado'
   }]);
 
   // Atualizar status para escalado
@@ -521,6 +603,7 @@ async function notifySupervisorUrgent(lead: any): Promise<void> {
     status: 'ESCALATED_TO_SUPERVISOR'
   }).eq('id', lead.id);
 }
+
 
 /**
  * Registra gargalo se vendedor não respondeu (lino-support-fiscalization)
@@ -643,7 +726,7 @@ export async function escalateToSupervisor(
 ): Promise<void> {
   const { data: lead } = await supabase
     .from('leads')
-    .select('*, current_owner:users(name, team_id, teams(supervisor_name, supervisor_phone))')
+    .select('*, current_owner:admin_users(name, team_id)')
     .eq('id', leadId)
     .single();
 
@@ -653,11 +736,11 @@ export async function escalateToSupervisor(
   await updateLeadStatus(leadId, 'ESCALATED_TO_SUPERVISOR');
 
   // Buscar telefone do supervisor
-  const supervisorPhone = lead.current_owner?.teams?.supervisor_phone;
+  const supervisor = await getTeamSupervisor(lead.current_owner?.team_id);
   
-  if (supervisorPhone) {
+  if (supervisor?.phone) {
     await notifySupervisor(
-      supervisorPhone,
+      supervisor.phone,
       lead.current_owner?.name || 'Vendedor',
       lead.name || 'Lead',
       lead.whatsapp_number || ''

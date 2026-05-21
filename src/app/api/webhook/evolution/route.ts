@@ -35,6 +35,20 @@ export async function POST(request: Request) {
 
       if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
+      // 1.5 IGNORAR SE O REMETENTE FOR UM FUNCIONÁRIO/VENDEDOR INTERNO
+      const senderPhone = remoteJid.replace(/\D/g, '');
+      const { data: internalUser } = await supabase
+        .from('admin_users')
+        .select('id, name')
+        .or(`whatsapp_number.ilike.%${senderPhone}%,whatsapp_number.ilike.%${senderPhone.substring(2)}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (internalUser) {
+        console.log(`[Webhook] Mensagem ignorada: remetente é funcionário interno (${internalUser.name} - ${senderPhone})`);
+        return NextResponse.json({ status: 'ignored', reason: 'sender_is_internal_user', name: internalUser.name });
+      }
+
       // 2. EXTRAÇÃO DE TEXTO
       const messageObj = messageData.message || messageData;
       let messageContent = messageObj?.conversation || 

@@ -122,6 +122,29 @@ export async function tipoColeta(product: any, segment: any, variables: LeadVari
 export async function routeLead(leadId: string, tenantId: string, variables: LeadVariables) {
   console.log('[Roteador] Iniciando roteamento para lead:', leadId);
 
+  // 0.5. Conversão numérica de quantidade para m2 ou m_lineares (prevenindo erro de limites Express)
+  if (variables.quantidade && !variables.m2 && !variables.m_lineares) {
+    const cleanQty = variables.quantidade.replace(/[^\d.,]/g, '').replace(',', '.');
+    const num = parseFloat(cleanQty);
+    if (!isNaN(num)) {
+      const lowerQty = variables.quantidade.toLowerCase();
+      if (lowerQty.includes('m2') || lowerQty.includes('m²')) {
+        variables.m2 = num;
+      } else if (lowerQty.includes('m') || lowerQty.includes('metro') || lowerQty.includes('ml')) {
+        variables.m_lineares = num;
+      } else {
+        // Fallback inteligente baseado no produto (ex: chapas -> m2, gradil/antiofuscante -> metros)
+        const prodLower = (variables.produto || '').toLowerCase();
+        if (prodLower.includes('gradil') || prodLower.includes('tela') || prodLower.includes('cerca') || prodLower.includes('antiofuscante')) {
+          variables.m_lineares = num;
+        } else {
+          variables.m2 = num;
+        }
+      }
+      console.log(`[Roteador] Quantidade convertida de "${variables.quantidade}" para m2=${variables.m2}, m_lineares=${variables.m_lineares}`);
+    }
+  }
+
   // 1. Resolver produto
   const product = variables.produto ? await resolverProduto(variables.produto) : null;
   const brandName = product?.brands?.name || null;

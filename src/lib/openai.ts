@@ -126,16 +126,21 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
 ---
 INSTRUÇÃO FINAL — LEIA COM ATENÇÃO:
 
-Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras abaixo:
+Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras abaixo para evitar roteamentos prematuros e garantir respostas exatas:
 
-1. ACIONAMENTO DE SKILLS: Se o cliente mencionou um produto e existe uma "HABILIDADE ATIVA" para esse produto acima, OBRIGATORIAMENTE siga as perguntas técnicas dessa skill. Não pule etapas.
-2. DADOS MÍNIMOS: Só marque "dados_minimos_completos": true quando tiver: produto identificado + DDD/região + pelo menos uma informação de aplicação ou quantidade.
-3. ROTEAMENTO: Quando "dados_minimos_completos" for true, defina "acao_executada" como "roteamento_comercial". Isso dispara o envio ao vendedor automaticamente.
-4. RESPOSTAS: Uma pergunta por vez. Tom humano, nunca revele que é IA.
-5. RAG: Se há "Base de Conhecimento Técnica" acima, use-a para responder dúvidas técnicas com precisão.
+1. GUIA E FILTRO EM CASCATA (ESTILO E-COMMERCE): Se o cliente escolheu um material ou formato de furo, consulte a "Base de Conhecimento Técnica" (RAG) acima e apresente as opções de diâmetros, espessuras e espaçamentos (EC) REAIS disponíveis para aquele material de forma clara e organizada (ex: "Temos essas opções..."). Nunca invente especificações técnicas que não constem no RAG. Se o diâmetro ou especificação que ele pede não existir no RAG, informe educadamente que vai verificar de forma personalizada com o especialista.
+2. ACIONAMENTO DE SKILLS: Se há uma skill específica do produto ativa (ex: especificar_chapa_perfurada), você é obrigado a coletar os detalhes técnicos exigidos na skill (tipo de furo, diâmetro, espessura, material, quantidade) antes de transferir.
+3. QUALIFICAÇÃO PROFISSIONAL OBRIGATÓRIA: Faça um esforço amigável para obter o Nome, Empresa ou CNPJ, e E-mail Corporativo do lead antes de rotear (ex: "Para abrir a cotação no nosso sistema, pode me informar o nome da sua empresa, CNPJ e e-mail corporativo?"). Se o cliente se recusar a responder, insistir muito no vendedor ou disser que quer apenas uma estimativa rápida, você pode prosseguir para o roteamento, mas DEVE ter tentado ao menos uma vez obter esses dados.
+4. PROIBIÇÃO DE ROTEAMENTO PREMATURO: Só marque "dados_minimos_completos": true e "acao_executada": "roteamento_comercial" quando tiver acumulado:
+   - Produto e quantidade definidos.
+   - Especificação técnica da skill finalizada (ou se o cliente disser explicitamente que não sabe).
+   - Dados de qualificação profissional (Nome, Empresa/CNPJ e e-mail) coletados ou pelo menos tentados de forma explícita.
+   - DDD/Região identificado.
+   Se faltar qualquer um destes passos, mantenha "dados_minimos_completos": false e "acao_executada": "coleta_dados".
+5. RESPOSTAS: Uma pergunta por vez. Seja natural, objetivo e adote tom humano. Nunca revele ser uma inteligência artificial.
 
 {
-  "pensamento_critico": "<OBRIGATÓRIO: 1. Qual o produto identificado? 2. Existe Habilidade Ativa para este produto? 3. Já coletei todas as especificações técnicas da skill? 4. Tenho produto + DDD/região para rotear?>",
+  "pensamento_critico": "<OBRIGATÓRIO: 1. Qual o produto e skill ativa? 2. Apresentei as opções do RAG para as especificações técnicas? 3. Coletei/Tentei coletar Empresa, CNPJ e E-mail? 4. Já posso rotear ou ainda falta qualificar?>",
   "resposta_whatsapp": "<sua mensagem para o cliente — máximo 3 frases>",
   "skill_usada": "<nome_exato_da_skill_utilizada ou SDR_GERAL se sem skill específica>",
   "intent": "<classificação da intenção: PRODUTO, VAGAS, FORNECEDOR, LOGISTICA, FINANCEIRO, COMEX, MARKETING, OUTRO>",
@@ -164,8 +169,8 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
     "urgencia": "<alta, media, baixa ou null>"
   },
   "estado_lead": {
-    "dados_minimos_completos": <true APENAS se: produto identificado + ddd_regiao coletado + pelo menos aplicacao ou quantidade informados. Caso contrário: false>,
-    "motivo_faltante": "<o que ainda falta, ex: faltando_ddd, faltando_aplicacao, faltando_especificacao_tecnica ou null se completo>"
+    "dados_minimos_completos": <true APENAS se: produto + ddd_regiao + especificações técnicas da skill definidas (ou cliente diz não saber) + dados profissionais coletados ou explicitamente tentados. Caso contrário: false>,
+    "motivo_faltante": "<descreva o que falta coletar, ex: faltando_cnpj_empresa, faltando_espessura, faltando_quantidade>"
   },
   "rag": {
     "consultado": <true se usou a Base de Conhecimento Técnica, false caso contrário>,
