@@ -23,7 +23,7 @@ export default function FluxosPage() {
         <div className="flex gap-2">
           <input 
             type="text" 
-            placeholder="Cole o ID do Lead para Debug" 
+            placeholder="Nome, Telefone ou ID do Lead" 
             className="w-72 bg-slate-800 text-white border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
