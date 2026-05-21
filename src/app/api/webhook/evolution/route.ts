@@ -222,46 +222,71 @@ export async function POST(request: Request) {
             }
           }]);
           
-          // Garantir extração de DDD via número de telefone
+          // ⚠️ DDD: SEMPRE extrair do número de telefone. A IA NÃO tem acesso ao número real.
           const rawPhone = remoteJid.replace(/\D/g, '');
           const systemDdd = rawPhone.length >= 12 && rawPhone.startsWith('55') ? rawPhone.substring(2, 4) : null;
-          const dddToUse = aiResult.cliente?.ddd_regiao || systemDdd || null;
+          
+          // Sanitizar ddd_regiao da IA: rejeitar placeholders e strings inválidas
+          const aiDdd = aiResult.cliente?.ddd_regiao;
+          const aiDddClean = aiDdd && /^\d{2}$/.test(String(aiDdd).trim()) ? String(aiDdd).trim() : null;
+          
+          // systemDdd tem prioridade máxima (extraído do número real)
+          const dddToUse = systemDdd || aiDddClean || null;
+
+          // Segmento normalizado da IA
+          const segmentoNormalizado = aiResult.demanda?.segmento_normalizado || null;
 
           const variaveis = {
             produto: aiResult.demanda?.produto_normalizado || aiResult.demanda?.produto_familia || aiResult.demanda?.produto_modelo || null,
             ddd: dddToUse,
             quantidade: aiResult.demanda?.quantidade_metragem || null,
-            aplicacao: aiResult.demanda?.segmento_aplicacao || null,
+            aplicacao: aiResult.demanda?.segmento_aplicacao || segmentoNormalizado || null,
             nome_cliente: aiResult.cliente?.nome || null,
             empresa: aiResult.cliente?.empresa || null,
             cnpj: aiResult.cliente?.cnpj || null,
             email: aiResult.cliente?.email || null,
-            segmento_detectado: aiResult.demanda?.segmento_aplicacao || null
+            segmento_detectado: segmentoNormalizado || aiResult.demanda?.segmento_aplicacao || null
           };
+
+          console.log(`[Webhook] DDD → sistema: ${systemDdd} | IA: ${aiDdd} | usando: ${dddToUse}`);
+          console.log(`[Webhook] Empresa: ${variaveis.empresa} | Email: ${variaveis.email} | CNPJ: ${variaveis.cnpj}`);
           
           const leadUpdate: any = { 
             updated_at: new Date().toISOString()
           };
+          // Produto e DDD — sempre atualiza se disponível
           if (variaveis.produto) leadUpdate.detected_product = variaveis.produto;
-          if (variaveis.ddd) leadUpdate.detected_ddd = variaveis.ddd;
+          if (dddToUse) leadUpdate.detected_ddd = dddToUse;
+          if (dddToUse) leadUpdate.detected_city = `DDD ${dddToUse}`;
+          
+          // Dados profissionais — atualiza APENAS se vier preenchido (não apaga existente)
           if (variaveis.empresa) leadUpdate.company = variaveis.empresa;
           if (variaveis.nome_cliente) leadUpdate.name = variaveis.nome_cliente;
-          
-          // Novos mapeamentos para coerência total
           if (variaveis.cnpj) leadUpdate.cnpj = variaveis.cnpj;
           if (variaveis.email) leadUpdate.email_corporativo = variaveis.email;
           if (aiResult.cliente?.cargo) leadUpdate.cargo = aiResult.cliente.cargo;
           if (variaveis.quantidade) leadUpdate.quantidade = variaveis.quantidade;
-          if (aiResult.demanda?.especificacao_detalhada || aiResult.demanda?.acabamento) {
-            leadUpdate.especificacao = `${aiResult.demanda.especificacao_detalhada || ''} | ${aiResult.demanda.acabamento || ''} | ${aiResult.demanda.dimensoes || ''}`;
-          }
-          if (aiResult.cliente?.ddd_regiao) leadUpdate.detected_city = aiResult.cliente.ddd_regiao;
+          
+          // Especificação técnica
+          const especParts = [aiResult.demanda?.dimensoes, aiResult.demanda?.acabamento, aiResult.demanda?.material].filter(Boolean);
+          if (especParts.length > 0) leadUpdate.especificacao = especParts.join(' | ');
           
           if (acao_executada.includes('outro_setor')) {
             leadUpdate.status = 'CANCELED';
           }
           
-          await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
+          // Salvar com log de erro explícito
+          const { error: updateError } = await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
+          if (updateError) {
+            console.error('[Webhook] ❌ ERRO ao salvar lead:', updateError);
+            await supabase.from('debug_logs').insert([{
+              lead_id: lead.id, level: 'ERROR', module: 'WEBHOOK',
+              action: 'LEAD_UPDATE_FAILED',
+              details: { error: updateError, leadUpdate }
+            }]);
+          } else {
+            console.log('[Webhook] ✅ Lead salvo:', Object.keys(leadUpdate).join(', '));
+          }
 
           if (resposta_whatsapp) {
             await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'sdr_ai', message_content: resposta_whatsapp }]);
@@ -277,25 +302,43 @@ export async function POST(request: Request) {
             }
           } else {
             // --- ROTEAMENTO ROBUSTO ---
-            // Dispara se: (1) IA marcou dados_minimos_completos=true  OU  (2) acao_executada contém "roteamento"
-            const dadosCompletos = aiResult.estado_lead?.dados_minimos_completos === true 
-                                || aiResult.estado_lead?.dados_minimos_completos === 'true';
             const acaoEhRoteamento = acao_executada.includes('roteamento') 
                                   || acao_executada.includes('encaminhar') 
                                   || acao_executada.includes('transfer');
 
-            const deveRotear = (dadosCompletos || acaoEhRoteamento) && variaveis?.produto && variaveis?.ddd;
+            // Dados comerciais mínimos para rotear
+            const temDadosComerciais = !!(variaveis.empresa || variaveis.email || variaveis.cnpj);
 
-            console.log(`[Webhook] Roteamento check — dadosCompletos: ${dadosCompletos}, acaoEhRoteamento: ${acaoEhRoteamento}, produto: ${variaveis?.produto}, ddd: ${variaveis?.ddd}`);
+            // Contar tentativas de coleta já feitas (recuperar do banco)
+            const { data: leadAtual } = await supabase.from('leads').select('tentativas_coleta').eq('id', lead.id).single();
+            const tentativasColeta = leadAtual?.tentativas_coleta || 0;
+
+            // Se ação é coleta_dados, incrementar contador
+            if (acao_executada.includes('coleta')) {
+              await supabase.from('leads').update({ tentativas_coleta: tentativasColeta + 1 }).eq('id', lead.id);
+            }
+
+            // Critérios para rotear:
+            // 1. Tem produto + DDD (obrigatórios)
+            // 2. IA marcou roteamento E tem dados comerciais OU já tentou 2+ vezes coletar
+            const temMinimo = !!(variaveis.produto && dddToUse);
+            const podeRotearComDados = acaoEhRoteamento && temDadosComerciais;
+            const forcaRoteamentoPorTentativas = acaoEhRoteamento && tentativasColeta >= 2;
+            const deveRotear = temMinimo && (podeRotearComDados || forcaRoteamentoPorTentativas);
+
+            console.log(`[Webhook] Roteamento check — acao: ${acao_executada}, produto: ${variaveis?.produto}, ddd: ${dddToUse}, empresa: ${variaveis.empresa}, tentativas: ${tentativasColeta}, deveRotear: ${deveRotear}`);
 
             if (deveRotear) {
-              console.log(`[Webhook] ✅ Roteando lead ${lead.id} para vendedor...`);
+              console.log(`[Webhook] ✅ Roteando lead ${lead.id} — dados comerciais: ${temDadosComerciais}, tentativas: ${tentativasColeta}`);
               if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
                 await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, "Estou te transferindo para o especialista agora...");
               }
               await routeLead(lead.id, lead.tenant_id, variaveis);
             } else {
-              console.log(`[Webhook] ⏳ Ainda coletando dados — motivo: ${aiResult.estado_lead?.motivo_faltante || 'não informado'}`);
+              const motivo = !temMinimo ? `produto ou DDD ausente (produto=${variaveis?.produto}, ddd=${dddToUse})` 
+                           : !acaoEhRoteamento ? `IA ainda coletando (tentativas=${tentativasColeta})`
+                           : `aguardando dados comerciais (tentativas=${tentativasColeta}/2)`;
+              console.log(`[Webhook] ⏳ Não rotear — motivo: ${motivo}`);
             }
           }
 

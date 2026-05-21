@@ -263,7 +263,39 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
     }
   }
 
-  // 8. Fallback por Equipe: qualquer um da equipe com WhatsApp cadastrado
+  // 8. Fallback Express: tenta rota Express antes do fallback genérico
+  if (!matchedRule && product) {
+    const isExp = await isExpress(product, variables);
+    if (isExp) {
+      console.log('[Roteador] Nenhuma regra específica. Tentando fallback Express...');
+      const { data: expressRule } = await supabase
+        .from('routing_rules')
+        .select('id, assigned_user_id, seller_ids, last_seller_index, region_ids, product_ids, segment_id, region, product_id, priority, is_express')
+        .eq('is_express', true)
+        .order('priority', { ascending: true })
+        .limit(1)
+        .single();
+      if (expressRule) {
+        matchedRule = expressRule;
+        console.log(`[Roteador] Fallback Express ativado: regra ${expressRule.id}`);
+      }
+    }
+  }
+
+  // Se matchedRule foi obtida pelo fallback Express, executar seleção de vendedor
+  if (matchedRule && !assignedUserId) {
+    const sellerIds: string[] = matchedRule.seller_ids || [];
+    const availableSellers = sellerIds.filter((id: string) => activeSellerIds.includes(id));
+    if (availableSellers.length > 0) {
+      const idx = (matchedRule.last_seller_index || 0) % availableSellers.length;
+      assignedUserId = availableSellers[idx];
+      supabase.from('routing_rules').update({ last_seller_index: (matchedRule.last_seller_index || 0) + 1 }).eq('id', matchedRule.id).then(() => {});
+    } else if (matchedRule.assigned_user_id) {
+      assignedUserId = matchedRule.assigned_user_id;
+    }
+  }
+
+  // 8.5 Fallback por Equipe: qualquer um da equipe com WhatsApp cadastrado
   if (!assignedUserId) {
     const teamName = finalBrand || 'Construção';
     const { data: team } = await supabase.from('teams').select('id').ilike('name', `%${teamName}%`).limit(1).single();
