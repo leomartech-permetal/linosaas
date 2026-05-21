@@ -1,6 +1,16 @@
+"use client";
+
+import { useState } from 'react';
 import FlowVisualizer from '../components/FlowVisualizer';
 
 export default function FluxosPage() {
+  const [searchInput, setSearchInput] = useState('');
+  const [leadId, setLeadId] = useState('');
+
+  const handleSearch = () => {
+    setLeadId(searchInput);
+  };
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="mb-6 flex justify-between items-center">
@@ -11,17 +21,27 @@ export default function FluxosPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition text-sm">
-            Modo Debug
+          <input 
+            type="text" 
+            placeholder="Cole o ID do Lead para Debug" 
+            className="w-72 bg-slate-800 text-white border border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <button 
+            onClick={handleSearch}
+            className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md transition text-sm">
+            Rastrear Fluxo
           </button>
           <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md transition text-sm font-medium">
-            Publicar Fluxo
+            Publicar Regras
           </button>
         </div>
       </div>
       
-      <div className="flex-1 min-h-[600px]">
-        <FlowVisualizer />
+      <div className="flex-1 min-h-[600px] relative">
+        <FlowVisualizer leadId={leadId} />
       </div>
     </div>
   );
