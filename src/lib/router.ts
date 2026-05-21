@@ -99,9 +99,17 @@ export async function isExpress(product: any, variables: LeadVariables): Promise
   if (!rule || !rule.config) return false;
   const config = rule.config as any;
 
-  // 2. Verificar exclusões (ex: antiofuscante, belinox)
+  // 1.5. Verificar elegibilidade explícita do produto (se false, nunca é express)
+  if (product && product.is_express_eligible === false) return false;
+
+  // 2. Verificar exclusões por palavra-chave (ex: antiofuscante, belinox)
   const productName = product.name.toLowerCase();
   if (config.exclusions?.some((ex: string) => productName.includes(ex.toLowerCase()))) {
+    return false;
+  }
+
+  // 2.5. Exigir quantidade conhecida para ser Express
+  if (!variables.quantidade && !variables.m2 && !variables.pecas_2x1 && !variables.pecas_3x1 && !variables.m_lineares) {
     return false;
   }
 

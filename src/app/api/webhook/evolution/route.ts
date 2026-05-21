@@ -240,8 +240,7 @@ export async function POST(request: Request) {
           };
           
           const leadUpdate: any = { 
-            updated_at: new Date().toISOString(),
-            last_skill_used: skill_usada
+            updated_at: new Date().toISOString()
           };
           if (variaveis.produto) leadUpdate.detected_product = variaveis.produto;
           if (variaveis.ddd) leadUpdate.detected_ddd = variaveis.ddd;
