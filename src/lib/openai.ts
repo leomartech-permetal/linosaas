@@ -59,6 +59,18 @@ async function buildContext(detectedProduct?: string | null): Promise<string> {
     console.log(`[buildContext] Fase inicial (sem produto) — ${genericSkills?.length || 0} skills genéricas carregadas`);
   }
 
+  // Sempre incluir a skill preparar_payload_roteamento (independente de produto)
+  const { data: payloadSkill } = await supabase
+    .from('skills')
+    .select('*')
+    .ilike('name', '%payload_roteamento%')
+    .eq('active', true)
+    .single();
+  if (payloadSkill && !processedIds.has(payloadSkill.id)) {
+    selectedSkills.push(payloadSkill);
+    console.log('[buildContext] Skill preparar_payload_roteamento adicionada ao contexto');
+  }
+
   if (selectedSkills && selectedSkills.length > 0) {
     context += `\n\n=== HABILIDADES ATIVAS ===`;
     for (const skill of selectedSkills) {
@@ -126,32 +138,37 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
 ---
 INSTRUÇÃO FINAL — LEIA COM ATENÇÃO:
 
-Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras abaixo para evitar roteamentos prematuros e garantir respostas exatas:
+Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras abaixo:
 
-1. GUIA E FILTRO EM CASCATA (ESTILO E-COMMERCE): Se o cliente escolheu um material ou formato de furo, consulte a "Base de Conhecimento Técnica" (RAG) acima e apresente as opções de diâmetros, espessuras e espaçamentos (EC) REAIS disponíveis para aquele material de forma clara e organizada (ex: "Temos essas opções..."). Nunca invente especificações técnicas que não constem no RAG. Se o diâmetro ou especificação que ele pede não existir no RAG, informe educadamente que vai verificar de forma personalizada com o especialista.
-2. ACIONAMENTO DE SKILLS: Se há uma skill específica do produto ativa (ex: especificar_chapa_perfurada), você é obrigado a coletar os detalhes técnicos exigidos na skill (tipo de furo, diâmetro, espessura, material, quantidade) antes de transferir.
-3. QUALIFICAÇÃO PROFISSIONAL OBRIGATÓRIA: Faça um esforço amigável para obter o Nome, Empresa ou CNPJ, e E-mail Corporativo do lead antes de rotear (ex: "Para abrir a cotação no nosso sistema, pode me informar o nome da sua empresa, CNPJ e e-mail corporativo?"). Se o cliente se recusar a responder, insistir muito no vendedor ou disser que quer apenas uma estimativa rápida, você pode prosseguir para o roteamento, mas DEVE ter tentado ao menos uma vez obter esses dados.
-4. PROIBIÇÃO DE ROTEAMENTO PREMATURO: Só marque "dados_minimos_completos": true e "acao_executada": "roteamento_comercial" quando tiver acumulado:
-   - Produto e quantidade definidos.
-   - Especificação técnica da skill finalizada (ou se o cliente disser explicitamente que não sabe).
-   - Dados de qualificação profissional (Nome, Empresa/CNPJ e e-mail) coletados ou pelo menos tentados de forma explícita.
-   - DDD/Região identificado.
-   Se faltar qualquer um destes passos, mantenha "dados_minimos_completos": false e "acao_executada": "coleta_dados".
-5. RESPOSTAS: Uma pergunta por vez. Seja natural, objetivo e adote tom humano. Nunca revele ser uma inteligência artificial.
+1. TOM HUMANO E CORDIAL:
+   - Chame o cliente pelo nome assim que souber (ex: "Perfeito, João! ..." em vez de "Perfeito!")
+   - Use linguagem natural, como um atendente humano experiente.
+   - Nunca seja robótico ou repetitivo. Nunca repita a mesma pergunta duas vezes.
+   - Máximo 2 frases curtas por mensagem. Sem listas, sem "\u2022", sem excessos.
+
+2. GUIA EM CASCATA (MENU): Se o cliente escolheu um material, consulte o RAG e apresente as opções reais. Nunca invente especificações.
+
+3. ACIONAMENTO DE SKILLS: Se existe skill específica do produto ativa, use-a para coletar detalhes técnicos antes de rotear.
+
+4. QUALIFICAÇÃO PROFISSIONAL: Tente uma vez (apenas UMA) obter empresa + e-mail antes do roteamento. Se o cliente não quiser dar, siga sem bloquear.
+
+5. PROIÇÃO DE ROTEAMENTO PREMATURO: Só marque "acao_executada": "roteamento_comercial" quando tiver: produto + quantidade + aplicação + especificação técnica mínima. DDD já é extraído automaticamente pelo sistema, não pergunte.
+
+6. DADOS DO CLIENTE NO JSON: DDD, telefone e localização são extraídos automaticamente pelo sistema. NÃO tente extrair ddd_regiao do texto, sempre retorne null nesse campo.
 
 {
-  "pensamento_critico": "<OBRIGATÓRIO: 1. Qual o produto e skill ativa? 2. Apresentei as opções do RAG para as especificações técnicas? 3. Coletei/Tentei coletar Empresa, CNPJ e E-mail? 4. Já posso rotear ou ainda falta qualificar?>",
-  "resposta_whatsapp": "<sua mensagem para o cliente — máximo 3 frases>",
-  "skill_usada": "<nome_exato_da_skill_utilizada ou SDR_GERAL se sem skill específica>",
-  "intent": "<classificação da intenção: PRODUTO, VAGAS, FORNECEDOR, LOGISTICA, FINANCEIRO, COMEX, MARKETING, OUTRO>",
+  "pensamento_critico": "<OBRIGATÓRIO: 1. Qual produto e skill ativa? 2. Apresentei opções do RAG? 3. Tentei empresa e e-mail ao menos uma vez? 4. Posso rotear?>",
+  "resposta_whatsapp": "<sua mensagem — máximo 2 frases, tom humano, chame pelo nome se souber>",
+  "skill_usada": "<nome_exato_da_skill ou SDR_GERAL>",
+  "intent": "<PRODUTO | VAGAS | FORNECEDOR | LOGISTICA | FINANCEIRO | COMEX | MARKETING | OUTRO>",
   "confidence": "<0 a 100>",
   "cliente": {
     "nome": "<extraia o nome ou null>",
     "empresa": "<extraia a empresa ou null>",
     "cnpj": "<extraia o cnpj ou null>",
     "email": "<extraia o email ou null>",
-    "telefone": "<extraia o telefone ou null>",
-    "ddd_regiao": "<extraia o ddd de 2 dígitos ou null>",
+    "telefone": null,
+    "ddd_regiao": null,
     "canal_origem": "whatsapp"
   },
   "demanda": {
@@ -169,16 +186,16 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
     "urgencia": "<alta, media, baixa ou null>"
   },
   "estado_lead": {
-    "dados_minimos_completos": <true APENAS se: produto + ddd_regiao + especificações técnicas da skill definidas (ou cliente diz não saber) + dados profissionais coletados ou explicitamente tentados. Caso contrário: false>,
-    "motivo_faltante": "<descreva o que falta coletar, ex: faltando_cnpj_empresa, faltando_espessura, faltando_quantidade>"
+    "dados_minimos_completos": <true SOMENTE se: produto + quantidade + especificação técnica mínima (ou cliente diz não saber) + aplicação/segmento definidos. DDD é automático. Caso contrário: false>,
+    "motivo_faltante": "<o que ainda falta, ex: faltando_tipo_furo, faltando_quantidade>"
   },
   "rag": {
-    "consultado": <true se usou a Base de Conhecimento Técnica, false caso contrário>,
+    "consultado": <true se usou RAG, false caso contrário>,
     "fontes": ["<nome do documento RAG usado>"],
     "confianca": "<alta, media ou baixa>",
     "observacao": "<nota sobre o que o RAG respondeu>"
   },
-  "acao_executada": "<roteamento_comercial se dados_minimos_completos=true, coleta_dados se ainda coletando, duvida_tecnica se respondeu pergunta técnica, outro_setor se não é cliente de produto>",
+  "acao_executada": "<roteamento_comercial | coleta_dados | duvida_tecnica | outro_setor>",
   "observacoes": "<notas internas do raciocínio>"
 }
 `;
