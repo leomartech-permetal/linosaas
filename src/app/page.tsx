@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import LeadDrawer from "@/app/components/LeadDrawer";
 
 const COLUMNS = [
   { key: "SDR_QUALIFICATION", label: "SDR Qualificando", color: "#3b82f6" },
@@ -50,6 +51,16 @@ export default function PipelinePage() {
     setSelectedLead(null);
     carregarLeads();
   }
+
+  const handleUpdateLead = async (field: string, value: any) => {
+    if (!selectedLead) return;
+    const { error } = await supabase.from('leads').update({ [field]: value }).eq('id', selectedLead.id);
+    if (!error) {
+      const updated = { ...selectedLead, [field]: value };
+      setSelectedLead(updated);
+      setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
+    }
+  };
 
   function handleDragStart(id: string) { setDraggedId(id); }
   function handleDragOver(e: React.DragEvent) { e.preventDefault(); }
@@ -161,101 +172,13 @@ export default function PipelinePage() {
         </div>
       )}
 
-      {/* Modal Detalhes (Dark) */}
-      {selectedLead && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={() => setSelectedLead(null)}>
-          <div className="bg-[#0f0f0f] p-8 rounded-3xl border border-gray-800 w-full max-w-xl shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h3 className="text-2xl font-black tracking-tighter">{selectedLead.name || "Interesse Anônimo"}</h3>
-                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{selectedLead.whatsapp_number}</p>
-              </div>
-              <button onClick={() => setSelectedLead(null)} className="text-gray-500 hover:text-white bg-white/5 p-2 rounded-full transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-            </div>
-
-            {/* Seção: Qualificação Profissional */}
-            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Qualificação Profissional</p>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Nome</p>
-                <p className="text-xs font-bold text-white">{selectedLead.name || "—"}</p>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Cargo</p>
-                <p className="text-xs font-bold text-white">{selectedLead.cargo || "—"}</p>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Empresa</p>
-                <p className="text-xs font-bold text-white">{selectedLead.company || selectedLead.empresa || "—"}</p>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">CNPJ</p>
-                <p className="text-xs font-bold text-white">{selectedLead.cnpj || "—"}</p>
-              </div>
-              <div className="col-span-2 p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">E-mail Corporativo</p>
-                <p className="text-xs font-bold text-white">{selectedLead.email_corporativo || "—"}</p>
-              </div>
-            </div>
-
-            {/* Seção: Interesse de Produto */}
-            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Interesse de Produto</p>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="col-span-2 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                <p className="text-[9px] font-black text-blue-400 uppercase mb-1">Produto Detectado</p>
-                <p className="text-xs font-bold text-white">{selectedLead.detected_product || selectedLead.produto || "—"}</p>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Quantidade</p>
-                <p className="text-xs font-bold text-white">{selectedLead.quantidade || "—"}</p>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Cidade / DDD</p>
-                <p className="text-xs font-bold text-white">{selectedLead.detected_city || (selectedLead.detected_ddd ? `DDD ${selectedLead.detected_ddd}` : "—")}</p>
-              </div>
-              <div className="col-span-2 p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Especificação Detalhada</p>
-                <p className="text-xs font-bold text-white">{selectedLead.especificacao || "—"}</p>
-              </div>
-            </div>
-
-            {/* Seção: Atribuição e SLA */}
-            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3">Atribuição e SLA</p>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Status</p>
-                <p className="text-xs font-bold text-blue-400">{COLUMNS.find(c => c.key === selectedLead.status)?.label || selectedLead.status}</p>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Intervenção (SLA)</p>
-                <p className={`text-xs font-bold ${selectedLead.support_attempts > 0 ? 'text-red-500' : 'text-green-500'}`}>{selectedLead.support_attempts || 0} tentativas</p>
-              </div>
-              <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                <p className="text-[9px] font-black text-amber-400 uppercase mb-1">Vendedor Atribuído</p>
-                <p className="text-xs font-bold text-white">{(selectedLead.seller as any)?.name || "—"}</p>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Notificado em</p>
-                <p className="text-xs font-bold text-white">
-                  {selectedLead.sent_to_seller_at
-                    ? new Date(selectedLead.sent_to_seller_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-                    : "—"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <button onClick={() => setSelectedLead(null)} className="flex-1 bg-white text-black font-black py-4 rounded-2xl hover:opacity-90 uppercase text-xs tracking-widest transition-all">Fechar Detalhes</button>
-              <button onClick={() => excluirLead(selectedLead.id)} className="px-6 border border-red-500/30 text-red-500 rounded-2xl hover:bg-red-500/10 transition-all">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Gaveta Detalhes (Unificada) */}
+      <LeadDrawer 
+        selectedLead={selectedLead}
+        onClose={() => setSelectedLead(null)}
+        onUpdateLead={handleUpdateLead}
+        onDeleteLead={excluirLead}
+      />
     </div>
   );
 }

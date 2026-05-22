@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import LeadDrawer from "@/app/components/LeadDrawer";
 
 export default function SDRLeadsPage() {
   const [leads, setLeads] = useState<any[]>([]);
@@ -55,6 +56,13 @@ export default function SDRLeadsPage() {
       setSelectedLead(updated);
       setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
     }
+  };
+
+  const handleDeleteLead = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este lead?")) return;
+    await supabase.from("leads").delete().eq("id", id);
+    setSelectedLead(null);
+    loadLeads();
   };
 
   return (
@@ -144,108 +152,12 @@ export default function SDRLeadsPage() {
       </div>
 
       {/* Painel Lateral (Drawer) */}
-      <div className={`fixed top-0 right-0 h-screen w-[450px] bg-[#0f0f0f] border-l border-gray-800 shadow-2xl transition-transform duration-300 transform z-50 flex flex-col ${selectedLead ? 'translate-x-0' : 'translate-x-full'}`}>
-        {selectedLead && (
-          <>
-            <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#111]">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setSelectedLead(null)} className="text-gray-500 hover:text-white">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-                <h3 className="font-bold text-lg">Detalhes do Lead</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => handleUpdateLead('bot_active', !selectedLead.bot_active)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all ${selectedLead.bot_active ? 'bg-green-500/20 text-green-400 border border-green-500/40' : 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/40'}`}
-                >
-                  {selectedLead.bot_active ? '🤖 Bot Ativo' : '✋ Bot Pausado'}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
-              {/* Seção 1: Perfil Profissional */}
-              <section>
-                <h5 className="text-[10px] text-gray-600 font-black uppercase tracking-[0.2em] mb-4">Qualificação Profissional</h5>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 uppercase">Nome</label>
-                    <input value={selectedLead.name || ''} onChange={(e) => handleUpdateLead('name', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 uppercase">Cargo</label>
-                    <input value={selectedLead.cargo || ''} onChange={(e) => handleUpdateLead('cargo', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 uppercase">Empresa</label>
-                    <input value={selectedLead.empresa || selectedLead.company || ''} onChange={(e) => handleUpdateLead('empresa', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 uppercase">CNPJ</label>
-                    <input value={selectedLead.cnpj || ''} onChange={(e) => handleUpdateLead('cnpj', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                  </div>
-                  <div className="col-span-2 space-y-1">
-                    <label className="text-[10px] text-gray-500 uppercase">E-mail Corporativo</label>
-                    <input value={selectedLead.email_corporativo || ''} onChange={(e) => handleUpdateLead('email_corporativo', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                  </div>
-                </div>
-              </section>
-
-              {/* Seção 2: Interesse Técnico */}
-              <section>
-                <h5 className="text-[10px] text-gray-600 font-black uppercase tracking-[0.2em] mb-4">Interesse de Produto</h5>
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 uppercase">Produto Detectado</label>
-                    <input value={selectedLead.produto || selectedLead.detected_product || ''} onChange={(e) => handleUpdateLead('produto', e.target.value)} className="w-full bg-blue-900/10 border border-blue-500/30 rounded px-3 py-2 text-sm text-blue-400 outline-none focus:border-blue-500" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-gray-500 uppercase">Quantidade</label>
-                      <input value={selectedLead.quantidade || ''} onChange={(e) => handleUpdateLead('quantidade', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-gray-500 uppercase">Cidade/UF</label>
-                      <input value={selectedLead.cidade_empresa || selectedLead.detected_city || ''} onChange={(e) => handleUpdateLead('cidade_empresa', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 uppercase">Especificação Detalhada</label>
-                    <textarea rows={3} value={selectedLead.especificacao || ''} onChange={(e) => handleUpdateLead('especificacao', e.target.value)} className="w-full bg-black border border-gray-800 rounded px-2 py-1.5 text-sm outline-none focus:border-[hsl(var(--tenant-primary))]" />
-                  </div>
-                </div>
-              </section>
-
-              {/* Seção 3: Histórico de Conversa */}
-              <section>
-                <h5 className="text-[10px] text-gray-600 font-black uppercase tracking-[0.2em] mb-4">Contexto da Conversa</h5>
-                <div className="space-y-3 bg-[#0a0a0a] p-4 rounded-lg border border-gray-800 max-h-[300px] overflow-y-auto">
-                  {history.length === 0 ? (
-                    <p className="text-xs text-gray-600 text-center py-4 italic">Nenhuma interação registrada.</p>
-                  ) : history.map((msg, idx) => (
-                    <div key={idx} className={`flex flex-col ${msg.sender_type === 'lead' ? 'items-start' : 'items-end'}`}>
-                      <div className={`max-w-[85%] p-3 rounded-lg text-xs ${msg.sender_type === 'lead' ? 'bg-[#1a1a1a] text-gray-300 rounded-bl-none' : 'bg-[hsl(var(--tenant-primary)/0.2)] text-[hsl(var(--tenant-primary))] border border-[hsl(var(--tenant-primary)/0.3)] rounded-br-none'}`}>
-                        {msg.message_content}
-                      </div>
-                      <span className="text-[8px] text-gray-600 mt-1 uppercase">{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-
-            <div className="p-6 bg-[#111] border-t border-gray-800">
-              <button 
-                onClick={() => setSelectedLead(null)}
-                className="w-full bg-white text-black font-bold py-3 rounded-lg text-sm hover:bg-gray-200 transition-all uppercase tracking-widest"
-              >
-                Concluído
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <LeadDrawer 
+        selectedLead={selectedLead}
+        onClose={() => setSelectedLead(null)}
+        onUpdateLead={handleUpdateLead}
+        onDeleteLead={handleDeleteLead}
+      />
     </div>
   );
 }
