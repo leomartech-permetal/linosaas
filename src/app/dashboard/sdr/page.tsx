@@ -82,13 +82,13 @@ export default function SDRLeadsPage() {
   };
 
   return (
-    <div className="flex h-full w-full bg-[#0a0a0a] overflow-hidden relative">
+    <div className="flex h-full w-full bg-[var(--theme-bg)] text-[var(--theme-fg)] overflow-hidden relative">
       {/* Lista Principal */}
       <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${selectedLead ? 'mr-[450px]' : ''}`}>
         <div className="p-6 md:p-8 overflow-y-auto h-full">
           <header className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-white">Pipeline de Qualificação</h2>
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--theme-fg)]">Pipeline de Qualificação</h2>
               <p className="text-gray-500 mt-1">Gestão de leads multimodais e triagem inteligente</p>
             </div>
             <div className="flex gap-4 items-center">
@@ -106,15 +106,15 @@ export default function SDRLeadsPage() {
                   a.click();
                   document.body.removeChild(a);
                 }}
-                className="text-[10px] font-black uppercase tracking-widest text-gray-400 border border-gray-800 px-4 py-2 rounded-lg hover:bg-white/5 transition-all"
+                className="text-[10px] font-black uppercase tracking-widest text-[var(--theme-muted)] border border-[var(--theme-border)] px-4 py-2 rounded-lg hover:bg-[var(--theme-hover)] transition-all"
               >
                 📥 Exportar CSV
               </button>
-              <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-gray-800">
-                <button onClick={() => setFilter('all')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'all' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>TODOS OS LEADS</button>
-                <button onClick={() => setFilter('incomplete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'incomplete' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>PENDENTES</button>
-                <button onClick={() => setFilter('complete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'complete' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>QUALIFICADOS</button>
-                <button onClick={() => setFilter('outros')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'outros' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>OUTROS CONTATOS</button>
+              <div className="flex bg-[var(--theme-card)] p-1 rounded-lg border border-[var(--theme-border)]">
+                <button onClick={() => setFilter('all')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'all' ? 'bg-[var(--theme-hover)] text-[var(--theme-fg)] shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>TODOS OS LEADS</button>
+                <button onClick={() => setFilter('incomplete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'incomplete' ? 'bg-blue-600 text-white shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>PENDENTES</button>
+                <button onClick={() => setFilter('complete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'complete' ? 'bg-green-600 text-white shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>QUALIFICADOS</button>
+                <button onClick={() => setFilter('outros')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'outros' ? 'bg-purple-600 text-white shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>OUTROS CONTATOS</button>
               </div>
             </div>
           </header>
@@ -129,14 +129,14 @@ export default function SDRLeadsPage() {
               <div 
                 key={lead.id} 
                 onClick={() => setSelectedLead(lead)}
-                className={`group flex items-center justify-between p-5 bg-[#111] border rounded-xl cursor-pointer transition-all hover:border-[hsl(var(--tenant-primary)/0.5)] hover:bg-[#161616] ${selectedLead?.id === lead.id ? 'border-[hsl(var(--tenant-primary))] bg-[#161616]' : 'border-gray-800'}`}
+                className={`group flex items-center justify-between p-5 bg-[var(--theme-card)] border rounded-xl cursor-pointer transition-all hover:border-[hsl(var(--tenant-primary)/0.5)] hover:bg-[var(--theme-hover)] ${selectedLead?.id === lead.id ? 'border-[hsl(var(--tenant-primary))] bg-[var(--theme-hover)]' : 'border-[var(--theme-border)]'}`}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center border border-gray-700 text-lg font-bold text-gray-400 group-hover:text-[hsl(var(--tenant-primary))]">
                     {(lead.name || "?").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-bold text-white group-hover:text-[hsl(var(--tenant-primary))] transition-colors">{lead.name || "Visitante Desconhecido"}</h4>
+                    <h4 className="font-bold text-[var(--theme-fg)] group-hover:text-[hsl(var(--tenant-primary))] transition-colors">{lead.name || "Visitante Desconhecido"}</h4>
                     <p className="text-xs text-gray-500 flex items-center gap-2">
                       <span>{lead.whatsapp_number.replace('@s.whatsapp.net','')}</span>
                       {(lead.company || lead.empresa) && <span className="w-1 h-1 bg-gray-700 rounded-full"></span>}

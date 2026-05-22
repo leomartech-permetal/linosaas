@@ -170,7 +170,7 @@ export default function SupportDashboard() {
   };
 
   return (
-    <div className="p-6 md:p-10 bg-[#0a0a0a] min-h-screen text-white overflow-y-auto">
+    <div className="p-6 md:p-10 bg-[var(--theme-bg)] min-h-screen text-[var(--theme-fg)] overflow-y-auto">
       {msg && (
         <div className="fixed bottom-5 right-5 z-50 bg-green-900/90 backdrop-blur-sm border border-green-700 text-green-300 font-bold px-4 py-3 rounded-xl shadow-2xl animate-bounce">
           {msg}
@@ -198,7 +198,7 @@ export default function SupportDashboard() {
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* GRÁFICO DE GARGALOS */}
-            <div className="xl:col-span-2 bg-[#141414] p-6 rounded-2xl border border-gray-800/50 shadow-2xl">
+            <div className="xl:col-span-2 bg-[var(--theme-card)] p-6 rounded-2xl border border-[var(--theme-border)] shadow-2xl">
               <h3 className="font-bold mb-6 flex items-center gap-2">📊 Tipos de Gargalos Detectados</h3>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -214,11 +214,11 @@ export default function SupportDashboard() {
             </div>
 
             {/* PERFORMANCE VENDEDORES */}
-            <div className="bg-[#141414] p-6 rounded-2xl border border-gray-800/50 shadow-2xl">
+            <div className="bg-[var(--theme-card)] p-6 rounded-2xl border border-[var(--theme-border)] shadow-2xl">
               <h3 className="font-bold mb-6 flex items-center gap-2">🏆 Performance (Leads vs Escalações)</h3>
               <div className="space-y-4">
                 {stats.sellerPerformance.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-gray-800/50">
+                  <div key={i} className="flex items-center justify-between p-3 bg-[var(--theme-hover)] rounded-lg border border-[var(--theme-border)]">
                     <span className="text-sm font-medium">{s.name}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] bg-green-900/20 text-green-400 px-2 py-1 rounded">L: {s.leads}</span>
@@ -231,7 +231,7 @@ export default function SupportDashboard() {
           </div>
 
           {/* MONITORAMENTO CRÍTICO */}
-          <div className="bg-[#141414] p-6 rounded-2xl border border-gray-800/50 shadow-2xl overflow-hidden">
+          <div className="bg-[var(--theme-card)] p-6 rounded-2xl border border-[var(--theme-border)] shadow-2xl overflow-hidden">
             <h3 className="font-bold mb-6 flex items-center gap-2">🚨 Monitoramento de Leads Estagnados</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -244,11 +244,11 @@ export default function SupportDashboard() {
                     <th className="pb-4 font-black text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/50">
+                <tbody className="divide-y divide-[var(--theme-border)]">
                   {stats.criticalLeads.map((l, i) => {
                     const waitMin = Math.round((new Date().getTime() - new Date(l.updated_at).getTime()) / (1000 * 60));
                     return (
-                      <tr key={i} className="group hover:bg-white/5 transition-colors">
+                      <tr key={i} className="group hover:bg-[var(--theme-hover)] transition-colors">
                         <td className="py-4">
                           <div className="font-bold text-sm">{l.name}</div>
                           <div className="text-[10px] text-gray-500">{l.whatsapp_number}</div>
@@ -291,7 +291,7 @@ export default function SupportDashboard() {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* AUDITORIA DE GARGALOS */}
-            <div className="bg-[#141414] p-6 rounded-2xl border border-gray-800/50 shadow-2xl">
+            <div className="bg-[var(--theme-card)] p-6 rounded-2xl border border-[var(--theme-border)] shadow-2xl">
               <h3 className="font-bold mb-6 flex items-center gap-2">🔍 Log de Auditoria de Gargalos</h3>
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
                 {stats.bottlenecks.map((b, i) => (
@@ -309,11 +309,11 @@ export default function SupportDashboard() {
             </div>
 
             {/* ESCALAÇÕES PARA SUPERVISOR */}
-            <div className="bg-[#141414] p-6 rounded-2xl border border-gray-800/50 shadow-2xl">
+            <div className="bg-[var(--theme-card)] p-6 rounded-2xl border border-[var(--theme-border)] shadow-2xl">
               <h3 className="font-bold mb-6 flex items-center gap-2">👨‍✈️ Escalações de Supervisão</h3>
               <div className="space-y-4">
                 {stats.escalations.map((e, i) => (
-                  <div key={i} className="flex items-start gap-4 p-4 bg-black/20 rounded-xl border border-gray-800/50">
+                  <div key={i} className="flex items-start gap-4 p-4 bg-[var(--theme-hover)] rounded-xl border border-[var(--theme-border)]">
                     <div className="w-10 h-10 bg-red-500/10 flex items-center justify-center rounded-lg text-lg">🚩</div>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
@@ -323,7 +323,7 @@ export default function SupportDashboard() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5">Vendedor: {e.admin_users?.name}</p>
-                      <p className="text-[10px] text-gray-400 mt-2 bg-black/40 p-2 rounded italic">"{e.escalation_reason}"</p>
+                      <p className="text-[10px] text-[var(--theme-muted)] mt-2 bg-[var(--theme-hover)] p-2 rounded italic">"{e.escalation_reason}"</p>
                     </div>
                   </div>
                 ))}
@@ -339,9 +339,9 @@ export default function SupportDashboard() {
 
 function StatCard({ title, value, sub, icon, color = "text-[hsl(var(--tenant-primary))]" }: any) {
   return (
-    <div className="bg-[#141414] p-6 rounded-2xl border border-gray-800/50 shadow-xl hover:border-[hsl(var(--tenant-primary))]/50 transition-all">
+    <div className="bg-[var(--theme-card)] p-6 rounded-2xl border border-[var(--theme-border)] shadow-xl hover:border-[hsl(var(--tenant-primary))]/50 transition-all">
       <div className="flex justify-between items-start mb-4">
-        <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center text-xl shadow-inner border border-gray-800">
+        <div className="w-10 h-10 bg-[var(--theme-input-bg)] rounded-xl flex items-center justify-center text-xl shadow-inner border border-[var(--theme-border)]">
           {icon}
         </div>
       </div>

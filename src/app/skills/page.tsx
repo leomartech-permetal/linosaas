@@ -216,10 +216,10 @@ export default function SkillsPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 w-full h-full text-white overflow-y-auto">
-      <header className="mb-8 border-b border-gray-800 pb-6">
+    <div className="p-6 md:p-10 w-full h-full text-[var(--theme-fg)] overflow-y-auto">
+      <header className="mb-8 border-b border-[var(--theme-border)] pb-6">
         <h2 className="text-3xl font-bold">Skills da Inteligência Artificial</h2>
-        <p className="text-gray-400 mt-2">Treine o cérebro do Lino. Defina comportamentos, conhecimentos e bases RAG.</p>
+        <p className="text-[var(--theme-muted)] mt-2">Treine o cérebro do Lino. Defina comportamentos, conhecimentos e bases RAG.</p>
       </header>
 
       {msg && <div className="bg-green-900/30 border border-green-800 text-green-400 px-4 py-2 rounded mb-6 text-sm">{msg}</div>}
@@ -227,7 +227,7 @@ export default function SkillsPage() {
       {loading ? <p className="text-gray-500">Carregando...</p> : (
         <>
           {/* PROMPT MESTRE */}
-          <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8 max-w-4xl">
+          <div className="bg-[var(--theme-card)] p-6 rounded-lg border border-[var(--theme-border)] mb-8 max-w-4xl">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-bold flex items-center">
@@ -235,10 +235,10 @@ export default function SkillsPage() {
                   Prompt Mestre (Comportamento Geral)
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-xs text-gray-500">Este prompt define a <b>personalidade base</b> e a <b>identidade</b> do Lino.</p>
+                  <p className="text-xs text-[var(--theme-muted)]">Este prompt define a <b>personalidade base</b> e a <b>identidade</b> do Lino.</p>
                   <div className="group relative">
                     <span className="cursor-help text-blue-400 text-[10px] border border-blue-400/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
-                    <div className="absolute left-6 top-0 w-72 p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed">
+                    <div className="absolute left-6 top-0 w-72 p-4 bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[var(--theme-fg)]">
                       <b className="text-blue-400 block mb-2 font-bold uppercase tracking-wider">🧠 Como preencher o Mestre:</b>
                       Imagine que você está contratando um funcionário. O que ele precisa saber sobre a empresa? Como ele deve falar?
                       <ul className="mt-2 space-y-2 text-gray-300">
@@ -257,7 +257,7 @@ export default function SkillsPage() {
               onChange={(e) => setMasterPrompt(e.target.value)}
               rows={12}
               placeholder="Ex: Você é Lino, assistente comercial da Permetal. Seu objetivo é ajudar clientes com dúvidas sobre chapas e grades..."
-              className="w-full bg-black border border-gray-700 rounded p-3 text-white text-sm outline-none focus:border-[hsl(var(--tenant-primary))] mb-3 font-mono leading-relaxed"
+              className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-3 text-[var(--theme-fg)] text-sm outline-none focus:border-[hsl(var(--tenant-primary))] mb-3 font-mono leading-relaxed"
             />
             <div className="flex justify-between items-center">
               <button onClick={saveMasterPrompt} className="bg-[hsl(var(--tenant-primary))] px-6 py-2 rounded font-bold text-black hover:opacity-90 transition-opacity">
@@ -268,7 +268,7 @@ export default function SkillsPage() {
           </div>
 
           {/* BASE RAG */}
-          <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8 max-w-4xl">
+          <div className="bg-[var(--theme-card)] p-6 rounded-lg border border-[var(--theme-border)] mb-8 max-w-4xl">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="text-lg font-bold flex items-center">
@@ -276,10 +276,10 @@ export default function SkillsPage() {
                   Base de Conhecimento RAG ({ragDocs.length})
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-xs text-gray-500">Documentos e tabelas que o Lino pode consultar para tirar dúvidas técnicas.</p>
+                  <p className="text-xs text-[var(--theme-muted)]">Documentos e tabelas que o Lino pode consultar para tirar dúvidas técnicas.</p>
                   <div className="group relative">
                     <span className="cursor-help text-purple-400 text-[10px] border border-purple-400/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
-                    <div className="absolute left-6 top-0 w-72 p-4 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed">
+                    <div className="absolute left-6 top-0 w-80 p-4 bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[var(--theme-fg)]">
                       <b className="text-purple-400 block mb-2 font-bold uppercase tracking-wider">📚 O que é RAG?</b>
                       É a "biblioteca" do Lino. Em vez de decorar tudo, ele lê esses arquivos quando o cliente faz uma pergunta difícil.
                       <ul className="mt-2 space-y-2 text-gray-300">
@@ -296,7 +296,7 @@ export default function SkillsPage() {
                   value={ragSearch} 
                   onChange={(e) => setRagSearch(e.target.value)} 
                   placeholder="Pesquisar RAG (nome ou conteúdo)..." 
-                  className="bg-black border border-gray-700 rounded px-3 py-2 text-sm text-white outline-none w-64"
+                  className="bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded px-3 py-2 text-sm text-[var(--theme-fg)] outline-none w-64"
                 />
                 <button onClick={() => { setEditingRag(null); setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(!showRagForm); }} className="bg-purple-700 px-4 py-2 rounded text-sm font-bold hover:bg-purple-800">
                   + Novo Documento
@@ -305,13 +305,13 @@ export default function SkillsPage() {
             </div>
 
             {showRagForm && (
-              <div className="bg-black p-4 rounded-lg border border-gray-700 mb-4">
+              <div className="bg-[var(--theme-input-bg)] p-4 rounded-lg border border-[var(--theme-border)] mb-4">
                 <h4 className="font-bold text-sm mb-3">{editingRag ? "✏️ Editar Documento RAG" : "Adicionar Documento RAG"}</h4>
                 <form onSubmit={uploadRag} className="space-y-3">
-                  <input type="text" value={ragName} onChange={(e) => setRagName(e.target.value)} placeholder="Nome do documento (ex: Catálogo Chapas 2026)" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+                  <input type="text" value={ragName} onChange={(e) => setRagName(e.target.value)} placeholder="Nome do documento (ex: Catálogo Chapas 2026)" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" required />
 
                   {/* Upload de arquivo */}
-                  <div className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:border-purple-500 transition-colors">
+                  <div className="border-2 border-dashed border-[var(--theme-border)] rounded-lg p-4 text-center hover:border-purple-500 transition-colors">
                     <input
                       type="file"
                       accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt"
@@ -339,7 +339,7 @@ export default function SkillsPage() {
                   {!ragFile && (
                     <>
                       <p className="text-center text-gray-600 text-xs">— ou cole o texto diretamente —</p>
-                      <textarea value={ragText} onChange={(e) => setRagText(e.target.value)} rows={4} placeholder="Cole aqui o conteúdo do catálogo, manual, FAQ..." className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                      <textarea value={ragText} onChange={(e) => setRagText(e.target.value)} rows={4} placeholder="Cole aqui o conteúdo do catálogo, manual, FAQ..." className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" />
                     </>
                   )}
 
@@ -356,7 +356,7 @@ export default function SkillsPage() {
             {/* Lista RAG */}
             <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
               {ragDocs.filter(doc => (doc.name || "").toLowerCase().includes(ragSearch.toLowerCase()) || (doc.content || "").toLowerCase().includes(ragSearch.toLowerCase())).map(doc => (
-                <div key={doc.id} className="bg-black p-3 rounded border border-gray-800 flex justify-between items-center group">
+                <div key={doc.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-center group">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-purple-400 text-xs font-bold uppercase">{doc.source_type}</span>
@@ -376,7 +376,7 @@ export default function SkillsPage() {
                 <div className="text-center text-gray-500 text-sm py-4">Nenhum RAG encontrado na pesquisa.</div>
               )}
               {ragDocs.length === 0 && !showRagForm && (
-                <div className="border border-dashed border-gray-700 rounded-lg p-6 text-center text-gray-600 text-sm">
+                <div className="border border-dashed border-[var(--theme-border)] rounded-lg p-6 text-center text-gray-600 text-sm">
                   Nenhum documento RAG. Clique em &quot;+ Novo Documento&quot; acima.
                 </div>
               )}
@@ -423,7 +423,7 @@ export default function SkillsPage() {
                   value={skillSearch} 
                   onChange={(e) => setSkillSearch(e.target.value)} 
                   placeholder="Pesquisar Skills..." 
-                  className="bg-black border border-gray-700 rounded px-3 py-2 text-sm text-white outline-none w-64"
+                  className="bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded px-3 py-2 text-sm text-[var(--theme-fg)] outline-none w-64"
                 />
                 <button
                   onClick={() => { setEditing(null); setForm({ name: "", type: "product", prompt: "" }); setSelectedRags([]); setShowForm(true); }}
@@ -436,7 +436,7 @@ export default function SkillsPage() {
 
             {/* Form Skill */}
             {showForm && (
-              <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-700 mb-8 shadow-xl">
+              <div className="bg-[var(--theme-card)] p-6 rounded-lg border border-[var(--theme-border)] mb-8 shadow-xl">
                 <h4 className="font-bold text-lg mb-6 flex items-center gap-2">
                   {editing ? "✏️ Editar Habilidade" : "✨ Criar Nova Habilidade"}
                 </h4>
@@ -444,11 +444,11 @@ export default function SkillsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-gray-500 uppercase mb-2">Nome da Habilidade</label>
-                      <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Chapas Perfuradas PSA" className="w-full bg-black border border-gray-700 rounded p-2.5 text-white text-sm outline-none focus:border-blue-500" required />
+                      <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Chapas Perfuradas PSA" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2.5 text-[var(--theme-fg)] text-sm outline-none focus:border-blue-500" required />
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500 uppercase mb-2">Tipo de Conhecimento</label>
-                      <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full bg-black border border-gray-700 rounded p-2.5 text-white text-sm outline-none focus:border-blue-500">
+                      <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2.5 text-[var(--theme-fg)] text-sm outline-none focus:border-blue-500">
                         {SKILL_TYPES.map((t) => (
                           <option key={t.value} value={t.value}>{t.label} — {t.desc}</option>
                         ))}
@@ -462,8 +462,8 @@ export default function SkillsPage() {
                       value={form.prompt} 
                       onChange={(e) => setForm({ ...form, prompt: e.target.value })} 
                       rows={6} 
-                      placeholder="Descreva aqui o conhecimento específico. Ex: Se o cliente perguntar de furos, explique que temos modelos redondos, quadrados e hexagonais..." 
-                      className="w-full bg-black border border-gray-700 rounded p-3 text-white text-sm outline-none focus:border-blue-500 font-mono leading-relaxed" 
+                      placeholder="Descreva aqui o conhecimento specific. Ex: Se o cliente perguntar de furos, explique que temos modelos redondos, quadrados e hexagonais..." 
+                      className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-3 text-[var(--theme-fg)] text-sm outline-none focus:border-blue-500 font-mono leading-relaxed" 
                       required 
                     />
                   </div>
@@ -475,7 +475,7 @@ export default function SkillsPage() {
                         📚 Vincular Conhecimento RAG
                         <span className="text-[10px] text-gray-600 normal-case">(Opcional: selecione quais arquivos esta skill pode ler)</span>
                       </label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto bg-black rounded border border-gray-800 p-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto bg-[var(--theme-input-bg)] rounded border border-[var(--theme-border)] p-3">
                         {ragDocs.map(doc => (
                           <label key={doc.id} className={`flex items-center gap-3 cursor-pointer hover:bg-gray-900 p-2 rounded border transition-colors ${selectedRags.includes(doc.id) ? 'border-purple-500/50 bg-purple-900/10' : 'border-transparent'}`}>
                             <input type="checkbox" checked={selectedRags.includes(doc.id)} onChange={() => toggleRagSelection(doc.id)} className="accent-purple-500 w-4 h-4" />
@@ -503,7 +503,7 @@ export default function SkillsPage() {
                 const info = getTypeInfo(s.type);
                 const linked = getLinkedRags(s.id);
                 return (
-                  <div key={s.id} className={`bg-[#1a1a1a] p-5 rounded-lg border border-gray-800 group hover:border-gray-700 transition-all ${!s.active ? "opacity-40" : ""}`}>
+                  <div key={s.id} className={`bg-[var(--theme-card)] p-5 rounded-lg border border-[var(--theme-border)] group hover:border-[var(--theme-border)] transition-all ${!s.active ? "opacity-40" : ""}`}>
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
@@ -513,7 +513,7 @@ export default function SkillsPage() {
                         </div>
                         <p className="text-sm text-gray-400 line-clamp-3 leading-relaxed">{s.prompt}</p>
                         {linked.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-gray-800/50">
+                          <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-[var(--theme-border)]">
                             {linked.map((doc: any) => (
                               <span key={doc.id} className="text-[10px] bg-purple-900/30 text-purple-400 px-2 py-1 rounded-full border border-purple-800/30 flex items-center gap-1">
                                 📚 {doc.name}
@@ -537,7 +537,7 @@ export default function SkillsPage() {
                 <div className="text-center text-gray-500 py-8">Nenhuma skill encontrada na pesquisa.</div>
               )}
               {skills.length === 0 && !showForm && (
-                <div className="border border-dashed border-gray-800 rounded-xl p-12 text-center">
+                <div className="border border-dashed border-[var(--theme-border)] rounded-xl p-12 text-center">
                   <div className="text-4xl mb-4 opacity-20">🧠</div>
                   <p className="text-gray-500 text-sm">O Lino ainda não tem habilidades específicas.</p>
                   <p className="text-gray-600 text-xs mt-1">Adicione uma habilidade para treinar o robô em assuntos específicos.</p>

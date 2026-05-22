@@ -76,21 +76,21 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 w-full h-full text-white overflow-y-auto">
-      <header className="mb-8 border-b border-gray-800 pb-6">
+    <div className="p-6 md:p-10 w-full h-full text-[var(--theme-fg)] overflow-y-auto">
+      <header className="mb-8 border-b border-[var(--theme-border)] pb-6">
         <h2 className="text-3xl font-bold">Gestão de Usuários</h2>
-        <p className="text-gray-400 mt-2">Controle quem pode acessar o sistema e suas permissões.</p>
+        <p className="text-[var(--theme-muted)] mt-2">Controle quem pode acessar o sistema e suas permissões.</p>
       </header>
 
       {msg && <div className="bg-green-900/30 border border-green-800 text-green-400 px-4 py-2 rounded mb-6 text-sm">{msg}</div>}
 
       {/* Tabela de Permissões */}
-      <div className="bg-[#1a1a1a] p-5 rounded-lg border border-gray-800 mb-8 max-w-3xl">
-        <h3 className="text-sm font-bold text-gray-400 mb-3">Tabela de Permissões por Perfil</h3>
+      <div className="bg-[var(--theme-card)] p-5 rounded-lg border border-[var(--theme-border)] mb-8 max-w-3xl">
+        <h3 className="text-sm font-bold text-[var(--theme-muted)] mb-3">Tabela de Permissões por Perfil</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-gray-500 border-b border-gray-800">
+              <tr className="text-[var(--theme-muted)] border-b border-[var(--theme-border)]">
                 <th className="text-left pb-2">Perfil</th>
                 <th className="pb-2">Dashboard</th>
                 <th className="pb-2">Pipeline</th>
@@ -101,8 +101,8 @@ export default function UsuariosPage() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-gray-800/50"><td className="py-2 text-red-400 font-bold">Admin</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td></tr>
-              <tr className="border-b border-gray-800/50"><td className="py-2 text-yellow-400 font-bold">Gestor</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">❌</td><td className="text-center">❌</td></tr>
+              <tr className="border-b border-[var(--theme-border)]"><td className="py-2 text-red-400 font-bold">Admin</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td></tr>
+              <tr className="border-b border-[var(--theme-border)]"><td className="py-2 text-yellow-400 font-bold">Gestor</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">❌</td><td className="text-center">❌</td></tr>
               <tr><td className="py-2 text-blue-400 font-bold">Vendedor</td><td className="text-center">❌</td><td className="text-center">✅</td><td className="text-center">❌</td><td className="text-center">❌</td><td className="text-center">❌</td><td className="text-center">❌</td></tr>
             </tbody>
           </table>
@@ -123,16 +123,16 @@ export default function UsuariosPage() {
 
         {/* Form */}
         {showForm && (
-          <div className="bg-[#1a1a1a] p-5 rounded-lg border border-gray-700 mb-6">
+          <div className="bg-[var(--theme-card)] p-5 rounded-lg border border-[var(--theme-border)] mb-6">
             <h4 className="font-bold mb-4">{editing ? "Editar Usuário" : "Novo Usuário"}</h4>
             <form onSubmit={saveUser} className="space-y-3">
-              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" required />
               <div className="grid grid-cols-2 gap-3">
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="E-mail" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
-                <input type="text" value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} placeholder="WhatsApp (5511...)" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="E-mail" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" required />
+                <input type="text" value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} placeholder="WhatsApp (5511...)" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" />
               </div>
-              <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={editing ? "Nova senha (deixe vazio para manter)" : "Senha *"} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
-              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
+              <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={editing ? "Nova senha (deixe vazio para manter)" : "Senha *"} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" />
+              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none">
                 <option value="admin">Administrador</option>
                 <option value="gestor">Gestor</option>
                 <option value="vendedor">Vendedor</option>
@@ -151,7 +151,7 @@ export default function UsuariosPage() {
             {users.map((u) => {
               const role = ROLES[u.role] || ROLES.vendedor;
               return (
-                <div key={u.id} className={`bg-[#1a1a1a] p-4 rounded-lg border border-gray-800 flex justify-between items-center group ${!u.active ? "opacity-50" : ""}`}>
+                <div key={u.id} className={`bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] flex justify-between items-center group ${!u.active ? "opacity-50" : ""}`}>
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-bold text-sm">{u.name}</h4>

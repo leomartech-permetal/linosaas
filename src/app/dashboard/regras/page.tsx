@@ -48,14 +48,14 @@ export default function RegrasPage() {
   };
 
   return (
-    <div className="p-6 md:p-10 w-full h-full bg-[#0a0a0a] text-white overflow-y-auto scrollbar-hide">
+    <div className="p-6 md:p-10 w-full h-full bg-[var(--theme-bg)] text-[var(--theme-fg)] overflow-y-auto scrollbar-hide">
       <header className="mb-10">
-        <h2 className="text-4xl font-black tracking-tighter text-white">Regras de Negócio</h2>
+        <h2 className="text-4xl font-black tracking-tighter text-[var(--theme-fg)]">Regras de Negócio</h2>
         <p className="text-gray-500 mt-1 font-medium italic">Configure os limites e exceções da Permetal Express e Metalgrade Express</p>
       </header>
 
       {msg && (
-        <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10 text-xs font-bold flex items-center gap-2">
+        <div className="mb-6 p-4 rounded-xl bg-[var(--theme-card)] border border-[var(--theme-border)] text-xs font-bold flex items-center gap-2">
           {msg}
         </div>
       )}
@@ -67,10 +67,10 @@ export default function RegrasPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {rules.map((rule) => (
-            <div key={rule.id} className="bg-[#111] border border-gray-800 rounded-3xl p-8 shadow-2xl">
+            <div key={rule.id} className="bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-3xl p-8 shadow-2xl">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="text-xl font-black text-white uppercase tracking-tighter">{rule.rule_key.replace('_', ' ')}</h3>
+                  <h3 className="text-xl font-black text-[var(--theme-fg)] uppercase tracking-tighter">{rule.rule_key.replace('_', ' ')}</h3>
                   <p className="text-xs text-gray-500">{rule.description}</p>
                 </div>
                 <button 
@@ -91,7 +91,7 @@ export default function RegrasPage() {
                           type="number" 
                           value={rule.config.max_m2} 
                           onChange={(e) => handleConfigChange(rule.id, 'max_m2', e.target.value, rule.config)}
-                          className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
+                          className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
                         />
                       </div>
                       <div>
@@ -100,7 +100,7 @@ export default function RegrasPage() {
                           type="number" 
                           value={rule.config.max_pcs_2x1} 
                           onChange={(e) => handleConfigChange(rule.id, 'max_pcs_2x1', e.target.value, rule.config)}
-                          className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
+                          className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
                         />
                       </div>
                       <div>
@@ -109,7 +109,7 @@ export default function RegrasPage() {
                           type="number" 
                           value={rule.config.max_pcs_3x1} 
                           onChange={(e) => handleConfigChange(rule.id, 'max_pcs_3x1', e.target.value, rule.config)}
-                          className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
+                          className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
                         />
                       </div>
                     </div>
@@ -121,7 +121,7 @@ export default function RegrasPage() {
                       type="number" 
                       value={rule.config.max_m_lineares} 
                       onChange={(e) => handleConfigChange(rule.id, 'max_m_lineares', e.target.value, rule.config)}
-                      className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
+                      className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none"
                     />
                   </div>
                 )}
@@ -132,7 +132,7 @@ export default function RegrasPage() {
                     value={rule.config.exclusions?.join(', ')} 
                     onChange={(e) => handleConfigChange(rule.id, 'exclusions', e.target.value, rule.config)}
                     placeholder="Ex: belinox, antiofuscante, degraus"
-                    className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none h-24"
+                    className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded-xl p-3 text-sm focus:border-[hsl(var(--tenant-primary))] outline-none h-24"
                   ></textarea>
                   <p className="text-[9px] text-gray-600 mt-2 font-bold uppercase tracking-widest italic">
                     * Produtos que contenham estes termos no nome não serão elegíveis para Express.

@@ -181,11 +181,11 @@ export default function SaaSPage() {
   function getUserName(id: string) { return users.find(u => u.id === id)?.name || "—"; }
 
   return (
-    <div className="p-6 md:p-10 w-full h-full text-white overflow-y-auto">
-      <header className="sticky top-[-40px] z-20 bg-[#0a0a0a] pt-10 mb-8 border-b border-gray-800 pb-6 flex justify-between items-start">
+    <div className="p-6 md:p-10 w-full h-full text-[var(--theme-fg)] overflow-y-auto">
+      <header className="sticky top-[-40px] z-20 bg-[var(--theme-bg)] pt-10 mb-8 border-b border-[var(--theme-border)] pb-6 flex justify-between items-start">
         <div>
           <h2 className="text-3xl font-bold">Configurações SaaS</h2>
-          <p className="text-gray-400 mt-2">Personalize a marca, gerencie conexões e segurança.</p>
+          <p className="text-[var(--theme-muted)] mt-2">Personalize a marca, gerencie conexões e segurança.</p>
         </div>
         <div className="flex flex-col gap-2">
           <button 
@@ -223,41 +223,41 @@ export default function SaaSPage() {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* IDENTIDADE VISUAL */}
-            <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800">
+            <div className="bg-[var(--theme-card)] p-6 rounded-lg border border-[var(--theme-border)]">
               <h3 className="text-lg font-bold mb-4 flex items-center"><span className="bg-[hsl(var(--tenant-primary))] w-2 h-5 mr-2 rounded-sm"></span>Identidade Visual</h3>
               <form onSubmit={saveDesign} className="space-y-4">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Nome da Empresa</label>
-                  <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                  <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Subtítulo</label>
-                  <input type="text" value={companySubtitle} onChange={(e) => setCompanySubtitle(e.target.value)} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                  <input type="text" value={companySubtitle} onChange={(e) => setCompanySubtitle(e.target.value)} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">URL da Logomarca (PNG/SVG)</label>
-                  <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://seusite.com/logo.png" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                  <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://seusite.com/logo.png" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   {logoUrl && <img src={logoUrl} alt="Logo" className="mt-2 h-12 object-contain bg-black rounded p-1" />}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Cor Primária</label>
                     <div className="flex gap-2">
-                      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-9 rounded cursor-pointer bg-black border-none" />
-                      <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-9 rounded cursor-pointer bg-[var(--theme-input-bg)] border-none" />
+                      <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Cor Secundária</label>
                     <div className="flex gap-2">
-                      <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-9 rounded cursor-pointer bg-black border-none" />
-                      <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                      <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-9 rounded cursor-pointer bg-[var(--theme-input-bg)] border-none" />
+                      <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                     </div>
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Tipo de Fundo</label>
-                  <select value={bgType} onChange={(e) => setBgType(e.target.value)} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
+                  <select value={bgType} onChange={(e) => setBgType(e.target.value)} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none">
                     <option value="solid">Cor Sólida</option>
                     <option value="gradient">Degradê</option>
                     <option value="texture">Textura Metálica</option>
@@ -266,7 +266,7 @@ export default function SaaSPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Fonte Títulos</label>
-                    <select value={fontHeading} onChange={(e) => setFontHeading(e.target.value)} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
+                    <select value={fontHeading} onChange={(e) => setFontHeading(e.target.value)} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none">
                       <option value="Roboto Condensed">Roboto Condensed</option>
                       <option value="Montserrat">Montserrat</option>
                       <option value="Inter">Inter</option>
@@ -276,7 +276,7 @@ export default function SaaSPage() {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Fonte Corpo</label>
-                    <select value={fontBody} onChange={(e) => setFontBody(e.target.value)} className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none">
+                    <select value={fontBody} onChange={(e) => setFontBody(e.target.value)} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none">
                       <option value="Assistant">Assistant</option>
                       <option value="Roboto">Roboto</option>
                       <option value="Open Sans">Open Sans</option>
@@ -290,7 +290,7 @@ export default function SaaSPage() {
                   <input type="range" min="0" max="1" step="0.05" value={bgOpacity} onChange={(e) => setBgOpacity(parseFloat(e.target.value))} className="w-full accent-[hsl(var(--tenant-primary))]" />
                 </div>
                 {/* Preview */}
-                <div className="border border-gray-700 rounded-lg overflow-hidden">
+                <div className="border border-[var(--theme-border)] rounded-lg overflow-hidden">
                   <p className="text-[10px] text-gray-500 px-3 pt-2">Pré-visualização:</p>
                   <div className="h-20 m-2 rounded flex items-center justify-center text-sm font-bold" style={{
                     background: bgType === "solid" ? bgColor1 : bgType === "gradient" ? `linear-gradient(135deg, ${bgColor1}, ${bgColor2})` : "#0a0a0a",
@@ -306,24 +306,24 @@ export default function SaaSPage() {
 
             <div className="space-y-6">
               {/* CHAVES API */}
-              <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800">
+              <div className="bg-[var(--theme-card)] p-6 rounded-lg border border-[var(--theme-border)]">
                 <h3 className="text-lg font-bold mb-4 flex items-center"><span className="bg-orange-500 w-2 h-5 mr-2 rounded-sm"></span>Chaves de API (Globais)</h3>
                 <form onSubmit={saveAPI} className="space-y-4">
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Evolution API — URL Base</label>
-                    <input type="url" value={evolutionUrl} onChange={(e) => setEvolutionUrl(e.target.value)} placeholder="https://evolution.sua-vps.com" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="url" value={evolutionUrl} onChange={(e) => setEvolutionUrl(e.target.value)} placeholder="https://evolution.sua-vps.com" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Evolution API — Token Global</label>
-                    <input type="password" value={evolutionKey} onChange={(e) => setEvolutionKey(e.target.value)} placeholder="Chave da Evolution" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="password" value={evolutionKey} onChange={(e) => setEvolutionKey(e.target.value)} placeholder="Chave da Evolution" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Evolution API — Nome da Instância</label>
-                    <input type="text" value={evolutionInstanceName} onChange={(e) => setEvolutionInstanceName(e.target.value)} placeholder="Ex: minha_instancia" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="text" value={evolutionInstanceName} onChange={(e) => setEvolutionInstanceName(e.target.value)} placeholder="Ex: minha_instancia" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">OpenAI API Key</label>
-                    <input type="password" value={openaiKey} onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="password" value={openaiKey} onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <button type="submit" className="w-full bg-orange-600 py-2 rounded font-bold text-white hover:bg-orange-700">Salvar Credenciais</button>
                   {msg && msg.includes("Credenciais") && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
@@ -331,16 +331,16 @@ export default function SaaSPage() {
               </div>
 
               {/* SENHA */}
-              <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800">
+              <div className="bg-[var(--theme-card)] p-6 rounded-lg border border-[var(--theme-border)]">
                 <h3 className="text-lg font-bold mb-4 flex items-center"><span className="bg-red-500 w-2 h-5 mr-2 rounded-sm"></span>Senha de Acesso</h3>
                 <form onSubmit={savePassword} className="space-y-4">
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">E-mail do Usuário</label>
-                    <input type="email" value={passwordEmail} onChange={(e) => setPasswordEmail(e.target.value)} placeholder="admin@lino.com" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+                    <input type="email" value={passwordEmail} onChange={(e) => setPasswordEmail(e.target.value)} placeholder="admin@lino.com" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" required />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Nova Senha</label>
-                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha" className="w-full bg-black border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" required />
                   </div>
                   <button type="submit" className="w-full bg-red-700 py-2 rounded font-bold text-white hover:bg-red-800">Atualizar Senha</button>
                   {msg && msg.includes("Senha") && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
@@ -350,46 +350,46 @@ export default function SaaSPage() {
           </div>
 
           {/* INSTÂNCIAS EVOLUTION */}
-          <div className="bg-[#1a1a1a] p-6 rounded-lg border border-gray-800">
+          <div className="bg-[var(--theme-card)] p-6 rounded-lg border border-[var(--theme-border)]">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="text-lg font-bold flex items-center"><span className="bg-green-500 w-2 h-5 mr-2 rounded-sm"></span>Instâncias WhatsApp ({instances.length})</h3>
-                <p className="text-xs text-gray-500 mt-1">Cada celular de vendedor é uma instância da Evolution API que recebe mensagens no sistema.</p>
+                <p className="text-xs text-[var(--theme-muted)] mt-1">Cada celular de vendedor é uma instância da Evolution API que recebe mensagens no sistema.</p>
               </div>
               <button onClick={() => setShowInstForm(!showInstForm)} className="bg-green-700 px-4 py-2 rounded text-sm font-bold hover:bg-green-800">+ Nova Instância</button>
             </div>
 
             {/* Form nova instância */}
             {showInstForm && (
-              <div className="bg-black p-4 rounded-lg border border-gray-700 mb-4">
+              <div className="bg-[var(--theme-input-bg)] p-4 rounded-lg border border-[var(--theme-border)] mb-4">
                 <h4 className="font-bold text-sm mb-3">{editingInstance ? "Editar Instância" : "Cadastrar Nova Instância"}</h4>
                 <form onSubmit={addInstance} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] text-gray-400 mb-1">Nome da Instância *</label>
-                    <input type="text" value={instForm.name} onChange={(e) => setInstForm({ ...instForm, name: e.target.value })} placeholder="Ex: Celular Vendas SP" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" required />
+                    <input type="text" value={instForm.name} onChange={(e) => setInstForm({ ...instForm, name: e.target.value })} placeholder="Ex: Celular Vendas SP" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" required />
                   </div>
                   <div>
                     <label className="block text-[10px] text-gray-400 mb-1">Número do WhatsApp</label>
-                    <input type="text" value={instForm.phone_number} onChange={(e) => setInstForm({ ...instForm, phone_number: e.target.value })} placeholder="5511999999999" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="text" value={instForm.phone_number} onChange={(e) => setInstForm({ ...instForm, phone_number: e.target.value })} placeholder="5511999999999" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <div>
                     <label className="block text-[10px] text-gray-400 mb-1">Nome da Instância na Evolution</label>
-                    <input type="text" value={instForm.evolution_instance_name} onChange={(e) => setInstForm({ ...instForm, evolution_instance_name: e.target.value })} placeholder="Ex: permetal_sp" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="text" value={instForm.evolution_instance_name} onChange={(e) => setInstForm({ ...instForm, evolution_instance_name: e.target.value })} placeholder="Ex: permetal_sp" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <div>
                     <label className="block text-[10px] text-gray-400 mb-1">Vendedor Responsável</label>
-                    <select value={instForm.assigned_user_id} onChange={(e) => setInstForm({ ...instForm, assigned_user_id: e.target.value })} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none">
+                    <select value={instForm.assigned_user_id} onChange={(e) => setInstForm({ ...instForm, assigned_user_id: e.target.value })} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none">
                       <option value="">Nenhum (distribuição automática)</option>
                       {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[10px] text-gray-400 mb-1">URL da Evolution (se diferente da global)</label>
-                    <input type="url" value={instForm.evolution_url} onChange={(e) => setInstForm({ ...instForm, evolution_url: e.target.value })} placeholder="https://..." className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="url" value={instForm.evolution_url} onChange={(e) => setInstForm({ ...instForm, evolution_url: e.target.value })} placeholder="https://..." className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <div>
                     <label className="block text-[10px] text-gray-400 mb-1">Token da Evolution (se diferente)</label>
-                    <input type="password" value={instForm.evolution_key} onChange={(e) => setInstForm({ ...instForm, evolution_key: e.target.value })} placeholder="Token específico" className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm outline-none" />
+                    <input type="password" value={instForm.evolution_key} onChange={(e) => setInstForm({ ...instForm, evolution_key: e.target.value })} placeholder="Token específico" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] text-[var(--theme-fg)] rounded p-2 text-sm outline-none" />
                   </div>
                   <div className="md:col-span-2 flex gap-3">
                     <button type="submit" className="flex-1 bg-green-700 py-2 rounded font-bold text-sm hover:bg-green-800">{editingInstance ? "Salvar Alterações" : "Criar Instância"}</button>
@@ -403,7 +403,7 @@ export default function SaaSPage() {
             {/* Lista de instâncias */}
             <div className="space-y-2">
               {instances.map(inst => (
-                <div key={inst.id} className={`bg-black p-4 rounded border border-gray-800 flex justify-between items-center group ${!inst.active ? "opacity-50" : ""}`}>
+                <div key={inst.id} className={`bg-[var(--theme-card)] p-4 rounded border border-[var(--theme-border)] flex justify-between items-center group ${!inst.active ? "opacity-50" : ""}`}>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${inst.active ? "bg-green-400" : "bg-red-400"}`}></span>
@@ -424,7 +424,7 @@ export default function SaaSPage() {
                 </div>
               ))}
               {instances.length === 0 && !showInstForm && (
-                <div className="border border-dashed border-gray-700 rounded-lg p-6 text-center text-gray-600 text-sm">
+                <div className="border border-dashed border-[var(--theme-border)] rounded-lg p-6 text-center text-gray-600 text-sm">
                   Nenhuma instância cadastrada. Clique em &quot;+ Nova Instância&quot; acima.
                 </div>
               )}
