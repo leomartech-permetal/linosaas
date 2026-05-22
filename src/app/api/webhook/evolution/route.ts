@@ -257,7 +257,6 @@ export async function POST(request: Request) {
           // Produto e DDD — sempre atualiza se disponível
           if (variaveis.produto) leadUpdate.detected_product = variaveis.produto;
           if (dddToUse) leadUpdate.detected_ddd = dddToUse;
-          if (dddToUse) leadUpdate.detected_city = `DDD ${dddToUse}`;
           
           // Dados profissionais — atualiza APENAS se vier preenchido (não apaga existente)
           if (variaveis.empresa) leadUpdate.company = variaveis.empresa;
