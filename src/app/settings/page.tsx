@@ -288,7 +288,12 @@ export default function SettingsPage() {
       priority: (rule.priority || 0) + 1 // Sugere uma prioridade próxima
     };
     const { error } = await supabase.from("routing_rules").insert([payload]);
-    if (error) { flash("Erro ao dup  const inputCls = "w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none focus:border-[hsl(var(--tenant-primary))] transition-all";
+    if (error) { flash("Erro ao duplicar: " + error.message); return; }
+    flash("✔ Regra duplicada com sucesso!");
+    loadAll();
+  }
+
+  const inputCls = "w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none focus:border-[hsl(var(--tenant-primary))] transition-all";
   const btnCls = "w-full py-2 rounded font-bold text-sm hover:opacity-90 transition-all cursor-pointer";
 
   return (
@@ -954,14 +959,6 @@ export default function SettingsPage() {
 
               <div className="bg-blue-900/10 border border-blue-900/20 p-4 rounded-lg text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
                 <strong>💡 Como funciona:</strong> O Lino SDR qualifica o lead usando o Master Prompt e as Skills. Assim que o vendedor é atribuído, o sistema entra em modo de <strong>Monitoramento de Suporte</strong>. A IA passa a usar este Prompt de Suporte para manter o cliente engajado enquanto o vendedor não inicia o atendimento humano.
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}trong>. A IA passa a usar este Prompt de Suporte para manter o cliente engajado enquanto o vendedor não inicia o atendimento humano.
               </div>
             </div>
           )}
