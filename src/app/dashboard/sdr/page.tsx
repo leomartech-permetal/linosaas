@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 export default function SDRLeadsPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'incomplete' | 'complete'>('all');
+  const [filter, setFilter] = useState<'all' | 'incomplete' | 'complete' | 'outros'>('incomplete');
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
   const [history, setHistory] = useState<any[]>([]);
 
@@ -40,9 +40,11 @@ export default function SDRLeadsPage() {
   }
 
   const filteredLeads = leads.filter(l => {
+    const isOutros = l.status === 'OTHER_DEPARTMENT' || l.status === 'CANCELED';
     if (filter === 'incomplete') return l.status === 'SDR_QUALIFICATION';
-    if (filter === 'complete') return l.status !== 'SDR_QUALIFICATION';
-    return true;
+    if (filter === 'complete') return l.status !== 'SDR_QUALIFICATION' && !isOutros;
+    if (filter === 'outros') return isOutros;
+    return !isOutros; // all não mostra os lixos
   });
 
   const handleUpdateLead = async (field: string, value: any) => {
@@ -85,9 +87,10 @@ export default function SDRLeadsPage() {
                 📥 Exportar CSV
               </button>
               <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-gray-800">
-                <button onClick={() => setFilter('all')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'all' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>TODOS</button>
+                <button onClick={() => setFilter('all')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'all' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>TODOS OS LEADS</button>
                 <button onClick={() => setFilter('incomplete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'incomplete' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>PENDENTES</button>
                 <button onClick={() => setFilter('complete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'complete' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>QUALIFICADOS</button>
+                <button onClick={() => setFilter('outros')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'outros' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>OUTROS CONTATOS</button>
               </div>
             </div>
           </header>
@@ -124,8 +127,12 @@ export default function SDRLeadsPage() {
                     <p className="text-xs text-blue-400 font-medium">{lead.detected_product || "—"}</p>
                   </div>
                   <div className="text-right min-w-[120px]">
-                    <span className={`text-[10px] px-2 py-1 rounded font-black tracking-tighter uppercase ${lead.status === 'SDR_QUALIFICATION' ? 'bg-blue-900/20 text-blue-400 border border-blue-500/20' : 'bg-green-900/20 text-green-400 border border-green-500/20'}`}>
-                      {lead.status === 'SDR_QUALIFICATION' ? 'Em Qualificação' : 'Qualificado'}
+                    <span className={`text-[10px] px-2 py-1 rounded font-black tracking-tighter uppercase ${
+                      lead.status === 'SDR_QUALIFICATION' ? 'bg-blue-900/20 text-blue-400 border border-blue-500/20' : 
+                      lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'bg-purple-900/20 text-purple-400 border border-purple-500/20' :
+                      'bg-green-900/20 text-green-400 border border-green-500/20'
+                    }`}>
+                      {lead.status === 'SDR_QUALIFICATION' ? 'Em Qualificação' : lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'Outro Setor' : 'Qualificado'}
                     </span>
                     <p className="text-[10px] text-gray-600 mt-2">{new Date(lead.updated_at).toLocaleDateString()}</p>
                   </div>
