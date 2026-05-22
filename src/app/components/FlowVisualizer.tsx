@@ -8,7 +8,6 @@ import {
   Background,
   useNodesState,
   useEdgesState,
-  addEdge,
   BackgroundVariant,
   Node,
   Edge,
@@ -60,205 +59,112 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
   const [loading, setLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState<any>(null);
 
-  // Guarda estado base para resetar visual
   const [baseNodes, setBaseNodes] = useState<Node[]>([]);
   const [baseEdges, setBaseEdges] = useState<Edge[]>([]);
 
   useEffect(() => {
-    async function fetchAndBuildGraph() {
-      try {
-        setLoading(true);
-        const [
-          { data: segments },
-          { data: products },
-          { data: regions },
-          { data: rules },
-          { data: teams },
-          { data: users },
-          { data: skills }
-        ] = await Promise.all([
-          supabase.from('segments').select('*'),
-          supabase.from('products').select('*'),
-          supabase.from('regions').select('*'),
-          supabase.from('routing_rules').select('*'),
-          supabase.from('teams').select('*'),
-          supabase.from('admin_users').select('id, name, role, team_id'),
-          supabase.from('skills').select('id, name, type')
-        ]);
-
-        const newNodes: Node[] = [];
-        const newEdges: Edge[] = [];
-
-        // Y-Levels
-        const LEVEL_IN = 50;
-        const LEVEL_ROUTER = 150;
-        const LEVEL_RULES = 300;
-        const LEVEL_TEAMS = 450;
-        const LEVEL_USERS = 600;
-        const LEVEL_SKILLS = 750;
-        const LEVEL_OUT = 900;
-
-        // Maps for fast lookup
-        const prodMap = new Map(products?.map(p => [p.id, p.name]));
-        const segMap = new Map(segments?.map(s => [s.id, s.name]));
-        const regMap = new Map(regions?.map(r => [r.id, r.name]));
-        const teamMap = new Map(teams?.map(t => [t.id, t.name]));
-
-        // 1. INPUT LAYER
-        newNodes.push({
-          id: 'root',
-          position: { x: 500, y: LEVEL_IN },
-          data: { label: 'Webhook (Evolution API)' },
-          type: 'input',
-          style: { background: '#2563eb', color: 'white', border: 'none', fontWeight: 'bold' }
-        });
-
-        // 2. ROUTER LAYER
-        newNodes.push({
-          id: 'router',
-          position: { x: 500, y: LEVEL_ROUTER },
-          data: { label: 'Motor de Roteamento' },
-          style: { background: '#334155', color: 'white', border: '2px solid #475569' }
-        });
-        newEdges.push({ id: 'e-root-router', source: 'root', target: 'router', animated: true });
-
-        // 3. RULES LAYER
-        const rulesSpacing = 220;
-        const rulesStartX = 500 - ((rules?.length || 1) * rulesSpacing) / 2;
-        
-        rules?.forEach((rule: any, idx: number) => {
-          const id = `rule-${rule.id}`;
-          
-          // Build conditions label
-          let conditions = [];
-          if (rule.segment_id) conditions.push(`Seg: ${segMap.get(rule.segment_id)}`);
-          if (rule.product_ids?.length) conditions.push(`${rule.product_ids.length} Produtos`);
-          if (rule.region_ids?.length) conditions.push(`${rule.region_ids.length} Regiões`);
-          
-          newNodes.push({
-            id,
-            position: { x: rulesStartX + (idx * rulesSpacing), y: LEVEL_RULES },
-            data: { 
-              label: (
-                <div className="text-xs">
-                  <div className="font-bold text-sm mb-1">Regra {idx + 1}</div>
-                  <div className="text-slate-300">{conditions.join(' | ') || 'Default'}</div>
-                </div>
-              )
-            },
-            style: { background: '#0f172a', color: '#38bdf8', border: '1px solid #38bdf8', width: 200 }
-          });
-          newEdges.push({ id: `e-router-${id}`, source: 'router', target: id, animated: true });
-        });
-
-        // 4. TEAMS LAYER
-        const teamsSpacing = 250;
-        const teamsStartX = 500 - ((teams?.length || 1) * teamsSpacing) / 2;
-
-        teams?.forEach((team: any, idx: number) => {
-          const id = `team-${team.id}`;
-          newNodes.push({
-            id,
-            position: { x: teamsStartX + (idx * teamsSpacing), y: LEVEL_TEAMS },
-            data: { label: `Equipe: ${team.name}` },
-            style: { background: '#4c1d95', color: 'white', border: '1px solid #7c3aed', width: 200 }
-          });
-
-          // Connect rules to this team
-          rules?.filter((r: any) => r.team_id === team.id).forEach((rule: any) => {
-            newEdges.push({ id: `e-rule-${rule.id}-team-${team.id}`, source: `rule-${rule.id}`, target: id });
-          });
-        });
-
-        // 5. USERS LAYER
-        // Agrupar usuários por time para organizar X
-        const usersSpacing = 150;
-        let currentUserX = 100;
-
-        users?.forEach((user: any) => {
-          const id = `user-${user.id}`;
-          newNodes.push({
-            id,
-            position: { x: currentUserX, y: LEVEL_USERS },
-            data: { 
-              label: (
-                <div className="text-xs">
-                  <div className="font-bold">{user.name}</div>
-                  <div className="text-slate-400">{user.role}</div>
-                </div>
-              )
-            },
-            style: { background: '#1e293b', color: '#e2e8f0', border: '1px solid #64748b' }
-          });
-
-          // Connect team to user
-          if (user.team_id) {
-            newEdges.push({ id: `e-team-${user.team_id}-user-${user.id}`, source: `team-${user.team_id}`, target: id });
-          }
-
-          // Also connect direct assigned rules to users
-          rules?.filter((r: any) => r.assigned_user_id === user.id || r.seller_ids?.includes(user.id)).forEach((rule: any) => {
-            newEdges.push({ id: `e-rule-${rule.id}-user-${user.id}`, source: `rule-${rule.id}`, target: id, style: { strokeDasharray: '5,5' } });
-          });
-
-          currentUserX += usersSpacing;
-        });
-
-        // 6. SKILLS LAYER
-        const skillsSpacing = 180;
-        const skillsStartX = 500 - ((skills?.length || 1) * skillsSpacing) / 2;
-
-        skills?.forEach((skill: any, idx: number) => {
-          const id = `skill-${skill.id}`;
-          newNodes.push({
-            id,
-            position: { x: skillsStartX + (idx * skillsSpacing), y: LEVEL_SKILLS },
-            data: { 
-              label: (
-                <div className="text-xs">
-                  <div className="font-bold">Cérebro IA</div>
-                  <div className="text-purple-300">{skill.name}</div>
-                </div>
-              )
-            },
-            style: { background: '#2e1065', color: '#d8b4fe', border: '1px solid #9333ea' }
-          });
-
-          // Connect users to skills (assuming general connection for visuals unless specific mapping exists)
-          users?.forEach((user: any) => {
-             // To avoid extreme clutter, only connect lightly
-             newEdges.push({ id: `e-user-${user.id}-skill-${skill.id}`, source: `user-${user.id}`, target: id, style: { stroke: '#4c1d95', opacity: 0.1 } });
-          });
-        });
-
-        // 7. OUTPUT LAYER
-        newNodes.push({
-          id: 'whatsapp-out',
-          position: { x: 500, y: LEVEL_OUT },
-          data: { label: 'Envio WhatsApp / Fila Evolution' },
-          type: 'output',
-          style: { background: '#166534', color: 'white', border: 'none', fontWeight: 'bold' }
-        });
-
-        skills?.forEach((skill: any) => {
-          newEdges.push({ id: `e-skill-${skill.id}-wa`, source: `skill-${skill.id}`, target: 'whatsapp-out', animated: true, style: { stroke: '#166534' } });
-        });
-
-        setBaseNodes(newNodes);
-        setBaseEdges(newEdges);
-        setNodes(newNodes);
-        setEdges(newEdges);
-      } catch (error) {
-        console.error("Erro ao carregar grafo do banco:", error);
-      } finally {
-        setLoading(false);
+    // Agora os nós são fixos (representam a lógica do código)
+    const initialNodes: Node[] = [
+      {
+        id: 'node-webhook',
+        position: { x: 400, y: 50 },
+        data: { label: '1. Webhook (Entrada)' },
+        type: 'input',
+        style: { background: '#2563eb', color: 'white', border: 'none', fontWeight: 'bold' }
+      },
+      {
+        id: 'node-debounce',
+        position: { x: 400, y: 150 },
+        data: { label: '2. Debounce & Multimídia' },
+        style: { background: '#475569', color: 'white', border: '1px solid #94a3b8' }
+      },
+      {
+        id: 'node-is-lead',
+        position: { x: 400, y: 250 },
+        data: { 
+          label: (
+            <div className="text-center">
+              <div className="font-bold text-xs text-amber-200">IF/ELSE</div>
+              <div>É Lead ou Vendedor?</div>
+            </div>
+          )
+        },
+        style: { background: '#d97706', color: 'white', border: 'none', borderRadius: '8px' }
+      },
+      {
+        id: 'node-end-internal',
+        position: { x: 150, y: 350 },
+        data: { label: 'Ignorar (Uso Interno)' },
+        type: 'output',
+        style: { background: '#1e293b', color: '#64748b', border: '1px dashed #64748b' }
+      },
+      {
+        id: 'node-is-return',
+        position: { x: 550, y: 350 },
+        data: { 
+          label: (
+            <div className="text-center">
+              <div className="font-bold text-xs text-amber-200">IF/ELSE</div>
+              <div>Lead de Retorno?</div>
+            </div>
+          )
+        },
+        style: { background: '#d97706', color: 'white', border: 'none', borderRadius: '8px' }
+      },
+      {
+        id: 'node-sla',
+        position: { x: 750, y: 450 },
+        data: { label: 'Sistema SLA / Suporte' },
+        style: { background: '#9333ea', color: 'white', border: '1px solid #c084fc' }
+      },
+      {
+        id: 'node-ai',
+        position: { x: 350, y: 450 },
+        data: { label: 'Cérebro IA (SDR/Skills)' },
+        style: { background: '#4c1d95', color: 'white', border: '1px solid #a78bfa' }
+      },
+      {
+        id: 'node-router',
+        position: { x: 350, y: 550 },
+        data: { label: 'Roteador Automático' },
+        style: { background: '#334155', color: 'white', border: '1px solid #64748b' }
+      },
+      {
+        id: 'node-save-db',
+        position: { x: 550, y: 650 },
+        data: { label: 'Salvar Supabase' },
+        style: { background: '#059669', color: 'white', border: 'none' }
+      },
+      {
+        id: 'node-evolution-out',
+        position: { x: 550, y: 750 },
+        data: { label: 'Disparo Evolution API' },
+        type: 'output',
+        style: { background: '#16a34a', color: 'white', border: 'none', fontWeight: 'bold' }
       }
-    }
+    ];
 
-    fetchAndBuildGraph();
+    const initialEdges: Edge[] = [
+      { id: 'e1', source: 'node-webhook', target: 'node-debounce', animated: true },
+      { id: 'e2', source: 'node-debounce', target: 'node-is-lead', animated: true },
+      { id: 'e3', source: 'node-is-lead', target: 'node-end-internal', label: 'Vendedor', style: { strokeDasharray: '5,5' } },
+      { id: 'e4', source: 'node-is-lead', target: 'node-is-return', label: 'Lead', animated: true },
+      { id: 'e5', source: 'node-is-return', target: 'node-sla', label: 'Sim', animated: true },
+      { id: 'e6', source: 'node-is-return', target: 'node-ai', label: 'Não (Novo)', animated: true },
+      { id: 'e7', source: 'node-ai', target: 'node-router', animated: true },
+      { id: 'e8', source: 'node-router', target: 'node-save-db', animated: true },
+      { id: 'e9', source: 'node-sla', target: 'node-save-db', animated: true },
+      { id: 'e10', source: 'node-save-db', target: 'node-evolution-out', animated: true }
+    ];
+
+    setBaseNodes(initialNodes);
+    setBaseEdges(initialEdges);
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+    setLoading(false);
   }, [setNodes, setEdges]);
 
-  // Função para aplicar os logs ao grafo
+  // Função para aplicar os logs (Modo Debug)
   useEffect(() => {
     if (!leadId) {
       setNodes(baseNodes);
@@ -307,7 +213,7 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         return;
       }
 
-      let activeNodes = new Set<string>(['root']);
+      let activeNodes = new Set<string>(['node-webhook']);
       let activeEdges = new Set<string>();
       let errorNodes = new Map<string, any>(); 
       let nodeLogs = new Map<string, any>(); 
@@ -316,43 +222,69 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         const strLog = JSON.stringify(log).toLowerCase();
         
         if (strLog.includes('webhook') || strLog.includes('receive')) {
-          nodeLogs.set('root', log);
+          nodeLogs.set('node-webhook', log);
+          if (log.level === 'error') errorNodes.set('node-webhook', log);
         }
-        
-        if (strLog.includes('rout')) {
-          activeNodes.add('router');
-          activeEdges.add('e-root-router');
-          nodeLogs.set('router', log);
-          if (log.level === 'error') errorNodes.set('router', log);
+
+        if (strLog.includes('debounce') || strLog.includes('buffer') || strLog.includes('multimidia')) {
+          activeNodes.add('node-debounce');
+          activeEdges.add('e1');
+          nodeLogs.set('node-debounce', log);
+          if (log.level === 'error') errorNodes.set('node-debounce', log);
+        }
+
+        if (strLog.includes('internal') || strLog.includes('vendedor')) {
+          activeNodes.add('node-is-lead');
+          activeEdges.add('e2');
+          activeNodes.add('node-end-internal');
+          activeEdges.add('e3');
+          nodeLogs.set('node-is-lead', log);
+        }
+
+        if (strLog.includes('sdr') || strLog.includes('openai') || strLog.includes('skill')) {
+          activeNodes.add('node-is-lead');
+          activeNodes.add('node-is-return');
+          activeNodes.add('node-ai');
+          activeEdges.add('e2');
+          activeEdges.add('e4');
+          activeEdges.add('e6');
+          nodeLogs.set('node-ai', log);
+          if (log.level === 'error') errorNodes.set('node-ai', log);
+        }
+
+        if (strLog.includes('sla') || strLog.includes('support') || strLog.includes('retorno')) {
+          activeNodes.add('node-is-lead');
+          activeNodes.add('node-is-return');
+          activeNodes.add('node-sla');
+          activeEdges.add('e2');
+          activeEdges.add('e4');
+          activeEdges.add('e5');
+          nodeLogs.set('node-sla', log);
+          if (log.level === 'error') errorNodes.set('node-sla', log);
+        }
+
+        if (strLog.includes('rout') || strLog.includes('rule')) {
+          activeNodes.add('node-router');
+          activeEdges.add('e7');
+          nodeLogs.set('node-router', log);
+          if (log.level === 'error') errorNodes.set('node-router', log);
+        }
+
+        if (strLog.includes('salva') || strLog.includes('insert') || strLog.includes('update')) {
+          activeNodes.add('node-save-db');
+          if (activeNodes.has('node-router')) activeEdges.add('e8');
+          if (activeNodes.has('node-sla')) activeEdges.add('e9');
+          nodeLogs.set('node-save-db', log);
+          if (log.level === 'error') errorNodes.set('node-save-db', log);
         }
 
         if (strLog.includes('send') || strLog.includes('whatsapp') || strLog.includes('evolution')) {
-          activeNodes.add('whatsapp-out');
-          nodeLogs.set('whatsapp-out', log);
-          if (log.level === 'error') errorNodes.set('whatsapp-out', log);
+          activeNodes.add('node-save-db');
+          activeNodes.add('node-evolution-out');
+          activeEdges.add('e10');
+          nodeLogs.set('node-evolution-out', log);
+          if (log.level === 'error') errorNodes.set('node-evolution-out', log);
         }
-
-        // Mapeamento dinâmico: procura menções a IDs no log para acender nós específicos
-        baseNodes.forEach(n => {
-           if (n.id === 'root' || n.id === 'router' || n.id === 'whatsapp-out') return;
-           
-           const realId = n.id.split('-').slice(1).join('-'); // ex: user-1234-5678 -> 1234-5678
-           
-           if (strLog.includes(realId.toLowerCase())) {
-             activeNodes.add(n.id);
-             nodeLogs.set(n.id, log);
-             if (log.level === 'error') {
-               errorNodes.set(n.id, log);
-             }
-
-             // Encontra e acende a aresta que chega nesse nó
-             baseEdges.forEach(e => {
-                if (e.target === n.id && activeNodes.has(e.source)) {
-                  activeEdges.add(e.id);
-                }
-             });
-           }
-        });
       });
 
       const updatedNodes = baseNodes.map(n => {
@@ -396,7 +328,7 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
   }, []);
 
   if (loading) {
-    return <div className="w-full h-[80vh] flex items-center justify-center text-white">Carregando a complexidade do sistema...</div>;
+    return <div className="w-full h-[80vh] flex items-center justify-center text-white">Carregando fluxo logico...</div>;
   }
 
   return (
