@@ -150,11 +150,10 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
 
 3. ACIONAMENTO DE SKILLS: Se existe skill específica do produto ativa, use-a para coletar detalhes técnicos antes de rotear.
 
-4. QUALIFICAÇÃO PROFISSIONAL: Tente uma vez (apenas UMA) obter empresa + e-mail antes do roteamento. Se o cliente não quiser dar, siga sem bloquear.
-
-5. PROIBIÇÃO DE ROTEAMENTO PREMATURO E CONTRADIÇÕES:
-   - Se a sua 'resposta_whatsapp' contém UMA PERGUNTA (ex: pedindo CNPJ, email ou detalhes técnicos), você ESTÁ COLETANDO DADOS. Portanto, OBRIGATORIAMENTE "acao_executada": "coleta_dados".
-   - Você SÓ PODE marcar "acao_executada": "roteamento_comercial" se NÃO estiver fazendo NENHUMA pergunta na mensagem e todos os dados mínimos já tiverem sido respondidos ou recusados pelo cliente no turno anterior. Nunca pergunte e roteie no mesmo turno!
+5. PROIBIÇÃO DE ROTEAMENTO PREMATURO E OBRIGATORIEDADE DE CONFIRMAÇÃO:
+   - FASE 1 (COLETA): Se você ainda está perguntando algo, use SEMPRE `"acao_executada": "coleta_dados"`.
+   - FASE 2 (RESUMO E CONFIRMAÇÃO): Quando você já coletou Empresa/CNPJ, Email, Produto, Aplicação e as Especificações, você DEVE enviar um resumo formatado em bullet points para o cliente e perguntar se está tudo certo (Ex: "Tudo certinho? Me diga 'sim' para confirmar ou 'corrigir'"). Nesse turno, use OBRIGATORIAMENTE `"acao_executada": "confirmacao"`.
+   - FASE 3 (ROTEAMENTO): Você SÓ PODE marcar `"acao_executada": "roteamento_comercial"` se o cliente acabou de responder "Sim" ou confirmar o resumo enviado no turno anterior. Nunca pule a Fase 2!
 
 6. DADOS DO CLIENTE NO JSON: DDD, telefone e localização são extraídos automaticamente pelo sistema. NÃO tente extrair ddd_regiao do texto, sempre retorne null nesse campo.
 
@@ -197,7 +196,7 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
     "confianca": "<alta, media ou baixa>",
     "observacao": "<nota sobre o que o RAG respondeu>"
   },
-  "acao_executada": "<roteamento_comercial | coleta_dados | duvida_tecnica | outro_setor>",
+  "acao_executada": "<roteamento_comercial | confirmacao | coleta_dados | duvida_tecnica | outro_setor>",
   "observacoes": "<notas internas do raciocínio>"
 }
 `;
@@ -272,8 +271,13 @@ REGRAS OBRIGATÓRIAS:
 3. Se o cliente estiver bravo, reconheça o problema sem inventar justificativas.
 4. Nunca diga "alta demanda" sem ter certeza do contexto real.
 5. Não prometa prazos específicos.
+6. CLASSIFICAÇÃO: Analise se a última mensagem do cliente trouxe uma nova especificação técnica (nova medida, mudança de material, alteração de quantidade, envio de projeto, etc.) que o vendedor precisa saber. Se sim, defina "nova_informacao" como true.
 
-SAÍDA: Apenas o texto da mensagem para o WhatsApp.`;
+Você deve retornar EXCLUSIVAMENTE um objeto JSON neste formato:
+{
+  "nova_informacao": <true|false>,
+  "message": "<Apenas o texto da mensagem para o WhatsApp.>"
+}`;
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -287,11 +291,12 @@ SAÍDA: Apenas o texto da mensagem para o WhatsApp.`;
     const response = await dynamicOpenai.chat.completions.create({
       model: 'gpt-4o',
       messages: messages as any,
-      max_tokens: 200
+      response_format: { type: 'json_object' }
     });
-    return { message: response.choices[0].message.content || "Estou acompanhando seu caso." };
+    const content = response.choices[0].message.content || '{}';
+    return JSON.parse(content);
   } catch (e) {
-    return { message: "Um momento, estou verificando com o vendedor." };
+    return { message: "Um momento, estou verificando com o vendedor.", nova_informacao: false };
   }
 }
 

@@ -135,6 +135,23 @@ export async function notifySellerAboutLead(
 }
 
 /**
+ * Notifica o vendedor sobre novas informações que o cliente enviou pós-roteamento.
+ */
+export async function notifySellerAboutUpdate(
+  sellerPhone: string,
+  leadName: string,
+  leadPhone: string,
+  updateMessage: string
+): Promise<boolean> {
+  const globalConfig = await getGlobalConfig();
+  if (!globalConfig) return false;
+
+  const text = `⚠️ *LINO SUPORTE — ATUALIZAÇÃO DO CLIENTE*\n\nO cliente *${leadName}* (${leadPhone}) enviou uma nova informação de especificação enquanto aguardava seu atendimento:\n\n_"${updateMessage}"_\n\nPor favor, leve isso em consideração ao atendê-lo.`;
+
+  return sendTextMessage(globalConfig.instanceName, globalConfig.url, globalConfig.key, sellerPhone, text);
+}
+
+/**
  * Notifica o supervisor que o vendedor não atendeu o lead dentro do prazo.
  */
 export async function notifySupervisor(

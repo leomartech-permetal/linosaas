@@ -4,6 +4,7 @@ import {
   notifySellerAboutLead,
   notifySupervisor,
   checkSellerStartedConversation,
+  notifySellerAboutUpdate
 } from './evolution-api';
 
 /**
@@ -458,6 +459,24 @@ async function decideActionByStatus(
       const { data: interactionData } = await supabase.from('interactions').select('sender_type, message_content').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(10);
       const aiResponse = await generateSupportResponse(lead, (interactionData || []).reverse(), returnCount >= 1 ? 'COBRANÇA_URGENTE' : 'PRIMEIRO_RETORNO');
       
+      const lastClientMessage = (interactionData || []).find(i => i.sender_type === 'USER')?.message_content || 'Nova informação';
+
+      if (aiResponse.nova_informacao) {
+        const sellerPhone = await getSellerPhone(lead.current_owner_id);
+        if (sellerPhone) {
+          await notifySellerAboutUpdate(
+            sellerPhone,
+            lead.name || 'Lead',
+            lead.whatsapp_number || '',
+            lastClientMessage
+          );
+        }
+        return {
+          action: 'NOTIFY_SELLER_UPDATE',
+          message: aiResponse.message
+        };
+      }
+
       if (returnCount >= 1) {
         await notifySellerUrgent(lead, returnCount);
         return {
