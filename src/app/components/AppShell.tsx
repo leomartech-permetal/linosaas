@@ -123,7 +123,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }
       `}</style>
       {/* Sidebar Premium */}
-      <aside className="w-60 flex flex-col bg-[#FAFAFA] border-r border-[#EAEAEA] z-50">
+      <aside className="sidebar-container-clean flex flex-col z-50">
         <div className="p-6">
           <a href="/dashboard" className="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity">
             {config.logo_url ? (
@@ -134,33 +134,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
             {!config.logo_url && (
-              <span className="font-black tracking-tighter text-xl text-[#171717]">{config.company_name}</span>
+              <span className="font-black tracking-tighter text-xl text-[var(--text-primary)]">{config.company_name}</span>
             )}
           </a>
-          <p className="text-[9px] uppercase font-black tracking-widest leading-none text-gray-400">{config.company_subtitle}</p>
+          <p className="text-[9px] uppercase font-black tracking-widest leading-none text-[var(--text-tertiary)]">{config.company_subtitle}</p>
         </div>
 
         <nav className="flex-1 px-4 py-2 space-y-6 overflow-y-auto scrollbar-hide">
           {menuGroups.map((group, gIdx) => (
             <div key={gIdx} className="space-y-1">
-              <h4 className="px-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{group.title}</h4>
+              <h4 className="px-3 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-2">{group.title}</h4>
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.href === "/" && pathname === "/");
                 return (
                   <a
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200 group ${
-                      isActive 
-                        ? "bg-[#E2E8F0] text-[#171717] font-semibold" 
-                        : "text-[#666666] hover:text-[#171717] hover:bg-[#F1F5F9]"
-                    }`}
+                    className={`sidebar-menu-item-clean ${isActive ? "active" : ""}`}
                   >
-                    <span className={`${isActive ? "text-[#0070F3]" : "text-gray-400 group-hover:text-gray-600"}`}>
+                    <span className={`${isActive ? "text-[var(--brand-accent)]" : "text-[var(--text-tertiary)]"}`}>
                       {item.icon(config.primary_color)}
                     </span>
                     <span className="font-medium">{item.label}</span>
-                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0070F3] shadow-[0_0_6px_#0070F3]"></div>}
+                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand-accent)] shadow-[0_0_6px_var(--brand-accent)]"></div>}
                   </a>
                 );
               })}
@@ -168,15 +164,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[#EAEAEA] bg-[#FAFAFA]">
-          <div className="p-3 rounded-md flex items-center gap-3 mb-4 bg-gray-100">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gray-200 text-gray-700">AD</div>
+        <div className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)]">
+          <div className="p-3 rounded-md flex items-center gap-3 mb-4 bg-[var(--bg-hover)]">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-[var(--bg-active)] text-[var(--text-primary)]">AD</div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-[#171717]">Administrador</p>
-              <p className="text-[10px] text-gray-500 truncate">Permetal SaaS</p>
+              <p className="text-xs font-bold truncate text-[var(--text-primary)]">Administrador</p>
+              <p className="text-[10px] text-[var(--text-secondary)] truncate">Permetal SaaS</p>
             </div>
           </div>
-          <a href="/api/logout" className="flex items-center justify-center gap-2 w-full py-2 text-[10px] font-black uppercase transition-colors border border-gray-200 rounded-md text-gray-600 hover:text-red-600 hover:border-red-600/30 bg-white">
+          <a href="/api/logout" className="flex items-center justify-center gap-2 w-full py-2 text-[10px] font-black uppercase transition-colors border border-[var(--border-default)] rounded-md text-[var(--text-secondary)] hover:text-[var(--status-error)] hover:border-[var(--status-error)]/30 bg-[var(--bg-surface)]">
             Encerrar Sessão
           </a>
         </div>

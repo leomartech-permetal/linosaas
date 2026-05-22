@@ -159,7 +159,7 @@ export default function DashboardPage() {
                           <div className="font-black text-sm group-hover:text-[hsl(var(--tenant-primary))]">{lead.name || "Interesse Anônimo"}</div>
                           <div className="text-[10px] text-[var(--theme-muted)]">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</div>
                         </td>
-                        <td className="p-6 text-xs text-blue-500 dark:text-blue-400 font-bold">{lead.detected_product || lead.produto || "—"}</td>
+                        <td className="p-6 text-xs text-blue-600 font-bold">{lead.detected_product || lead.produto || "—"}</td>
                         <td className="p-6">
                           <span className="text-[9px] font-black uppercase px-2 py-1 rounded" style={{ backgroundColor: (statusColors[lead.status] || "#666") + "20", color: statusColors[lead.status] || "#666" }}>
                             {STATUS_LABELS[lead.status] || lead.status}
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="pt-4 border-t border-[var(--theme-border)] flex justify-between items-center">
                     <span className="text-[var(--theme-muted)] text-[10px] uppercase">Skill Utilizada pela IA:</span> 
-                    <span className="px-2 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[10px] font-black rounded border border-purple-500/20">
+                    <span className="px-2 py-1 bg-purple-500/10 text-purple-600 text-[10px] font-black rounded border border-purple-500/20">
                       {selectedLead.last_skill_used || "SDR General"}
                     </span>
                   </div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                 <h5 className="text-[10px] text-[var(--theme-muted)] font-black uppercase mb-4">Histórico Real</h5>
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                   {history.map((msg, i) => (
-                    <div key={i} className={`p-3 rounded-lg text-xs ${msg.sender_type === 'lead' ? 'bg-[var(--theme-hover)] text-[var(--theme-fg)]' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'}`}>
+                    <div key={i} className={`p-3 rounded-lg text-xs ${msg.sender_type === 'lead' ? 'bg-[var(--theme-hover)] text-[var(--theme-fg)]' : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'}`}>
                       {msg.message_content}
                     </div>
                   ))}

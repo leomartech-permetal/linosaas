@@ -82,16 +82,16 @@ export default function SDRLeadsPage() {
   };
 
   return (
-    <div className="flex h-full w-full bg-[var(--theme-bg)] text-[var(--theme-fg)] overflow-hidden relative">
+    <div className="flex h-full w-full bg-[var(--bg-app)] text-[var(--text-primary)] overflow-hidden relative">
       {/* Lista Principal */}
       <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${selectedLead ? 'mr-[450px]' : ''}`}>
         <div className="p-6 md:p-8 overflow-y-auto h-full">
-          <header className="flex justify-between items-end mb-8">
+          <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
             <div>
-              <h2 className="text-3xl font-semibold tracking-tight text-[#171717]">Pipeline de Qualificação</h2>
-              <p className="text-[#666666] mt-1">Gestão de leads multimodais e triagem inteligente</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Pipeline de Qualificação</h2>
+              <p className="text-[var(--text-secondary)] mt-1">Gestão de leads multimodais e triagem inteligente</p>
             </div>
-            <div className="flex gap-4 items-center">
+            <div className="flex flex-wrap gap-4 items-center">
               <button 
                 onClick={() => {
                   const headers = ["Data", "Nome", "Empresa", "Produto", "WhatsApp", "Status"];
@@ -106,15 +106,17 @@ export default function SDRLeadsPage() {
                   a.click();
                   document.body.removeChild(a);
                 }}
-                className="text-xs font-semibold text-[#171717] bg-[#FFFFFF] border border-[#D4D4D8] px-4 py-2 rounded-md hover:bg-[#F1F5F9] transition-all"
+                className="btn-secondary text-xs"
               >
                 📥 Exportar CSV
               </button>
-              <div className="flex bg-[#FFFFFF] p-1 rounded-lg border border-[#EAEAEA]">
-                <button onClick={() => setFilter('all')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'all' ? 'bg-[#E2E8F0] text-[#171717]' : 'text-[#666666] hover:text-[#171717]'}`}>TODOS</button>
-                <button onClick={() => setFilter('incomplete')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'incomplete' ? 'bg-[#0070F3] text-white' : 'text-[#666666] hover:text-[#171717]'}`}>PENDENTES</button>
-                <button onClick={() => setFilter('complete')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'complete' ? 'bg-[#10B981] text-white' : 'text-[#666666] hover:text-[#171717]'}`}>QUALIFICADOS</button>
-                <button onClick={() => setFilter('outros')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'outros' ? 'bg-[#8B5CF6] text-white' : 'text-[#666666] hover:text-[#171717]'}`}>OUTROS</button>
+              
+              {/* Abas Modernas Clean UI */}
+              <div className="tabs-container-clean">
+                <button onClick={() => setFilter('all')} className={`tab-item-clean ${filter === 'all' ? 'active' : ''}`}>TODOS</button>
+                <button onClick={() => setFilter('incomplete')} className={`tab-item-clean ${filter === 'incomplete' ? 'active' : ''}`}>PENDENTES</button>
+                <button onClick={() => setFilter('complete')} className={`tab-item-clean ${filter === 'complete' ? 'active' : ''}`}>QUALIFICADOS</button>
+                <button onClick={() => setFilter('outros')} className={`tab-item-clean ${filter === 'outros' ? 'active' : ''}`}>OUTROS</button>
               </div>
             </div>
           </header>
@@ -122,24 +124,24 @@ export default function SDRLeadsPage() {
           <div className="grid grid-cols-1 gap-3">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="w-10 h-10 border-4 border-[hsl(var(--tenant-primary))] border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-500 animate-pulse text-sm">Sincronizando dados...</p>
+                <div className="w-10 h-10 border-4 border-[var(--brand-accent)] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-[var(--text-secondary)] animate-pulse text-sm">Sincronizando dados...</p>
               </div>
             ) : filteredLeads.map((lead) => (
               <div 
                 key={lead.id} 
                 onClick={() => setSelectedLead(lead)}
-                className={`group flex items-center justify-between p-5 bg-[#FFFFFF] border rounded-lg cursor-pointer transition-all hover:border-[#0070F3] hover:shadow-sm ${selectedLead?.id === lead.id ? 'border-[#0070F3] bg-[#F1F5F9]' : 'border-[#EAEAEA]'}`}
+                className={`card-base p-5 group flex items-center justify-between cursor-pointer transition-all hover:border-[var(--brand-accent)] ${selectedLead?.id === lead.id ? '!border-[var(--brand-accent)] bg-[var(--bg-hover)]' : ''}`}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#F1F5F9] flex items-center justify-center border border-[#EAEAEA] text-lg font-semibold text-[#171717] group-hover:border-[#0070F3] group-hover:text-[#0070F3] transition-colors">
+                  <div className="w-12 h-12 rounded-full bg-[var(--bg-hover)] flex items-center justify-center border border-[var(--border-subtle)] text-lg font-semibold text-[var(--text-primary)] group-hover:border-[var(--brand-accent)] group-hover:text-[var(--brand-accent)] transition-colors">
                     {(lead.name || "?").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-[#171717] group-hover:text-[#0070F3] transition-colors">{lead.name || "Visitante Desconhecido"}</h4>
-                    <p className="text-xs text-[#666666] flex items-center gap-2">
+                    <h4 className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--brand-accent)] transition-colors">{lead.name || "Visitante Desconhecido"}</h4>
+                    <p className="text-xs text-[var(--text-secondary)] flex items-center gap-2">
                       <span>{lead.whatsapp_number.replace('@s.whatsapp.net','')}</span>
-                      {(lead.company || lead.empresa) && <span className="w-1 h-1 bg-[#D4D4D8] rounded-full"></span>}
+                      {(lead.company || lead.empresa) && <span className="w-1 h-1 bg-[var(--border-default)] rounded-full"></span>}
                       <span>{lead.company || lead.empresa}</span>
                     </p>
                   </div>
@@ -147,18 +149,18 @@ export default function SDRLeadsPage() {
 
                 <div className="flex items-center gap-8">
                   <div className="hidden lg:block text-center">
-                    <p className="text-[10px] text-[#888888] uppercase font-semibold tracking-wider mb-1">Interesse</p>
-                    <p className="text-xs text-[#0070F3] font-medium">{lead.detected_product || lead.produto || "—"}</p>
+                    <p className="text-[10px] text-[var(--text-tertiary)] uppercase font-semibold tracking-wider mb-1">Interesse</p>
+                    <p className="text-xs text-[var(--brand-accent)] font-medium">{lead.detected_product || lead.produto || "—"}</p>
                   </div>
                   <div className="text-right min-w-[120px]">
                     <span className={`text-[10px] px-2.5 py-1 rounded font-semibold uppercase border ${
-                      lead.status === 'SDR_QUALIFICATION' ? 'bg-[#0070F3]/10 text-[#0070F3] border-[#0070F3]/20' : 
-                      lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'bg-[#8B5CF6]/10 text-[#8B5CF6] border-[#8B5CF6]/20' :
-                      'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
+                      lead.status === 'SDR_QUALIFICATION' ? 'bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-[var(--brand-accent)]/20' : 
+                      lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'bg-[var(--chart-purple)]/10 text-[var(--chart-purple)] border-[var(--chart-purple)]/20' :
+                      'bg-[var(--status-success)]/10 text-[var(--status-success)] border-[var(--status-success)]/20'
                     }`}>
                       {lead.status === 'SDR_QUALIFICATION' ? 'Em Qualificação' : lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'Outro Setor' : 'Qualificado'}
                     </span>
-                    <p className="text-[10px] text-[#888888] mt-2">{new Date(lead.updated_at).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-[var(--text-tertiary)] mt-2">{new Date(lead.updated_at).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>

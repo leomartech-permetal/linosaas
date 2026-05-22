@@ -84,7 +84,7 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         data: { 
           label: (
             <div className="text-center">
-              <div className="font-semibold text-[10px] text-yellow-800">IF/ELSE</div>
+              <div className="font-semibold text-[10px] text-amber-950">IF/ELSE</div>
               <div className="text-[12px]">É Lead ou Vendedor?</div>
             </div>
           )
@@ -104,7 +104,7 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         data: { 
           label: (
             <div className="text-center">
-              <div className="font-semibold text-[10px] text-yellow-800">IF/ELSE</div>
+              <div className="font-semibold text-[10px] text-amber-950">IF/ELSE</div>
               <div className="text-[12px]">Lead de Retorno?</div>
             </div>
           )

@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
+    color-scheme: light;
     /* Clean Dashboard UI Design System */
     --bg-app: #FAFAFA;
     --bg-surface: #FFFFFF;
@@ -55,11 +58,15 @@
   }
 
   body {
-    background-color: var(--bg-app);
-    color: var(--text-primary);
+    background-color: var(--bg-app) !important;
+    color: var(--text-primary) !important;
     font-family: var(--font-sans);
     transition: background-color 0.2s ease, color 0.2s ease;
     antialiased: true;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    color: var(--text-primary) !important;
   }
   
   /* Classe opcional para a textura da chapa */
@@ -73,11 +80,162 @@
 }
 
 @layer components {
+  /* Classes do Clean Dashboard UI */
+  .btn-primary {
+    background-color: var(--brand-primary);
+    color: var(--text-inverse);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+  }
+  .btn-primary:hover {
+    background-color: #333333;
+  }
+
+  .btn-secondary {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+  }
+  .btn-secondary:hover {
+    background-color: var(--bg-hover);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 4px 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+  }
+  .btn-ghost:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .card-base {
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    padding: 24px;
+  }
+
+  .card-header-clean {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-container-clean {
+    width: 240px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-subtle);
+    padding: 16px;
+  }
+
+  .sidebar-menu-item-clean {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    margin-bottom: 4px;
+    transition: all 0.15s ease-in-out;
+  }
+  .sidebar-menu-item-clean:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+  .sidebar-menu-item-clean.active {
+    background-color: var(--bg-active);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .list-row-clean {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 14px;
+  }
+
+  .list-status-dot-clean {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .input-search-clean {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s ease-in-out;
+  }
+  .input-search-clean:focus {
+    border-color: var(--border-strong);
+  }
+
+  .code-block-container-clean {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-primary);
+    overflow-x: auto;
+  }
+
+  .tabs-container-clean {
+    display: flex;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .tab-item-clean {
+    padding: 8px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+  }
+  .tab-item-clean:hover {
+    color: var(--text-primary);
+  }
+  .tab-item-clean.active {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--brand-primary);
+  }
+
   .card-clean {
     @apply bg-white rounded-xl border border-[hsl(var(--content-border))] shadow-lg p-6;
   }
   
-  /* Os botões agora usam a variável dinâmica --tenant-primary */
   .btn-dynamic {
     @apply bg-[hsl(var(--tenant-primary))] hover:brightness-110 text-white font-medium py-2 px-6 rounded-md transition-all shadow-md;
   }

@@ -105,7 +105,7 @@ export default function PipelinePage() {
         </div>
         <button 
           onClick={() => setShowNewModal(true)} 
-          className="bg-[hsl(var(--tenant-primary))] text-white dark:text-black font-black py-3 px-8 rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_hsl(var(--tenant-primary)/0.3)] uppercase text-xs tracking-widest cursor-pointer"
+          className="bg-[hsl(var(--tenant-primary))] text-white font-black py-3 px-8 rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_hsl(var(--tenant-primary)/0.3)] uppercase text-xs tracking-widest cursor-pointer"
         >
           + Inserir Lead Manual
         </button>
@@ -128,14 +128,15 @@ export default function PipelinePage() {
                   <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: col.color }}></div>
                   <h3 className="font-black text-xs uppercase tracking-widest text-gray-400">{col.label}</h3>
                 </div>
-                <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-400">{colLeads.length}</span>
-              </div>              {/* Área de Cards */}
-              <div className="flex-1 bg-black/[0.02] dark:bg-[#111]/40 border border-[var(--theme-border)] rounded-2xl p-3 space-y-4 overflow-y-auto scrollbar-hide">
+                <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-gray-100 border border-[#EAEAEA] text-[#666666]">{colLeads.length}</span>
+              </div>
+              {/* Área de Cards */}
+              <div className="flex-1 bg-gray-50/50 border border-[var(--theme-border)] rounded-2xl p-3 space-y-4 overflow-y-auto scrollbar-hide">
                 {loading ? (
-                  <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-800 border-t-blue-500 rounded-full animate-spin"></div></div>
+                  <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>
                 ) : colLeads.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 gap-2 border-2 border-dashed border-gray-200 dark:border-gray-900 rounded-2xl">
-                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-800 uppercase">Vazio</span>
+                  <div className="flex flex-col items-center justify-center py-20 gap-2 border-2 border-dashed border-gray-200 rounded-2xl">
+                    <span className="text-[10px] font-black text-gray-400 uppercase">Vazio</span>
                   </div>
                 ) : (
                   colLeads.map((lead) => {
@@ -162,10 +163,10 @@ export default function PipelinePage() {
                         {!seller && <div className="h-2"></div>}
  
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-black uppercase text-blue-500 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20 truncate max-w-[150px]">
+                          <span className="text-[9px] font-bold uppercase text-[#0070F3] bg-[#0070F3]/10 px-2 py-0.5 rounded-md border border-[#0070F3]/20 truncate max-w-[150px]">
                             {lead.produto || lead.detected_product || "Sem Produto"}
                           </span>
-                          <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[8px] font-black text-gray-500">
+                          <div className="w-5 h-5 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[8px] font-semibold text-[#171717]">
                             {lead.support_attempts > 0 ? '🚨' : (lead.name || '?').charAt(0).toUpperCase()}
                           </div>
                         </div>
@@ -181,7 +182,7 @@ export default function PipelinePage() {
 
       {/* Modal Novo Lead */}
       {showNewModal && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={() => setShowNewModal(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={() => setShowNewModal(false)}>
           <div className="bg-[var(--theme-card)] p-8 rounded-3xl border border-[var(--theme-border)] w-full max-w-md shadow-2xl text-[var(--theme-fg)]" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-2xl font-black mb-6 tracking-tighter">Inserção Tática</h3>
             <form onSubmit={criarLead} className="space-y-5">
@@ -198,8 +199,8 @@ export default function PipelinePage() {
                 <input type="text" value={form.gtm_tag} onChange={(e) => setForm({ ...form, gtm_tag: e.target.value })} placeholder="LINO.ADS" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded-xl p-3 text-sm text-[var(--theme-fg)] outline-none focus:border-[hsl(var(--tenant-primary))]" />
               </div>
               <div className="flex gap-4 pt-4">
-                <button type="submit" className="flex-1 bg-[hsl(var(--tenant-primary))] text-white dark:text-black font-black py-3 rounded-xl hover:opacity-90 uppercase text-xs tracking-widest cursor-pointer">Criar Lead</button>
-                <button type="button" onClick={() => setShowNewModal(false)} className="flex-1 border border-[var(--theme-border)] text-gray-400 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 uppercase text-xs tracking-widest cursor-pointer">Cancelar</button>
+                <button type="submit" className="flex-1 bg-[hsl(var(--tenant-primary))] text-white font-black py-3 rounded-xl hover:opacity-90 uppercase text-xs tracking-widest cursor-pointer">Criar Lead</button>
+                <button type="button" onClick={() => setShowNewModal(false)} className="flex-1 border border-[#D4D4D8] text-[#666666] py-3 rounded-xl hover:bg-gray-100 uppercase text-xs tracking-widest cursor-pointer">Cancelar</button>
               </div>
             </form>
           </div>

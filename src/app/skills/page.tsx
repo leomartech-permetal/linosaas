@@ -216,38 +216,38 @@ export default function SkillsPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 w-full h-full text-[#171717] overflow-y-auto bg-[#FAFAFA]">
-      <header className="mb-8 border-b border-[#EAEAEA] pb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-[#171717]">Cérebro IA e Habilidades</h2>
-        <p className="text-[#666666] text-sm mt-1">Treine o comportamento do Lino. Defina o prompt mestre e vincule bases de dados RAG.</p>
+    <div className="p-6 md:p-10 w-full h-full text-[var(--text-primary)] overflow-y-auto bg-[var(--bg-app)]">
+      <header className="mb-8 border-b border-[var(--border-subtle)] pb-6">
+        <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Cérebro IA e Habilidades</h2>
+        <p className="text-[var(--text-secondary)] text-sm mt-1">Treine o comportamento do Lino. Defina o prompt mestre e vincule bases de dados RAG.</p>
       </header>
 
       {msg && (
-        <div className="bg-[#E6F4EA] border border-[#10B981] text-[#137333] px-4 py-2.5 rounded-md mb-6 text-sm flex items-center gap-2">
+        <div className="bg-[#E6F4EA] border border-[var(--status-success)] text-[#137333] px-4 py-2.5 rounded-md mb-6 text-sm flex items-center gap-2">
           <span>{msg}</span>
         </div>
       )}
 
       {loading ? (
-        <p className="text-[#666666] text-sm">Carregando dados...</p>
+        <p className="text-[var(--text-secondary)] text-sm">Carregando dados...</p>
       ) : (
         <>
           {/* PROMPT MESTRE */}
-          <div className="bg-white p-6 rounded-lg border border-[#EAEAEA] shadow-sm mb-8 max-w-4xl">
+          <div className="card-base mb-8 max-w-4xl">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-base font-bold flex items-center text-[#171717]">
-                  <span className="bg-[#0070F3] w-1 h-5 mr-2 rounded-full"></span>
+                <h3 className="text-base font-bold flex items-center text-[var(--text-primary)]">
+                  <span className="bg-[var(--brand-accent)] w-1 h-5 mr-2 rounded-full"></span>
                   Prompt Mestre (Comportamento Geral)
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-xs text-[#666666]">Este prompt define a personalidade base e a identidade geral do Lino.</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Este prompt define a personalidade base e a identidade geral do Lino.</p>
                   <div className="group relative">
-                    <span className="cursor-help text-[#0070F3] text-[10px] border border-[#0070F3]/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
-                    <div className="absolute left-6 top-0 w-72 p-4 bg-white border border-[#EAEAEA] rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[#666666]">
-                      <b className="text-[#171717] block mb-2 font-bold uppercase tracking-wider">🧠 Como escrever o Prompt:</b>
+                    <span className="cursor-help text-[var(--brand-accent)] text-[10px] border border-[var(--brand-accent)]/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
+                    <div className="absolute left-6 top-0 w-72 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[var(--text-secondary)]">
+                      <b className="text-[var(--text-primary)] block mb-2 font-bold uppercase tracking-wider">🧠 Como escrever o Prompt:</b>
                       Instrua o assistente como se fosse um atendente real.
-                      <ul className="mt-2 space-y-1 text-gray-500">
+                      <ul className="mt-2 space-y-1 text-[var(--text-secondary)]">
                         <li>• <b>Identidade:</b> &quot;Você é Lino, assistente comercial...&quot;</li>
                         <li>• <b>Tom:</b> &quot;Seja direto, amigável e use parágrafos curtos.&quot;</li>
                         <li>• <b>Regra:</b> &quot;Nunca dê preços fixos, consulte o vendedor.&quot;</li>
@@ -263,33 +263,33 @@ export default function SkillsPage() {
               onChange={(e) => setMasterPrompt(e.target.value)}
               rows={10}
               placeholder="Descreva aqui o comportamento geral do robô..."
-              className="w-full bg-white border border-[#D4D4D8] rounded-md p-3 text-[#171717] text-sm outline-none focus:border-[#0070F3] mb-3 font-mono leading-relaxed focus:ring-1 focus:ring-[#0070F3] shadow-sm"
+              className="input-search-clean mb-3 font-mono leading-relaxed h-auto p-3"
             />
             <div className="flex justify-between items-center">
               <button 
                 onClick={saveMasterPrompt} 
-                className="bg-[#000000] text-white hover:bg-[#333333] px-5 py-2 rounded-md font-medium text-sm transition-colors border-none"
+                className="btn-primary"
               >
                 Salvar Prompt Mestre
               </button>
-              <p className="text-[10px] text-[#888888] italic">* Aplicação imediata para todas as novas interações.</p>
+              <p className="text-[10px] text-[var(--text-tertiary)] italic">* Aplicação imediata para todas as novas interações.</p>
             </div>
           </div>
 
           {/* BASE RAG */}
-          <div className="bg-white p-6 rounded-lg border border-[#EAEAEA] shadow-sm mb-8 max-w-4xl">
+          <div className="card-base mb-8 max-w-4xl">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h3 className="text-base font-bold flex items-center text-[#171717]">
-                  <span className="bg-[#8B5CF6] w-1 h-5 mr-2 rounded-full"></span>
+                <h3 className="text-base font-bold flex items-center text-[var(--text-primary)]">
+                  <span className="bg-[var(--chart-purple)] w-1 h-5 mr-2 rounded-full"></span>
                   Base de Conhecimento RAG ({ragDocs.length})
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-xs text-[#666666]">Arquivos e catálogos que a IA pode ler para responder dúvidas muito específicas.</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Arquivos e catálogos que a IA pode ler para responder dúvidas muito específicas.</p>
                   <div className="group relative">
-                    <span className="cursor-help text-[#8B5CF6] text-[10px] border border-[#8B5CF6]/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
-                    <div className="absolute left-6 top-0 w-80 p-4 bg-white border border-[#EAEAEA] rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[#666666]">
-                      <b className="text-[#171717] block mb-2 font-bold uppercase tracking-wider">📚 RAG (Biblioteca)</b>
+                    <span className="cursor-help text-[var(--chart-purple)] text-[10px] border border-[var(--chart-purple)]/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
+                    <div className="absolute left-6 top-0 w-80 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[var(--text-secondary)]">
+                      <b className="text-[var(--text-primary)] block mb-2 font-bold uppercase tracking-wider">📚 RAG (Biblioteca)</b>
                       Permite que a IA leia e pesquise em manuais técnicos, PDFs, planilhas CSV ou textos antes de enviar uma resposta técnica.
                     </div>
                   </div>
@@ -301,11 +301,11 @@ export default function SkillsPage() {
                   value={ragSearch} 
                   onChange={(e) => setRagSearch(e.target.value)} 
                   placeholder="Pesquisar RAG..." 
-                  className="bg-white border border-[#D4D4D8] rounded-md px-3 py-1.5 text-xs text-[#171717] outline-none focus:border-[#0070F3] w-48 shadow-sm"
+                  className="input-search-clean w-48 py-1.5 text-xs"
                 />
                 <button 
                   onClick={() => { setEditingRag(null); setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(!showRagForm); }} 
-                  className="bg-[#000000] text-white hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                  className="btn-primary py-1.5 text-xs"
                 >
                   {showRagForm ? "Fechar" : "+ Novo Documento"}
                 </button>
@@ -313,20 +313,20 @@ export default function SkillsPage() {
             </div>
 
             {showRagForm && (
-              <div className="bg-[#FAFAFA] p-4 rounded-md border border-[#EAEAEA] mb-4">
-                <h4 className="font-bold text-xs mb-3 text-[#171717]">{editingRag ? "✏️ Editar Documento RAG" : "Adicionar Documento RAG"}</h4>
+              <div className="bg-[var(--bg-app)] p-4 rounded-md border border-[var(--border-subtle)] mb-4">
+                <h4 className="font-bold text-xs mb-3 text-[var(--text-primary)]">{editingRag ? "✏️ Editar Documento RAG" : "Adicionar Documento RAG"}</h4>
                 <form onSubmit={uploadRag} className="space-y-3">
                   <input 
                     type="text" 
                     value={ragName} 
                     onChange={(e) => setRagName(e.target.value)} 
                     placeholder="Nome do documento (ex: Catálogo Técnico Chapas)" 
-                    className="w-full bg-white border border-[#D4D4D8] rounded-md p-2 text-[#171717] text-xs outline-none focus:border-[#0070F3]" 
+                    className="input-search-clean py-2 text-xs" 
                     required 
                   />
 
                   {/* Upload de arquivo */}
-                  <div className="border-2 border-dashed border-[#D4D4D8] rounded-md p-4 text-center bg-white hover:border-[#8B5CF6] transition-colors">
+                  <div className="border-2 border-dashed border-[var(--border-default)] rounded-md p-4 text-center bg-[var(--bg-surface)] hover:border-[var(--chart-purple)] transition-colors">
                     <input
                       type="file"
                       accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt"
@@ -337,14 +337,14 @@ export default function SkillsPage() {
                     <label htmlFor="rag-file-input" className="cursor-pointer">
                       {ragFile ? (
                         <div className="flex items-center justify-center gap-2">
-                          <span className="text-[#8B5CF6] text-xs font-bold">📄 {ragFile.name}</span>
-                          <span className="text-[#666666] text-[10px]">({formatSize(ragFile.size)})</span>
-                          <button type="button" onClick={(e) => { e.preventDefault(); setRagFile(null); }} className="text-[#E5484D] text-xs ml-2 hover:underline">✕ Remover</button>
+                          <span className="text-[var(--chart-purple)] text-xs font-bold">📄 {ragFile.name}</span>
+                          <span className="text-[var(--text-secondary)] text-[10px]">({formatSize(ragFile.size)})</span>
+                          <button type="button" onClick={(e) => { e.preventDefault(); setRagFile(null); }} className="text-[var(--status-error)] text-xs ml-2 hover:underline">✕ Remover</button>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-[#666666] text-xs font-medium">📎 Clique para anexar arquivo</p>
-                          <p className="text-[#888888] text-[9px] mt-0.5">PDF, DOCX, XLSX, CSV, TXT (até 10MB)</p>
+                          <p className="text-[var(--text-secondary)] text-xs font-medium">📎 Clique para anexar arquivo</p>
+                          <p className="text-[var(--text-tertiary)] text-[9px] mt-0.5">PDF, DOCX, XLSX, CSV, TXT (até 10MB)</p>
                         </div>
                       )}
                     </label>
@@ -353,13 +353,13 @@ export default function SkillsPage() {
                   {/* Texto manual */}
                   {!ragFile && (
                     <>
-                      <p className="text-center text-[#888888] text-[10px]">— ou digite o conteúdo manualmente —</p>
+                      <p className="text-center text-[var(--text-tertiary)] text-[10px]">— ou digite o conteúdo manualmente —</p>
                       <textarea 
                         value={ragText} 
                         onChange={(e) => setRagText(e.target.value)} 
                         rows={4} 
                         placeholder="Cole aqui o conteúdo técnico..." 
-                        className="w-full bg-white border border-[#D4D4D8] rounded-md p-2 text-[#171717] text-xs outline-none focus:border-[#0070F3]" 
+                        className="input-search-clean py-2 text-xs h-auto" 
                       />
                     </>
                   )}
@@ -368,14 +368,14 @@ export default function SkillsPage() {
                     <button 
                       type="submit" 
                       disabled={uploading || (!ragFile && !ragText)} 
-                      className="flex-1 bg-[#000000] text-white hover:bg-[#333333] py-2 rounded-md font-medium text-xs transition-colors disabled:opacity-50"
+                      className="flex-1 btn-primary py-2 text-xs disabled:opacity-50"
                     >
                       {uploading ? "Salvando..." : (editingRag ? "Atualizar Documento" : "Adicionar Documento")}
                     </button>
                     <button 
                       type="button" 
                       onClick={() => { setShowRagForm(false); setRagFile(null); setRagText(""); setEditingRag(null); }} 
-                      className="flex-1 bg-white text-[#171717] border border-[#D4D4D8] hover:bg-[#F1F5F9] py-2 rounded-md text-xs font-medium transition-colors"
+                      className="flex-1 btn-secondary py-2 text-xs"
                     >
                       Cancelar
                     </button>
@@ -387,26 +387,26 @@ export default function SkillsPage() {
             {/* Lista RAG */}
             <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
               {ragDocs.filter(doc => (doc.name || "").toLowerCase().includes(ragSearch.toLowerCase()) || (doc.content || "").toLowerCase().includes(ragSearch.toLowerCase())).map(doc => (
-                <div key={doc.id} className="bg-white p-3 rounded-md border border-[#EAEAEA] flex justify-between items-center group transition-colors hover:bg-[#F1F5F9]/50">
+                <div key={doc.id} className="bg-[var(--bg-surface)] p-3 rounded-md border border-[var(--border-subtle)] flex justify-between items-center group transition-colors hover:bg-[var(--bg-hover)]">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#8B5CF6] text-[9px] font-bold bg-[#8B5CF6]/10 px-2 py-0.5 rounded uppercase">{doc.source_type || 'TXT'}</span>
-                      <h4 className="font-semibold text-sm text-[#171717] truncate">{doc.name}</h4>
+                      <span className="text-[var(--chart-purple)] text-[9px] font-bold bg-[#8B5CF6]/10 px-2 py-0.5 rounded uppercase">{doc.source_type || 'TXT'}</span>
+                      <h4 className="font-semibold text-sm text-[var(--text-primary)] truncate">{doc.name}</h4>
                     </div>
-                    <p className="text-[10px] text-[#666666] mt-0.5 truncate">
+                    <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 truncate">
                       {doc.content?.substring(0, 100)}... • {formatSize(doc.file_size || 0)} • {doc.content?.length || 0} caracteres
                     </p>
                   </div>
                   <div className="flex opacity-0 group-hover:opacity-100 transition-opacity ml-2 gap-2">
                     <button 
                       onClick={() => startEditRag(doc)} 
-                      className="text-[10px] bg-white border border-[#D4D4D8] hover:bg-[#F1F5F9] text-[#171717] px-2 py-1 rounded-md transition-colors"
+                      className="text-[10px] btn-secondary px-2 py-1 h-auto"
                     >
                       Editar
                     </button>
                     <button 
                       onClick={() => deleteRag(doc.id)} 
-                      className="text-[10px] bg-white border border-[#D4D4D8] hover:bg-[#E5484D]/10 text-[#E5484D] px-2 py-1 rounded-md transition-colors"
+                      className="text-[10px] btn-secondary text-[var(--status-error)] border-[var(--status-error)]/30 hover:bg-[var(--status-error)]/10 px-2 py-1 h-auto"
                     >
                       Excluir
                     </button>
@@ -414,10 +414,10 @@ export default function SkillsPage() {
                 </div>
               ))}
               {ragDocs.length > 0 && ragDocs.filter(doc => (doc.name || "").toLowerCase().includes(ragSearch.toLowerCase()) || (doc.content || "").toLowerCase().includes(ragSearch.toLowerCase())).length === 0 && (
-                <div className="text-center text-[#888888] text-xs py-4">Nenhum RAG encontrado.</div>
+                <div className="text-center text-[var(--text-tertiary)] text-xs py-4">Nenhum RAG encontrado.</div>
               )}
               {ragDocs.length === 0 && !showRagForm && (
-                <div className="border border-dashed border-[#D4D4D8] rounded-md p-6 text-center text-[#666666] text-xs">
+                <div className="border border-dashed border-[var(--border-default)] rounded-md p-6 text-center text-[var(--text-secondary)] text-xs">
                   Nenhum documento RAG cadastrado.
                 </div>
               )}
@@ -428,8 +428,8 @@ export default function SkillsPage() {
           <div className="max-w-4xl">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-base font-bold text-[#171717]">Habilidades Específicas ({skills.length})</h3>
-                <p className="text-xs text-[#666666]">Habilidades modulares extras ativadas de acordo com as intenções e fluxos de atendimento.</p>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Habilidades Específicas ({skills.length})</h3>
+                <p className="text-xs text-[var(--text-secondary)]">Habilidades modulares extras ativadas de acordo com as intenções e fluxos de atendimento.</p>
               </div>
               <div className="flex items-center gap-3">
                 <input 
@@ -437,11 +437,11 @@ export default function SkillsPage() {
                   value={skillSearch} 
                   onChange={(e) => setSkillSearch(e.target.value)} 
                   placeholder="Pesquisar Skills..." 
-                  className="bg-white border border-[#D4D4D8] rounded-md px-3 py-1.5 text-xs text-[#171717] outline-none focus:border-[#0070F3] w-48 shadow-sm"
+                  className="input-search-clean w-48 py-1.5 text-xs"
                 />
                 <button
                   onClick={() => { setEditing(null); setForm({ name: "", type: "product", prompt: "" }); setSelectedRags([]); setShowForm(true); }}
-                  className="bg-[#000000] text-white hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                  className="btn-primary py-1.5 text-xs"
                 >
                   + Adicionar Skill
                 </button>
@@ -450,29 +450,29 @@ export default function SkillsPage() {
 
             {/* Form Skill */}
             {showForm && (
-              <div className="bg-white p-6 rounded-lg border border-[#EAEAEA] mb-8 shadow-sm">
-                <h4 className="font-bold text-sm mb-4 text-[#171717]">
+              <div className="card-base mb-8">
+                <h4 className="font-bold text-sm mb-4 text-[var(--text-primary)]">
                   {editing ? "✏️ Editar Habilidade" : "✨ Criar Nova Habilidade"}
                 </h4>
                 <form onSubmit={saveSkill} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-[#666666] uppercase mb-1">Nome da Habilidade</label>
+                      <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-1">Nome da Habilidade</label>
                       <input 
                         type="text" 
                         value={form.name} 
                         onChange={(e) => setForm({ ...form, name: e.target.value })} 
                         placeholder="Ex: Grade de Piso Especiais" 
-                        className="w-full bg-white border border-[#D4D4D8] rounded-md p-2 text-[#171717] text-xs outline-none focus:border-[#0070F3]" 
+                        className="input-search-clean py-2 text-xs" 
                         required 
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-[#666666] uppercase mb-1">Tipo de Conhecimento</label>
+                      <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-1">Tipo de Conhecimento</label>
                       <select 
                         value={form.type} 
                         onChange={(e) => setForm({ ...form, type: e.target.value })} 
-                        className="w-full bg-white border border-[#D4D4D8] rounded-md p-2 text-[#171717] text-xs outline-none focus:border-[#0070F3]"
+                        className="input-search-clean py-2 text-xs"
                       >
                         {SKILL_TYPES.map((t) => (
                           <option key={t.value} value={t.value}>{t.label} — {t.desc}</option>
@@ -482,13 +482,13 @@ export default function SkillsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-[#666666] uppercase mb-1">Prompt da Habilidade (Instruções)</label>
+                    <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-1">Prompt da Habilidade (Instruções)</label>
                     <textarea 
                       value={form.prompt} 
                       onChange={(e) => setForm({ ...form, prompt: e.target.value })} 
                       rows={5} 
                       placeholder="Descreva detalhadamente o conhecimento ou instrução dessa skill..." 
-                      className="w-full bg-white border border-[#D4D4D8] rounded-md p-2.5 text-[#171717] text-xs outline-none focus:border-[#0070F3] font-mono leading-relaxed" 
+                      className="input-search-clean py-2 text-xs font-mono leading-relaxed h-auto" 
                       required 
                     />
                   </div>
@@ -496,12 +496,12 @@ export default function SkillsPage() {
                   {/* Vincular RAGs */}
                   {ragDocs.length > 0 && (
                     <div>
-                      <label className="block text-[10px] font-bold text-[#666666] uppercase mb-2">
+                      <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2">
                         📚 Vincular Conhecimento RAG Relacionado
                       </label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-36 overflow-y-auto bg-[#FAFAFA] rounded-md border border-[#EAEAEA] p-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-36 overflow-y-auto bg-[var(--bg-app)] rounded-md border border-[var(--border-subtle)] p-2">
                         {ragDocs.map(doc => (
-                          <label key={doc.id} className={`flex items-center gap-2 cursor-pointer hover:bg-white p-1.5 rounded-md border border-transparent transition-colors ${selectedRags.includes(doc.id) ? '!border-[#8B5CF6]/30 bg-purple-500/5' : ''}`}>
+                          <label key={doc.id} className={`flex items-center gap-2 cursor-pointer hover:bg-[var(--bg-surface)] p-1.5 rounded-md border border-transparent transition-colors ${selectedRags.includes(doc.id) ? '!border-[#8B5CF6]/30 bg-purple-500/5' : ''}`}>
                             <input 
                               type="checkbox" 
                               checked={selectedRags.includes(doc.id)} 
@@ -509,8 +509,8 @@ export default function SkillsPage() {
                               className="accent-[#8B5CF6] w-3.5 h-3.5" 
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-[11px] font-semibold text-[#171717] truncate">{doc.name}</p>
-                              <p className="text-[9px] text-[#888888] uppercase">{doc.source_type}</p>
+                              <p className="text-[11px] font-semibold text-[var(--text-primary)] truncate">{doc.name}</p>
+                              <p className="text-[9px] text-[var(--text-tertiary)] uppercase">{doc.source_type}</p>
                             </div>
                           </label>
                         ))}
@@ -521,14 +521,14 @@ export default function SkillsPage() {
                   <div className="flex gap-3 pt-2">
                     <button 
                       type="submit" 
-                      className="flex-1 bg-[#000000] text-white hover:bg-[#333333] py-2 rounded-md font-medium text-xs transition-colors"
+                      className="flex-1 btn-primary py-2 text-xs"
                     >
                       {editing ? "Atualizar Habilidade" : "Criar Habilidade"}
                     </button>
                     <button 
                       type="button" 
                       onClick={() => { setShowForm(false); setEditing(null); }} 
-                      className="flex-1 bg-white text-[#171717] border border-[#D4D4D8] hover:bg-[#F1F5F9] py-2 rounded-md text-xs font-medium transition-colors"
+                      className="flex-1 btn-secondary py-2 text-xs"
                     >
                       Cancelar
                     </button>
@@ -543,7 +543,7 @@ export default function SkillsPage() {
                 const info = getTypeInfo(s.type);
                 const linked = getLinkedRags(s.id);
                 return (
-                  <div key={s.id} className={`bg-white p-5 rounded-lg border border-[#EAEAEA] shadow-sm transition-all hover:border-[#D4D4D8] ${!s.active ? "opacity-50" : ""}`}>
+                  <div key={s.id} className={`card-base transition-all hover:border-[var(--border-strong)] ${!s.active ? "opacity-50" : ""}`}>
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
@@ -553,10 +553,10 @@ export default function SkillsPage() {
                           >
                             {info.label}
                           </span>
-                          <h4 className="font-semibold text-sm text-[#171717] truncate">{s.name}</h4>
-                          {!s.active && <span className="text-[9px] bg-red-100 text-[#E5484D] px-2 py-0.5 rounded-full uppercase font-bold">Inativa</span>}
+                          <h4 className="font-semibold text-sm text-[var(--text-primary)] truncate">{s.name}</h4>
+                          {!s.active && <span className="text-[9px] bg-red-100 text-[var(--status-error)] px-2 py-0.5 rounded-full uppercase font-bold">Inativa</span>}
                         </div>
-                        <p className="text-xs text-[#666666] line-clamp-3 leading-relaxed font-mono bg-[#FAFAFA] p-3 rounded-md border border-[#EAEAEA]">{s.prompt}</p>
+                        <p className="code-block-container-clean">{s.prompt}</p>
                         {linked.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-3 pt-2">
                             {linked.map((doc: any) => (
@@ -570,21 +570,21 @@ export default function SkillsPage() {
                       <div className="flex gap-2">
                         <button 
                           onClick={() => toggleActive(s)} 
-                          className="p-1 text-xs bg-white border border-[#D4D4D8] hover:bg-[#F1F5F9] text-[#171717] rounded-md transition-colors w-7 h-7 flex items-center justify-center" 
+                          className="btn-secondary w-7 h-7 p-0 flex items-center justify-center" 
                           title={s.active ? "Desativar" : "Ativar"}
                         >
                           {s.active ? "⏸️" : "▶️"}
                         </button>
                         <button 
                           onClick={() => startEdit(s)} 
-                          className="p-1 text-xs bg-white border border-[#D4D4D8] hover:bg-[#F1F5F9] text-blue-500 rounded-md transition-colors w-7 h-7 flex items-center justify-center" 
+                          className="btn-secondary w-7 h-7 p-0 flex items-center justify-center text-blue-500" 
                           title="Editar"
                         >
                           ✏️
                         </button>
                         <button 
                           onClick={() => deleteSkill(s.id)} 
-                          className="p-1 text-xs bg-white border border-[#D4D4D8] hover:bg-[#E5484D]/10 text-[#E5484D] rounded-md transition-colors w-7 h-7 flex items-center justify-center" 
+                          className="btn-secondary w-7 h-7 p-0 flex items-center justify-center text-[var(--status-error)] border-[var(--status-error)]/30 hover:bg-[var(--status-error)]/10" 
                           title="Excluir"
                         >
                           🗑️
@@ -595,11 +595,11 @@ export default function SkillsPage() {
                 );
               })}
               {skills.length > 0 && skills.filter(s => (s.name || "").toLowerCase().includes(skillSearch.toLowerCase()) || (s.prompt || "").toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
-                <div className="text-center text-[#888888] text-xs py-8">Nenhuma habilidade encontrada.</div>
+                <div className="text-center text-[var(--text-tertiary)] text-xs py-8">Nenhuma habilidade encontrada.</div>
               )}
               {skills.length === 0 && !showForm && (
-                <div className="border border-dashed border-[#D4D4D8] rounded-md p-10 text-center">
-                  <p className="text-[#666666] text-xs">Nenhuma habilidade modular configurada.</p>
+                <div className="border border-dashed border-[var(--border-default)] rounded-md p-10 text-center">
+                  <p className="text-[var(--text-secondary)] text-xs">Nenhuma habilidade modular configurada.</p>
                 </div>
               )}
             </div>

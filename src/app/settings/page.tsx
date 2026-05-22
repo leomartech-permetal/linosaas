@@ -307,7 +307,7 @@ export default function SettingsPage() {
       <div className="sticky top-0 z-20 bg-[var(--theme-bg)] pt-2 pb-6 border-b border-[var(--theme-border)] mb-6 transition-colors">
         <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${tab === t.key ? "bg-[hsl(var(--tenant-primary))] text-white dark:text-black shadow-sm" : "bg-[var(--theme-card)] border border-[var(--theme-border)] text-[var(--theme-muted)] hover:bg-[var(--theme-hover)] hover:text-[var(--theme-fg)]"}`}>
+            <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${tab === t.key ? "bg-[hsl(var(--tenant-primary))] text-white shadow-sm" : "bg-[var(--theme-card)] border border-[var(--theme-border)] text-[var(--theme-muted)] hover:bg-[var(--theme-hover)] hover:text-[var(--theme-fg)]"}`}>
               {t.icon} {t.label}
             </button>
           ))}
@@ -334,7 +334,7 @@ export default function SettingsPage() {
                   <div key={r.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-center group">
                     <div>
                       <h4 className="font-bold text-sm">{r.name}</h4>
-                      <div className="flex flex-wrap gap-1 mt-1">{(r.ddd_codes || []).map((d: string) => <span key={d} className="text-[10px] bg-blue-900/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/10">{d}</span>)}</div>
+                      <div className="flex flex-wrap gap-1 mt-1">{(r.ddd_codes || []).map((d: string) => <span key={d} className="text-[10px] bg-blue-900/10 text-blue-600 px-1.5 py-0.5 rounded border border-blue-500/10">{d}</span>)}</div>
                     </div>
                     <button onClick={() => deleteRegion(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100 cursor-pointer">X</button>
                   </div>
@@ -392,9 +392,9 @@ export default function SettingsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-bold text-sm">{p.name}</h4>
-                        {p.brands?.name && <span className="text-[10px] bg-purple-900/10 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/10">{p.brands.name}</span>}
+                        {p.brands?.name && <span className="text-[10px] bg-purple-900/10 text-purple-600 px-1.5 py-0.5 rounded border border-purple-500/10">{p.brands.name}</span>}
                         {p.is_express_eligible && (
-                          <span className="text-[10px] bg-green-900/10 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded border border-green-500/20 font-bold">
+                          <span className="text-[10px] bg-green-900/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/20 font-bold">
                             Express ({p.express_max_qty || "Qtd ilimitada"})
                           </span>
                         )}
@@ -447,7 +447,7 @@ export default function SettingsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-sm">{s.name}</h4>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${s.collection_type === 'short' ? 'bg-yellow-900/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/10' : 'bg-[var(--theme-hover)] text-[var(--theme-muted)] border border-[var(--theme-border)]'}`}>{s.collection_type === 'short' ? 'Coleta Curta' : 'Coleta Normal'}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${s.collection_type === 'short' ? 'bg-yellow-900/10 text-yellow-600 border border-yellow-500/10' : 'bg-[var(--theme-hover)] text-[var(--theme-muted)] border border-[var(--theme-border)]'}`}>{s.collection_type === 'short' ? 'Coleta Curta' : 'Coleta Normal'}</span>
                       </div>
                       {(s.keywords || []).length > 0 && <p className="text-[10px] text-[var(--theme-muted)] mt-1">Keywords: {s.keywords.join(", ")}</p>}
                     </div>
@@ -537,7 +537,7 @@ export default function SettingsPage() {
                     </div>
                   </form>
                 ) : (
-                  <div className="bg-blue-900/10 border border-blue-900/20 p-4 rounded-lg text-xs text-blue-600 dark:text-blue-300">
+                  <div className="bg-blue-900/10 border border-blue-900/20 p-4 rounded-lg text-xs text-blue-600">
                     💡 <strong>Entidade Usuário:</strong> Todas as informações de nome, e-mail e whatsapp são gerenciadas em <strong>Configurações &gt; Usuários</strong>. Aqui você apenas atribui cada vendedor à sua equipe.
                   </div>
                 )}
@@ -549,14 +549,14 @@ export default function SettingsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-sm">{u.name}</p>
-                        <span className="text-[10px] bg-blue-900/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/10 font-bold uppercase">Vendedor</span>
+                        <span className="text-[10px] bg-blue-900/10 text-blue-600 px-1.5 py-0.5 rounded border border-blue-500/10 font-bold uppercase">Vendedor</span>
                       </div>
                       <p className="text-[10px] text-[var(--theme-muted)] mt-1">
                         {u.whatsapp_number ? `📞 ${u.whatsapp_number}` : "🚫 Sem WhatsApp"} • 👥 Equipe: {getName(teams, u.team_id)}
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => { setEditingUser(u); setUserForm({ name: u.name, whatsapp_number: u.whatsapp_number || "", team_id: u.team_id || "", role: u.role }); }} className="text-[10px] bg-[hsl(var(--tenant-primary))] text-white dark:text-black font-bold px-3 py-1 rounded cursor-pointer hover:opacity-90 transition-all">
+                      <button onClick={() => { setEditingUser(u); setUserForm({ name: u.name, whatsapp_number: u.whatsapp_number || "", team_id: u.team_id || "", role: u.role }); }} className="text-[10px] bg-[hsl(var(--tenant-primary))] text-white font-bold px-3 py-1 rounded cursor-pointer hover:opacity-90 transition-all">
                         Mudar Equipe
                       </button>
                     </div>
@@ -676,7 +676,7 @@ export default function SettingsPage() {
                       })}
                     </div>
                     {ruleSellerIds.length > 1 && (
-                      <p className="text-[10px] text-purple-600 dark:text-purple-400 mt-2 font-bold animate-pulse">
+                      <p className="text-[10px] text-purple-600 mt-2 font-bold animate-pulse">
                         🎰 {ruleSellerIds.length} vendedores em rodízio — o sistema vai alternar automaticamente
                       </p>
                     )}
@@ -798,25 +798,25 @@ export default function SettingsPage() {
                         {/* Vendedores */}
                         <div className="flex flex-wrap gap-1 mb-1">
                           {sellerDisplay.filter(Boolean).map((name: string) => (
-                            <span key={name} className="text-[10px] bg-purple-900/10 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded font-bold border border-purple-500/10">{name}</span>
+                            <span key={name} className="text-[10px] bg-purple-900/10 text-purple-600 px-1.5 py-0.5 rounded font-bold border border-purple-500/10">{name}</span>
                           ))}
                           {sellerDisplay.filter(Boolean).length > 1 && (
                             <span className="text-[10px] text-purple-500 px-1 font-medium">🎰 rodízio</span>
                           )}
                           {r.is_express && (
-                            <span className="text-[10px] bg-green-900/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded font-bold border border-green-500/20 ml-2">EXPRESS</span>
+                            <span className="text-[10px] bg-green-900/10 text-green-600 px-2 py-0.5 rounded font-bold border border-green-500/20 ml-2">EXPRESS</span>
                           )}
                         </div>
                         {/* Região e Produto */}
                         <div className="flex flex-wrap gap-1 mb-1">
                           {regionDisplay !== 'Todas' && regionDisplay.split(', ').map((n: string) => (
-                            <span key={n} className="text-[10px] bg-blue-900/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/10">{n}</span>
+                            <span key={n} className="text-[10px] bg-blue-900/10 text-blue-600 px-1.5 py-0.5 rounded border border-blue-500/10">{n}</span>
                           ))}
                           {productDisplay !== '—' && productDisplay.split(', ').map((n: string) => (
-                            <span key={n} className="text-[10px] bg-green-900/10 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded border border-green-500/10">{n}</span>
+                            <span key={n} className="text-[10px] bg-green-900/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/10">{n}</span>
                           ))}
                           {getName(segments, r.segment_id) !== '—' && (
-                            <span className="text-[10px] bg-orange-900/10 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded border border-orange-500/10">{getName(segments, r.segment_id)}</span>
+                            <span className="text-[10px] bg-orange-900/10 text-orange-600 px-1.5 py-0.5 rounded border border-orange-500/10">{getName(segments, r.segment_id)}</span>
                           )}
                         </div>
                         <p className="text-[10px] text-[var(--theme-muted)]">Prioridade {r.priority} • {getName(teams, r.team_id) !== '—' ? `Equipe: ${getName(teams, r.team_id)}` : 'Qualquer equipe'}</p>
@@ -824,7 +824,7 @@ export default function SettingsPage() {
                       <div className="flex gap-1 ml-2 shrink-0">
                         <button 
                           onClick={() => duplicateRule(r)} 
-                          className="text-[10px] bg-blue-900/10 text-blue-600 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-600 hover:text-white border border-blue-500/10 cursor-pointer"
+                          className="text-[10px] bg-blue-900/10 text-blue-600 px-2 py-1 rounded hover:bg-blue-600 hover:text-white border border-blue-500/10 cursor-pointer"
                           title="Duplicar esta regra"
                         >
                           Duplicar
@@ -944,11 +944,11 @@ export default function SettingsPage() {
                   <button 
                     onClick={saveCerebro} 
                     disabled={savingCerebro}
-                    className={`${btnCls} bg-[hsl(var(--tenant-primary))] text-white dark:text-black text-base py-3 shadow-md flex items-center justify-center gap-2`}
+                    className={`${btnCls} bg-[hsl(var(--tenant-primary))] text-white text-base py-3 shadow-md flex items-center justify-center gap-2`}
                   >
                     {savingCerebro ? (
                       <>
-                        <span className="w-4 h-4 border-2 border-black/20 border-t-black dark:border-white/20 dark:border-t-white rounded-full animate-spin"></span>
+                        <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></span>
                         Salvando...
                       </>
                     ) : "Salvar Configurações do Cérebro"}
@@ -957,7 +957,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-blue-900/10 border border-blue-900/20 p-4 rounded-lg text-xs text-blue-600 dark:text-blue-300 leading-relaxed">
+              <div className="bg-blue-900/10 border border-blue-900/20 p-4 rounded-lg text-xs text-blue-600 leading-relaxed">
                 <strong>💡 Como funciona:</strong> O Lino SDR qualifica o lead usando o Master Prompt e as Skills. Assim que o vendedor é atribuído, o sistema entra em modo de <strong>Monitoramento de Suporte</strong>. A IA passa a usar este Prompt de Suporte para manter o cliente engajado enquanto o vendedor não inicia o atendimento humano.
               </div>
             </div>

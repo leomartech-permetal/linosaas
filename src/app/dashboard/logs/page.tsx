@@ -95,7 +95,7 @@ export default function LogsPage() {
                     </td>
                     <td className="p-5">
                       <div className="text-sm font-bold text-[var(--theme-fg)] mb-1">{log.action}</div>
-                      <pre className="text-[9px] font-mono text-[var(--theme-muted)] bg-black/5 dark:bg-black/30 p-2 rounded max-h-20 overflow-y-auto scrollbar-hide">
+                      <pre className="text-[9px] font-mono text-[var(--theme-muted)] bg-[#F1F5F9] p-2 rounded max-h-20 overflow-y-auto scrollbar-hide">
                         {JSON.stringify(log.details, null, 2)}
                       </pre>
                     </td>
