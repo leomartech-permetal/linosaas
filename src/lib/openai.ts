@@ -34,29 +34,35 @@ async function buildContext(detectedProduct?: string | null): Promise<string> {
         processedIds.add(s.id);
       }
       console.log(`[buildContext] Skill de produto carregada: ${productSkills.map((s: any) => s.name).join(', ')}`);
-    } else {
-      console.log(`[buildContext] Nenhuma skill de produto encontrada para: "${detectedProduct}"`);
     }
+  }
 
-    // --- QUERY 2: Skills genéricas para complementar ---
-    let genericQuery = supabase.from('skills').select('*').eq('active', true).is('product_tag', null);
-    // Excluir IDs já carregados (apenas se houver)
-    if (processedIds.size > 0) {
-      genericQuery = genericQuery.not('id', 'in', `(${Array.from(processedIds).join(',')})`);
-    }
-    const { data: genericSkills } = await genericQuery.limit(4);
-    if (genericSkills) selectedSkills.push(...genericSkills);
-
-  } else {
-    // Sem produto: apenas skills genéricas
-    const { data: genericSkills } = await supabase
+  // Se nenhuma skill de produto foi carregada, busca a principal genérica (SDR_GERAL)
+  if (selectedSkills.length === 0) {
+    const { data: generalSkill } = await supabase
       .from('skills')
       .select('*')
       .eq('active', true)
-      .is('product_tag', null)
-      .limit(5);
-    if (genericSkills) selectedSkills = genericSkills;
-    console.log(`[buildContext] Fase inicial (sem produto) — ${genericSkills?.length || 0} skills genéricas carregadas`);
+      .eq('name', 'SDR_GERAL')
+      .maybeSingle();
+
+    if (generalSkill) {
+      selectedSkills.push(generalSkill);
+      processedIds.add(generalSkill.id);
+      console.log(`[buildContext] Skill genérica SDR_GERAL carregada`);
+    } else {
+      // Fallback: carregar a primeira skill geral ativa
+      const { data: fallbackSkill } = await supabase
+        .from('skills')
+        .select('*')
+        .eq('active', true)
+        .is('product_tag', null)
+        .limit(1);
+      if (fallbackSkill && fallbackSkill.length > 0) {
+        selectedSkills.push(fallbackSkill[0]);
+        processedIds.add(fallbackSkill[0].id);
+      }
+    }
   }
 
   // Sempre incluir a skill preparar_payload_roteamento (independente de produto)
@@ -117,15 +123,32 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
     return { erro_openai: 'Chave da OpenAI não configurada no banco de dados ou env.' };
   }
 
-  // 2. Recuperar produto já detectado para carregar skill seletiva
+  // 2. Recuperar dados do lead no banco para guiar a coleta estruturada
   let detectedProduct: string | null = null;
+  let leadInfoText = '';
   if (leadId) {
     const { data: leadData } = await supabase
       .from('leads')
-      .select('detected_product')
+      .select('*')
       .eq('id', leadId)
       .single();
-    detectedProduct = leadData?.detected_product || null;
+    if (leadData) {
+      detectedProduct = leadData.detected_product || leadData.produto || null;
+      leadInfoText = `
+=== DADOS DO CLIENTE JÁ CADASTRADOS NO BANCO ===
+- Nome: ${leadData.name || 'Não informado'}
+- Empresa: ${leadData.company || leadData.empresa || 'Não informado'}
+- CNPJ: ${leadData.cnpj || 'Não informado'}
+- E-mail: ${leadData.email_corporativo || 'Não informado'}
+- Produto: ${leadData.detected_product || leadData.produto || 'Não informado'}
+- Quantidade: ${leadData.quantidade || 'Não informado'}
+- Especificação Técnica: ${leadData.especificacao || 'Não informado'}
+================================================
+IMPORTANTE: As informações acima já estão salvas no banco de dados. 
+1. NÃO pergunte novamente nenhum dado que já esteja preenchido.
+2. Se o E-mail ou o CNPJ estiverem como "Não informado", você DEVE perguntar e coletar essas informações ativamente antes de tentar realizar o resumo e a confirmação para o roteamento comercial.
+`;
+    }
   }
 
   const dynamicOpenai = new OpenAI({ apiKey });
@@ -134,6 +157,8 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
   console.log(`[OpenAI Debug] Produto detectado: ${detectedProduct || 'nenhum (fase inicial)'}`);
 
   const extractionPrompt = `${systemContext}
+
+${leadInfoText}
 
 ---
 INSTRUÇÃO FINAL — LEIA COM ATENÇÃO:
@@ -228,6 +253,69 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
     const content = response.choices[0].message.content || '{}';
     console.log('[OpenAI] Resposta bruta:', content);
     const result = JSON.parse(content);
+
+    // --- CONFIRMATION GUARD INTERCEPTOR ---
+    if (result.acao_executada === 'roteamento_comercial') {
+      // 1. Verificar se no histórico já enviamos o resumo
+      let enviouResumo = false;
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].sender_type === 'sdr_ai') {
+          const text = history[i].message_content.toLowerCase();
+          if (
+            text.includes('resumo') || 
+            text.includes('tudo certinho?') || 
+            text.includes('está correto?') ||
+            text.includes('confirmar') ||
+            (text.includes('empresa:') && text.includes('produto:'))
+          ) {
+            enviouResumo = true;
+            break;
+          }
+        }
+      }
+
+      // 2. Verificar se a última mensagem do cliente foi uma confirmação
+      const lastLeadMsg = [...history].reverse().find(h => h.sender_type === 'lead');
+      
+      const verificarConfirmacaoCliente = (texto: string): boolean => {
+        const t = texto.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
+        const termosConfirmacao = [
+          'sim', 'ok', 'isso', 'correto', 'tudo certo', 'tudo certinho', 'confirmo', 
+          'pode ser', 'tá certo', 'ta certo', 'esta certo', 'está correto', 'sim está', 
+          'perfeito', 'fechado', 'exato', 'com certeza', 'pode enviar', 'pode mandar',
+          'esta correto', 'esta certinho', 'sim pfv', 'sim por favor', 'pode', 's'
+        ];
+        return termosConfirmacao.some(termo => t === termo || t.startsWith(termo + ' ') || t.endsWith(' ' + termo) || t.includes(' ' + termo + ' '));
+      };
+
+      const clienteConfirmou = lastLeadMsg ? verificarConfirmacaoCliente(lastLeadMsg.message_content) : false;
+
+      console.log(`[ConfirmationGuard] acao_executada era roteamento_comercial. enviouResumo: ${enviouResumo}, clienteConfirmou: ${clienteConfirmou}`);
+
+      if (!enviouResumo || !clienteConfirmou) {
+        console.log(`[ConfirmationGuard] Bloqueando roteamento prematuro. Forçando etapa de confirmação.`);
+        result.acao_executada = 'confirmacao';
+        
+        // Montar resumo formatado dos dados extraídos
+        const dadosResumo: string[] = [];
+        if (result.cliente?.empresa) dadosResumo.push(`* Empresa: ${result.cliente.empresa}`);
+        if (result.cliente?.cnpj) dadosResumo.push(`* CNPJ: ${result.cliente.cnpj}`);
+        if (result.cliente?.email) dadosResumo.push(`* E-mail: ${result.cliente.email}`);
+        
+        const prod = result.demanda?.produto_normalizado || result.demanda?.produto_familia || result.demanda?.produto_modelo;
+        if (prod) dadosResumo.push(`* Produto: ${prod}`);
+        
+        if (result.demanda?.quantidade_metragem) dadosResumo.push(`* Quantidade: ${result.demanda.quantidade_metragem}`);
+        
+        const especParts = [result.demanda?.dimensoes, result.demanda?.acabamento, result.demanda?.material].filter(Boolean);
+        if (especParts.length > 0) {
+          dadosResumo.push(`* Especificação: ${especParts.join(' | ')}`);
+        }
+        
+        result.resposta_whatsapp = `Fechou! Aqui vai o resumo da sua cotação 📋\n${dadosResumo.join('\n')}\n\nTudo certinho? Me diga 'sim' para confirmar ou 'corrigir' se quiser ajustar.`;
+      }
+    }
+
     return result;
   } catch (error: any) {
     console.error('[OpenAI Error]', error.message || error);

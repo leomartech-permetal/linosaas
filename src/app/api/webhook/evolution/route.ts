@@ -255,11 +255,17 @@ export async function POST(request: Request) {
             updated_at: new Date().toISOString()
           };
           // Produto e DDD — sempre atualiza se disponível
-          if (variaveis.produto) leadUpdate.detected_product = variaveis.produto;
+          if (variaveis.produto) {
+            leadUpdate.detected_product = variaveis.produto;
+            leadUpdate.produto = variaveis.produto;
+          }
           if (dddToUse) leadUpdate.detected_ddd = dddToUse;
           
           // Dados profissionais — atualiza APENAS se vier preenchido (não apaga existente)
-          if (variaveis.empresa) leadUpdate.company = variaveis.empresa;
+          if (variaveis.empresa) {
+            leadUpdate.company = variaveis.empresa;
+            leadUpdate.empresa = variaveis.empresa;
+          }
           if (variaveis.nome_cliente) leadUpdate.name = variaveis.nome_cliente;
           if (variaveis.cnpj) leadUpdate.cnpj = variaveis.cnpj;
           if (variaveis.email) leadUpdate.email_corporativo = variaveis.email;

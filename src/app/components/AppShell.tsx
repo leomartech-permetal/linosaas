@@ -19,8 +19,8 @@ const menuGroups = [
     items: [
       { href: "/settings", label: "Regras de Roteamento", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> },
       { href: "/dashboard/regras", label: "Regras de Negócio", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> },
-      {href: "/skills", label: "Cérebro IA", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> },
-      {href: "/fluxos", label: "Fluxos Visuais (Beta)", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
+      { href: "/skills", label: "Cérebro IA", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> },
+      { href: "/fluxos", label: "Fluxos Visuais (Beta)", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg> },
     ]
   },
   {
@@ -28,6 +28,7 @@ const menuGroups = [
     items: [
       { href: "/usuarios", label: "Usuários", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> },
       { href: "/saas", label: "Personalização", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg> },
+      { href: "/saas-dashboard", label: "Dashboard Vercel", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> },
       { href: "/dashboard/logs", label: "Logs do Sistema", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> },
     ]
   }
@@ -36,6 +37,8 @@ const menuGroups = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLogin = pathname === "/login";
+
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const [config, setConfig] = useState({
     company_name: "LINO CRM",
@@ -49,6 +52,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     logo_url: "",
     texture_url: "",
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("crm-theme") as 'light' | 'dark';
+    if (saved) {
+      setTheme(saved);
+      if (saved === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    localStorage.setItem("crm-theme", nextTheme);
+    if (nextTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   useEffect(() => {
     async function loadConfig() {
@@ -101,7 +127,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#0a0a0a]" style={{ 
+    <div className={`flex h-screen w-full transition-colors duration-200 ${theme === 'dark' ? 'dark bg-black text-white' : 'bg-white text-black'}`} style={{ 
       "--tenant-primary": primaryHSL,
       "--font-heading": (config as any).font_heading || 'Roboto Condensed',
       "--font-body": (config as any).font_body || 'Assistant'
@@ -117,7 +143,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }
       `}</style>
       {/* Sidebar Premium */}
-      <aside className="w-64 flex flex-col bg-[#050505] border-r border-gray-800/50 z-50">
+      <aside className="w-64 flex flex-col bg-[var(--theme-sidebar)] border-r border-[var(--theme-border)] z-50 transition-colors duration-200">
         <div className="p-6">
           <a href="/dashboard" className="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity">
             {config.logo_url ? (
@@ -128,16 +154,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
             {!config.logo_url && (
-              <span className="font-black tracking-tighter text-xl text-white">{config.company_name}</span>
+              <span className={`font-black tracking-tighter text-xl ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{config.company_name}</span>
             )}
           </a>
-          <p className="text-[9px] text-gray-600 uppercase font-black tracking-widest leading-none">{config.company_subtitle}</p>
+          <p className={`text-[9px] uppercase font-black tracking-widest leading-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{config.company_subtitle}</p>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-8 overflow-y-auto scrollbar-hide">
           {menuGroups.map((group, gIdx) => (
             <div key={gIdx} className="space-y-1">
-              <h4 className="px-3 text-[9px] font-black text-gray-700 uppercase tracking-[0.2em] mb-2">{group.title}</h4>
+              <h4 className="px-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">{group.title}</h4>
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.href === "/" && pathname === "/");
                 return (
@@ -145,10 +171,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 group ${
-                      isActive ? "bg-white/5 text-white shadow-lg" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                      isActive 
+                        ? (theme === 'dark' ? "bg-white/5 text-white shadow-lg" : "bg-black/5 text-black shadow-sm") 
+                        : (theme === 'dark' ? "text-gray-500 hover:text-gray-300 hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-black/5")
                     }`}
                   >
-                    <span className={`${isActive ? "text-[hsl(var(--tenant-primary))]" : "text-gray-700 group-hover:text-gray-500"}`}>
+                    <span className={`${isActive ? "text-[hsl(var(--tenant-primary))]" : (theme === 'dark' ? "text-gray-600 group-hover:text-gray-400" : "text-gray-400 group-hover:text-gray-600")}`}>
                       {item.icon(config.primary_color)}
                     </span>
                     <span className="font-medium">{item.label}</span>
@@ -160,22 +188,37 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-800/50 bg-[#070707]">
-          <div className="p-3 rounded-xl bg-gray-900/50 flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-500">AD</div>
+        <div className="p-4 border-t border-[var(--theme-border)] bg-[var(--theme-sidebar)] transition-colors duration-200">
+          <button 
+            onClick={toggleTheme} 
+            className={`flex items-center justify-center gap-2 w-full py-2 mb-3 text-[10px] font-black uppercase transition-all duration-200 border rounded-lg ${
+              theme === 'dark' 
+                ? 'text-white border-white/20 bg-white/5 hover:bg-white/10' 
+                : 'text-black border-black/10 bg-black/5 hover:bg-black/10'
+            }`}
+          >
+            {theme === 'dark' ? '☀️ Visão (Clara)' : '🌙 Visão (Black)'}
+          </button>
+          
+          <div className={`p-3 rounded-xl flex items-center gap-3 mb-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-100'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${theme === 'dark' ? 'bg-gray-800 text-gray-500' : 'bg-gray-200 text-gray-700'}`}>AD</div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold text-white truncate">Administrador</p>
-              <p className="text-[10px] text-gray-600 truncate">Permetal SaaS</p>
+              <p className={`text-xs font-bold truncate ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Administrador</p>
+              <p className="text-[10px] text-gray-500 truncate">Permetal SaaS</p>
             </div>
           </div>
-          <a href="/api/logout" className="flex items-center justify-center gap-2 w-full py-2 text-[10px] font-black uppercase text-gray-600 hover:text-red-400 transition-colors border border-gray-800/50 rounded-lg hover:border-red-400/30">
+          <a href="/api/logout" className={`flex items-center justify-center gap-2 w-full py-2 text-[10px] font-black uppercase transition-colors border rounded-lg ${
+            theme === 'dark'
+              ? 'text-gray-500 hover:text-red-400 border-gray-800/50 hover:border-red-400/30'
+              : 'text-gray-600 hover:text-red-600 border-gray-200 hover:border-red-600/30'
+          }`}>
             Encerrar Sessão
           </a>
         </div>
       </aside>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 relative h-full overflow-hidden flex flex-col">
+      <main className="flex-1 relative h-full overflow-hidden flex flex-col bg-[var(--theme-bg)] transition-colors duration-200">
         <div className="flex-1 overflow-y-auto relative z-10">
           {children}
         </div>

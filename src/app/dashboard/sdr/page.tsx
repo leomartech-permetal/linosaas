@@ -50,9 +50,25 @@ export default function SDRLeadsPage() {
 
   const handleUpdateLead = async (field: string, value: any) => {
     if (!selectedLead) return;
-    const { error } = await supabase.from('leads').update({ [field]: value }).eq('id', selectedLead.id);
+
+    let updatePayload: any = { [field]: value };
+    if (field === 'empresa') {
+      updatePayload.company = value;
+    } else if (field === 'company') {
+      updatePayload.empresa = value;
+    } else if (field === 'produto') {
+      updatePayload.detected_product = value;
+    } else if (field === 'detected_product') {
+      updatePayload.produto = value;
+    } else if (field === 'cidade_empresa') {
+      updatePayload.detected_city = value;
+    } else if (field === 'detected_city') {
+      updatePayload.cidade_empresa = value;
+    }
+
+    const { error } = await supabase.from('leads').update(updatePayload).eq('id', selectedLead.id);
     if (!error) {
-      const updated = { ...selectedLead, [field]: value };
+      const updated = { ...selectedLead, ...updatePayload };
       setSelectedLead(updated);
       setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
     }
@@ -123,8 +139,8 @@ export default function SDRLeadsPage() {
                     <h4 className="font-bold text-white group-hover:text-[hsl(var(--tenant-primary))] transition-colors">{lead.name || "Visitante Desconhecido"}</h4>
                     <p className="text-xs text-gray-500 flex items-center gap-2">
                       <span>{lead.whatsapp_number.replace('@s.whatsapp.net','')}</span>
-                      {lead.company && <span className="w-1 h-1 bg-gray-700 rounded-full"></span>}
-                      <span>{lead.company}</span>
+                      {(lead.company || lead.empresa) && <span className="w-1 h-1 bg-gray-700 rounded-full"></span>}
+                      <span>{lead.company || lead.empresa}</span>
                     </p>
                   </div>
                 </div>
@@ -132,7 +148,7 @@ export default function SDRLeadsPage() {
                 <div className="flex items-center gap-8">
                   <div className="hidden lg:block text-center">
                     <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest mb-1">Interesse</p>
-                    <p className="text-xs text-blue-400 font-medium">{lead.detected_product || "—"}</p>
+                    <p className="text-xs text-blue-400 font-medium">{lead.detected_product || lead.produto || "—"}</p>
                   </div>
                   <div className="text-right min-w-[120px]">
                     <span className={`text-[10px] px-2 py-1 rounded font-black tracking-tighter uppercase ${

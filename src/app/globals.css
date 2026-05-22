@@ -2,8 +2,19 @@
 
 @layer base {
   :root {
+    /* Temas */
+    --theme-bg: #ffffff;
+    --theme-fg: #111111;
+    --theme-sidebar: #fafafa;
+    --theme-border: #e5e5e5;
+    --theme-card: #ffffff;
+    --theme-muted: #666666;
+    --theme-hover: #f5f5f5;
+    --theme-input-bg: #ffffff;
+    --theme-input-border: #e5e5e5;
+
     /* Valores Padrão (Fallback) - Serão sobrescritos dinamicamente pelo banco */
-    --tenant-bg: 0 0% 8%; 
+    --tenant-bg: 0 0% 100%; 
     --tenant-primary: 184 75% 35%; /* Azul PSA padrão */
     
     --content-bg: 0 0% 100%;
@@ -12,9 +23,25 @@
     --foreground: 0 0% 10%;
   }
 
+  .dark {
+    --theme-bg: #000000;
+    --theme-fg: #ffffff;
+    --theme-sidebar: #050505;
+    --theme-border: #262626;
+    --theme-card: #0a0a0a;
+    --theme-muted: #a3a3a3;
+    --theme-hover: #171717;
+    --theme-input-bg: #0d0d0d;
+    --theme-input-border: #262626;
+
+    --tenant-bg: 0 0% 8%;
+    --foreground: 0 0% 100%;
+  }
+
   body {
-    background-color: hsl(var(--tenant-bg));
-    color: hsl(var(--foreground));
+    background-color: var(--theme-bg);
+    color: var(--theme-fg);
+    transition: background-color 0.2s ease, color 0.2s ease;
     antialiased: true;
   }
   
