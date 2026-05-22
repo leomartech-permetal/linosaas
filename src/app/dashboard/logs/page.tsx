@@ -51,13 +51,13 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 w-full h-full bg-[#0a0a0a] text-white overflow-y-auto scrollbar-hide">
+    <div className="p-6 md:p-10 w-full h-full bg-[var(--theme-bg)] text-[var(--theme-fg)] overflow-y-auto scrollbar-hide transition-colors duration-200">
       <header className="mb-10 flex justify-between items-start">
         <div>
-          <h2 className="text-4xl font-black tracking-tighter text-white">Debug & Audit Logs</h2>
-          <p className="text-gray-500 mt-1 font-medium italic">Rastreio em tempo real de eventos e erros do sistema</p>
+          <h2 className="text-4xl font-black tracking-tighter text-[var(--theme-fg)]">Debug & Audit Logs</h2>
+          <p className="text-[var(--theme-muted)] mt-1 font-medium italic">Rastreio em tempo real de eventos e erros do sistema</p>
         </div>
-        <button onClick={loadLogs} className="bg-[#111] border border-gray-800 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-colors">
+        <button onClick={loadLogs} className="bg-[var(--theme-card)] border border-[var(--theme-border)] text-[var(--theme-fg)] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--theme-hover)] transition-colors cursor-pointer">
           Atualizar Manual
         </button>
       </header>
@@ -67,11 +67,11 @@ export default function LogsPage() {
           <div className="w-10 h-10 border-2 border-[hsl(var(--tenant-primary))] border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="bg-[#111] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-3xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[10px] text-gray-600 uppercase font-black tracking-widest border-b border-gray-800 bg-[#161616]">
+                <tr className="text-[10px] text-[var(--theme-muted)] uppercase font-black tracking-widest border-b border-[var(--theme-border)] bg-[var(--theme-hover)]">
                   <th className="p-5 w-40">Data/Hora</th>
                   <th className="p-5 w-24">Nível</th>
                   <th className="p-5 w-32">Módulo</th>
@@ -79,10 +79,10 @@ export default function LogsPage() {
                   <th className="p-5">Lead Relacionado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/50">
+              <tbody className="divide-y divide-[var(--theme-border)]">
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="p-5 text-[10px] font-mono text-gray-500">
+                  <tr key={log.id} className="hover:bg-[var(--theme-hover)] transition-colors">
+                    <td className="p-5 text-[10px] font-mono text-[var(--theme-muted)]">
                       {new Date(log.created_at).toLocaleString('pt-BR')}
                     </td>
                     <td className="p-5">
@@ -91,29 +91,29 @@ export default function LogsPage() {
                       </span>
                     </td>
                     <td className="p-5">
-                      <span className="text-[10px] font-black uppercase text-gray-400">{log.module}</span>
+                      <span className="text-[10px] font-black uppercase text-[var(--theme-muted)]">{log.module}</span>
                     </td>
                     <td className="p-5">
-                      <div className="text-sm font-bold text-white mb-1">{log.action}</div>
-                      <pre className="text-[9px] font-mono text-gray-600 bg-black/30 p-2 rounded max-h-20 overflow-y-auto scrollbar-hide">
+                      <div className="text-sm font-bold text-[var(--theme-fg)] mb-1">{log.action}</div>
+                      <pre className="text-[9px] font-mono text-[var(--theme-muted)] bg-black/5 dark:bg-black/30 p-2 rounded max-h-20 overflow-y-auto scrollbar-hide">
                         {JSON.stringify(log.details, null, 2)}
                       </pre>
                     </td>
                     <td className="p-5">
                       {log.leads ? (
                         <div>
-                          <div className="text-xs font-bold text-white">{log.leads.name}</div>
-                          <div className="text-[10px] text-gray-600">{log.leads.whatsapp_number}</div>
+                          <div className="text-xs font-bold text-[var(--theme-fg)]">{log.leads.name}</div>
+                          <div className="text-[10px] text-[var(--theme-muted)]">{log.leads.whatsapp_number}</div>
                         </div>
                       ) : (
-                        <span className="text-[10px] text-gray-700 italic">—</span>
+                        <span className="text-[10px] text-[var(--theme-muted)] italic">—</span>
                       )}
                     </td>
                   </tr>
                 ))}
                 {logs.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-20 text-center text-gray-600 italic uppercase text-xs tracking-widest font-black">
+                    <td colSpan={5} className="p-20 text-center text-[var(--theme-muted)] italic uppercase text-xs tracking-widest font-black">
                       Nenhum log registrado ainda.
                     </td>
                   </tr>

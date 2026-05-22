@@ -129,7 +129,7 @@ export default function PipelinePage() {
                   <h3 className="font-black text-xs uppercase tracking-widest text-gray-400">{col.label}</h3>
                 </div>
                 <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-400">{colLeads.length}</span>
-              </di              {/* Área de Cards */}
+              </div>              {/* Área de Cards */}
               <div className="flex-1 bg-black/[0.02] dark:bg-[#111]/40 border border-[var(--theme-border)] rounded-2xl p-3 space-y-4 overflow-y-auto scrollbar-hide">
                 {loading ? (
                   <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-800 border-t-blue-500 rounded-full animate-spin"></div></div>
@@ -173,7 +173,7 @@ export default function PipelinePage() {
                     );
                   })
                 )}
-              </div>      </div>
+              </div>
             </div>
           );
         })}
