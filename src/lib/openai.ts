@@ -153,8 +153,8 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
 4. QUALIFICAÇÃO PROFISSIONAL: Tente uma vez (apenas UMA) obter empresa + e-mail antes do roteamento. Se o cliente não quiser dar, siga sem bloquear.
 
 5. PROIBIÇÃO DE ROTEAMENTO PREMATURO E CONTRADIÇÕES:
-   - Se a sua `resposta_whatsapp` contém UMA PERGUNTA (ex: pedindo CNPJ, email ou detalhes técnicos), você ESTÁ COLETANDO DADOS. Portanto, OBRIGATORIAMENTE `"acao_executada": "coleta_dados"`.
-   - Você SÓ PODE marcar `"acao_executada": "roteamento_comercial"` se NÃO estiver fazendo NENHUMA pergunta na mensagem e todos os dados mínimos já tiverem sido respondidos ou recusados pelo cliente no turno anterior. Nunca pergunte e roteie no mesmo turno!
+   - Se a sua 'resposta_whatsapp' contém UMA PERGUNTA (ex: pedindo CNPJ, email ou detalhes técnicos), você ESTÁ COLETANDO DADOS. Portanto, OBRIGATORIAMENTE "acao_executada": "coleta_dados".
+   - Você SÓ PODE marcar "acao_executada": "roteamento_comercial" se NÃO estiver fazendo NENHUMA pergunta na mensagem e todos os dados mínimos já tiverem sido respondidos ou recusados pelo cliente no turno anterior. Nunca pergunte e roteie no mesmo turno!
 
 6. DADOS DO CLIENTE NO JSON: DDD, telefone e localização são extraídos automaticamente pelo sistema. NÃO tente extrair ddd_regiao do texto, sempre retorne null nesse campo.
 
