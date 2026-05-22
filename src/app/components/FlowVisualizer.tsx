@@ -20,31 +20,31 @@ import { supabase } from '@/lib/supabase';
 function LogSidebar({ log, onClose }: { log: any, onClose: () => void }) {
   if (!log) return null;
   return (
-    <div className="absolute right-0 top-0 h-full w-96 bg-[#0f172a] border-l border-slate-700 shadow-2xl z-50 flex flex-col text-white">
-      <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-[#1e293b]">
-        <h3 className="font-bold">Detalhes do Log / Erro</h3>
-        <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
+    <div className="absolute right-0 top-0 h-full w-96 bg-[#FFFFFF] border-l border-[#EAEAEA] shadow-dropdown z-50 flex flex-col text-[#171717]">
+      <div className="p-4 border-b border-[#EAEAEA] flex justify-between items-center bg-[#FAFAFA]">
+        <h3 className="font-semibold text-sm">Detalhes do Log / Erro</h3>
+        <button onClick={onClose} className="text-[#666666] hover:text-[#171717] font-semibold">✕</button>
       </div>
       <div className="p-4 flex-1 overflow-y-auto text-sm">
         <div className="mb-4">
-          <span className="text-slate-400 block text-xs">Módulo</span>
-          <span className="font-mono bg-slate-800 px-2 py-1 rounded">{log.module || 'N/A'}</span>
+          <span className="text-[#888888] block text-xs mb-1">Módulo</span>
+          <span className="font-mono bg-[#F1F5F9] px-2 py-1 rounded border border-[#EAEAEA] text-xs text-[#171717]">{log.module || 'N/A'}</span>
         </div>
         <div className="mb-4">
-          <span className="text-slate-400 block text-xs">Ação</span>
-          <span className="font-bold">{log.action || 'N/A'}</span>
+          <span className="text-[#888888] block text-xs mb-1">Ação</span>
+          <span className="font-semibold text-sm">{log.action || 'N/A'}</span>
         </div>
         <div className="mb-4">
-          <span className="text-slate-400 block text-xs">Nível</span>
-          <span className={`font-bold uppercase ${log.level === 'error' ? 'text-red-400' : 'text-green-400'}`}>{log.level || 'info'}</span>
+          <span className="text-[#888888] block text-xs mb-1">Nível</span>
+          <span className={`font-semibold text-xs uppercase ${log.level === 'error' ? 'text-[#E5484D]' : 'text-[#10B981]'}`}>{log.level || 'info'}</span>
         </div>
         <div className="mb-4">
-          <span className="text-slate-400 block text-xs">Data/Hora</span>
-          <span>{new Date(log.created_at).toLocaleString('pt-BR')}</span>
+          <span className="text-[#888888] block text-xs mb-1">Data/Hora</span>
+          <span className="text-xs text-[#171717]">{new Date(log.created_at).toLocaleString('pt-BR')}</span>
         </div>
         <div className="mt-6">
-          <span className="text-slate-400 block text-xs mb-2">Motivo Técnico (Payload JSON)</span>
-          <pre className="bg-slate-900 p-3 rounded overflow-x-auto text-xs text-green-300">
+          <span className="text-[#888888] block text-xs mb-2">Motivo Técnico (Payload JSON)</span>
+          <pre className="bg-[#FAFAFA] border border-[#EAEAEA] p-3 rounded overflow-x-auto text-xs text-[#0070F3] font-mono">
             {JSON.stringify(log.details, null, 2)}
           </pre>
         </div>
@@ -70,13 +70,13 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         position: { x: 400, y: 50 },
         data: { label: '1. Webhook (Entrada)' },
         type: 'input',
-        style: { background: '#2563eb', color: 'white', border: 'none', fontWeight: 'bold' }
+        style: { background: '#0070F3', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'medium', fontSize: '12px' }
       },
       {
         id: 'node-debounce',
         position: { x: 400, y: 150 },
         data: { label: '2. Debounce & Multimídia' },
-        style: { background: '#475569', color: 'white', border: '1px solid #94a3b8' }
+        style: { background: '#FFFFFF', color: '#171717', border: '1px solid #D4D4D8', borderRadius: '6px', fontSize: '12px' }
       },
       {
         id: 'node-is-lead',
@@ -84,19 +84,19 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         data: { 
           label: (
             <div className="text-center">
-              <div className="font-bold text-xs text-amber-200">IF/ELSE</div>
-              <div>É Lead ou Vendedor?</div>
+              <div className="font-semibold text-[10px] text-yellow-800">IF/ELSE</div>
+              <div className="text-[12px]">É Lead ou Vendedor?</div>
             </div>
           )
         },
-        style: { background: '#d97706', color: 'white', border: 'none', borderRadius: '8px' }
+        style: { background: '#F5A623', color: 'white', border: 'none', borderRadius: '6px' }
       },
       {
         id: 'node-end-internal',
         position: { x: 150, y: 350 },
         data: { label: 'Ignorar (Uso Interno)' },
         type: 'output',
-        style: { background: '#1e293b', color: '#64748b', border: '1px dashed #64748b' }
+        style: { background: '#FAFAFA', color: '#888888', border: '1px dashed #D4D4D8', borderRadius: '6px', fontSize: '12px' }
       },
       {
         id: 'node-is-return',
@@ -104,43 +104,43 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         data: { 
           label: (
             <div className="text-center">
-              <div className="font-bold text-xs text-amber-200">IF/ELSE</div>
-              <div>Lead de Retorno?</div>
+              <div className="font-semibold text-[10px] text-yellow-800">IF/ELSE</div>
+              <div className="text-[12px]">Lead de Retorno?</div>
             </div>
           )
         },
-        style: { background: '#d97706', color: 'white', border: 'none', borderRadius: '8px' }
+        style: { background: '#F5A623', color: 'white', border: 'none', borderRadius: '6px' }
       },
       {
         id: 'node-sla',
         position: { x: 750, y: 450 },
         data: { label: 'Sistema SLA / Suporte' },
-        style: { background: '#9333ea', color: 'white', border: '1px solid #c084fc' }
+        style: { background: '#8B5CF6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px' }
       },
       {
         id: 'node-ai',
         position: { x: 350, y: 450 },
         data: { label: 'Cérebro IA (SDR/Skills)' },
-        style: { background: '#4c1d95', color: 'white', border: '1px solid #a78bfa' }
+        style: { background: '#000000', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px' }
       },
       {
         id: 'node-router',
         position: { x: 350, y: 550 },
         data: { label: 'Roteador Automático' },
-        style: { background: '#334155', color: 'white', border: '1px solid #64748b' }
+        style: { background: '#FFFFFF', color: '#171717', border: '1px solid #D4D4D8', borderRadius: '6px', fontSize: '12px' }
       },
       {
         id: 'node-save-db',
         position: { x: 550, y: 650 },
         data: { label: 'Salvar Supabase' },
-        style: { background: '#059669', color: 'white', border: 'none' }
+        style: { background: '#10B981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px' }
       },
       {
         id: 'node-evolution-out',
         position: { x: 550, y: 750 },
         data: { label: 'Disparo Evolution API' },
         type: 'output',
-        style: { background: '#16a34a', color: 'white', border: 'none', fontWeight: 'bold' }
+        style: { background: '#10B981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px' }
       }
     ];
 
@@ -328,11 +328,11 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
   }, []);
 
   if (loading) {
-    return <div className="w-full h-[80vh] flex items-center justify-center text-white">Carregando fluxo logico...</div>;
+    return <div className="w-full h-[80vh] flex items-center justify-center text-[#666666] text-sm">Carregando fluxo lógico...</div>;
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }} className="rounded-lg border border-slate-700 overflow-hidden shadow-lg">
+    <div style={{ width: '100%', height: '100%', position: 'relative' }} className="rounded-lg border border-[#EAEAEA] overflow-hidden bg-white shadow-sm">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -340,11 +340,11 @@ export default function FlowVisualizer({ leadId }: { leadId?: string }) {
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         fitView
-        colorMode="dark"
+        colorMode="light"
       >
         <Controls />
         <MiniMap />
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} color="#E2E8F0" />
       </ReactFlow>
       
       {selectedLog && (

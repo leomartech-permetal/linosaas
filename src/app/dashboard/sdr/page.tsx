@@ -88,8 +88,8 @@ export default function SDRLeadsPage() {
         <div className="p-6 md:p-8 overflow-y-auto h-full">
           <header className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-[var(--theme-fg)]">Pipeline de Qualificação</h2>
-              <p className="text-gray-500 mt-1">Gestão de leads multimodais e triagem inteligente</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-[#171717]">Pipeline de Qualificação</h2>
+              <p className="text-[#666666] mt-1">Gestão de leads multimodais e triagem inteligente</p>
             </div>
             <div className="flex gap-4 items-center">
               <button 
@@ -106,40 +106,40 @@ export default function SDRLeadsPage() {
                   a.click();
                   document.body.removeChild(a);
                 }}
-                className="text-[10px] font-black uppercase tracking-widest text-[var(--theme-muted)] border border-[var(--theme-border)] px-4 py-2 rounded-lg hover:bg-[var(--theme-hover)] transition-all"
+                className="text-xs font-semibold text-[#171717] bg-[#FFFFFF] border border-[#D4D4D8] px-4 py-2 rounded-md hover:bg-[#F1F5F9] transition-all"
               >
                 📥 Exportar CSV
               </button>
-              <div className="flex bg-[var(--theme-card)] p-1 rounded-lg border border-[var(--theme-border)]">
-                <button onClick={() => setFilter('all')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'all' ? 'bg-[var(--theme-hover)] text-[var(--theme-fg)] shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>TODOS OS LEADS</button>
-                <button onClick={() => setFilter('incomplete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'incomplete' ? 'bg-blue-600 text-white shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>PENDENTES</button>
-                <button onClick={() => setFilter('complete')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'complete' ? 'bg-green-600 text-white shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>QUALIFICADOS</button>
-                <button onClick={() => setFilter('outros')} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filter === 'outros' ? 'bg-purple-600 text-white shadow-lg' : 'text-[var(--theme-muted)] hover:text-[var(--theme-fg)]'}`}>OUTROS CONTATOS</button>
+              <div className="flex bg-[#FFFFFF] p-1 rounded-lg border border-[#EAEAEA]">
+                <button onClick={() => setFilter('all')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'all' ? 'bg-[#E2E8F0] text-[#171717]' : 'text-[#666666] hover:text-[#171717]'}`}>TODOS</button>
+                <button onClick={() => setFilter('incomplete')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'incomplete' ? 'bg-[#0070F3] text-white' : 'text-[#666666] hover:text-[#171717]'}`}>PENDENTES</button>
+                <button onClick={() => setFilter('complete')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'complete' ? 'bg-[#10B981] text-white' : 'text-[#666666] hover:text-[#171717]'}`}>QUALIFICADOS</button>
+                <button onClick={() => setFilter('outros')} className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === 'outros' ? 'bg-[#8B5CF6] text-white' : 'text-[#666666] hover:text-[#171717]'}`}>OUTROS</button>
               </div>
             </div>
           </header>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-10 h-10 border-4 border-[hsl(var(--tenant-primary))] border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-500 animate-pulse">Sincronizando com a IA...</p>
+                <p className="text-gray-500 animate-pulse text-sm">Sincronizando dados...</p>
               </div>
             ) : filteredLeads.map((lead) => (
               <div 
                 key={lead.id} 
                 onClick={() => setSelectedLead(lead)}
-                className={`group flex items-center justify-between p-5 bg-[var(--theme-card)] border rounded-xl cursor-pointer transition-all hover:border-[hsl(var(--tenant-primary)/0.5)] hover:bg-[var(--theme-hover)] ${selectedLead?.id === lead.id ? 'border-[hsl(var(--tenant-primary))] bg-[var(--theme-hover)]' : 'border-[var(--theme-border)]'}`}
+                className={`group flex items-center justify-between p-5 bg-[#FFFFFF] border rounded-lg cursor-pointer transition-all hover:border-[#0070F3] hover:shadow-sm ${selectedLead?.id === lead.id ? 'border-[#0070F3] bg-[#F1F5F9]' : 'border-[#EAEAEA]'}`}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center border border-gray-700 text-lg font-bold text-gray-400 group-hover:text-[hsl(var(--tenant-primary))]">
+                  <div className="w-12 h-12 rounded-full bg-[#F1F5F9] flex items-center justify-center border border-[#EAEAEA] text-lg font-semibold text-[#171717] group-hover:border-[#0070F3] group-hover:text-[#0070F3] transition-colors">
                     {(lead.name || "?").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-bold text-[var(--theme-fg)] group-hover:text-[hsl(var(--tenant-primary))] transition-colors">{lead.name || "Visitante Desconhecido"}</h4>
-                    <p className="text-xs text-gray-500 flex items-center gap-2">
+                    <h4 className="font-semibold text-[#171717] group-hover:text-[#0070F3] transition-colors">{lead.name || "Visitante Desconhecido"}</h4>
+                    <p className="text-xs text-[#666666] flex items-center gap-2">
                       <span>{lead.whatsapp_number.replace('@s.whatsapp.net','')}</span>
-                      {(lead.company || lead.empresa) && <span className="w-1 h-1 bg-gray-700 rounded-full"></span>}
+                      {(lead.company || lead.empresa) && <span className="w-1 h-1 bg-[#D4D4D8] rounded-full"></span>}
                       <span>{lead.company || lead.empresa}</span>
                     </p>
                   </div>
@@ -147,18 +147,18 @@ export default function SDRLeadsPage() {
 
                 <div className="flex items-center gap-8">
                   <div className="hidden lg:block text-center">
-                    <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest mb-1">Interesse</p>
-                    <p className="text-xs text-blue-400 font-medium">{lead.detected_product || lead.produto || "—"}</p>
+                    <p className="text-[10px] text-[#888888] uppercase font-semibold tracking-wider mb-1">Interesse</p>
+                    <p className="text-xs text-[#0070F3] font-medium">{lead.detected_product || lead.produto || "—"}</p>
                   </div>
                   <div className="text-right min-w-[120px]">
-                    <span className={`text-[10px] px-2 py-1 rounded font-black tracking-tighter uppercase ${
-                      lead.status === 'SDR_QUALIFICATION' ? 'bg-blue-900/20 text-blue-400 border border-blue-500/20' : 
-                      lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'bg-purple-900/20 text-purple-400 border border-purple-500/20' :
-                      'bg-green-900/20 text-green-400 border border-green-500/20'
+                    <span className={`text-[10px] px-2.5 py-1 rounded font-semibold uppercase border ${
+                      lead.status === 'SDR_QUALIFICATION' ? 'bg-[#0070F3]/10 text-[#0070F3] border-[#0070F3]/20' : 
+                      lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'bg-[#8B5CF6]/10 text-[#8B5CF6] border-[#8B5CF6]/20' :
+                      'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
                     }`}>
                       {lead.status === 'SDR_QUALIFICATION' ? 'Em Qualificação' : lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'Outro Setor' : 'Qualificado'}
                     </span>
-                    <p className="text-[10px] text-gray-600 mt-2">{new Date(lead.updated_at).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-[#888888] mt-2">{new Date(lead.updated_at).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>

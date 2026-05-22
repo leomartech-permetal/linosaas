@@ -12,11 +12,11 @@ export default function FluxosPage() {
   };
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col bg-[#FAFAFA]">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--theme-fg)] mb-2">Editor de Fluxos Lino</h1>
-          <p className="text-[var(--theme-muted)]">
+          <h1 className="text-2xl font-semibold text-[#171717] mb-1">Editor de Fluxos Lino</h1>
+          <p className="text-[#666666] text-sm">
             Visualize a arquitetura de roteamento e decisão da IA.
           </p>
         </div>
@@ -24,17 +24,17 @@ export default function FluxosPage() {
           <input 
             type="text" 
             placeholder="Nome, Telefone ou ID do Lead" 
-            className="w-72 bg-[var(--theme-input-bg)] text-[var(--theme-fg)] border border-[var(--theme-input-border)] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+            className="w-72 bg-[#FFFFFF] text-[#171717] border border-[#EAEAEA] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#A1A1AA] transition-all"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <button 
             onClick={handleSearch}
-            className="bg-[var(--theme-hover)] hover:brightness-95 text-[var(--theme-fg)] border border-[var(--theme-border)] px-4 py-2 rounded-md transition text-sm">
+            className="bg-[#FFFFFF] border border-[#D4D4D8] text-[#171717] px-4 py-2 rounded-md hover:bg-[#F1F5F9] transition-all text-sm font-medium">
             Rastrear Fluxo
           </button>
-          <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md transition text-sm font-medium">
+          <button className="bg-[#000000] text-white px-4 py-2 rounded-md hover:bg-[#333333] transition-all text-sm font-medium">
             Publicar Regras
           </button>
         </div>

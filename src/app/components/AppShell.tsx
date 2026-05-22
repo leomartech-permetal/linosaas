@@ -37,8 +37,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLogin = pathname === "/login";
 
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
   const [config, setConfig] = useState({
     company_name: "LINO CRM",
     company_subtitle: "Grupo Permetal",
@@ -53,27 +51,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem("crm-theme") as 'light' | 'dark';
-    if (saved) {
-      setTheme(saved);
-      if (saved === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
+    // Forçar a remoção de qualquer classe dark ou vestígio
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem("crm-theme");
   }, []);
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(nextTheme);
-    localStorage.setItem("crm-theme", nextTheme);
-    if (nextTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   useEffect(() => {
     async function loadConfig() {
@@ -126,7 +107,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`flex h-screen w-full transition-colors duration-200 ${theme === 'dark' ? 'dark bg-black text-white' : 'bg-white text-black'}`} style={{ 
+    <div className="flex h-screen w-full bg-[#FAFAFA] text-[#171717]" style={{ 
       "--tenant-primary": primaryHSL,
       "--font-heading": (config as any).font_heading || 'Roboto Condensed',
       "--font-body": (config as any).font_body || 'Assistant'
@@ -142,7 +123,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }
       `}</style>
       {/* Sidebar Premium */}
-      <aside className="w-64 flex flex-col bg-[var(--theme-sidebar)] border-r border-[var(--theme-border)] z-50 transition-colors duration-200">
+      <aside className="w-60 flex flex-col bg-[#FAFAFA] border-r border-[#EAEAEA] z-50">
         <div className="p-6">
           <a href="/dashboard" className="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity">
             {config.logo_url ? (
@@ -153,33 +134,33 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
             {!config.logo_url && (
-              <span className={`font-black tracking-tighter text-xl ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{config.company_name}</span>
+              <span className="font-black tracking-tighter text-xl text-[#171717]">{config.company_name}</span>
             )}
           </a>
-          <p className={`text-[9px] uppercase font-black tracking-widest leading-none ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{config.company_subtitle}</p>
+          <p className="text-[9px] uppercase font-black tracking-widest leading-none text-gray-400">{config.company_subtitle}</p>
         </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-8 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-4 py-2 space-y-6 overflow-y-auto scrollbar-hide">
           {menuGroups.map((group, gIdx) => (
             <div key={gIdx} className="space-y-1">
-              <h4 className="px-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">{group.title}</h4>
+              <h4 className="px-3 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{group.title}</h4>
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.href === "/" && pathname === "/");
                 return (
                   <a
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 group ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200 group ${
                       isActive 
-                        ? (theme === 'dark' ? "bg-white/5 text-white shadow-lg" : "bg-black/5 text-black shadow-sm") 
-                        : (theme === 'dark' ? "text-gray-500 hover:text-gray-300 hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-black/5")
+                        ? "bg-[#E2E8F0] text-[#171717] font-semibold" 
+                        : "text-[#666666] hover:text-[#171717] hover:bg-[#F1F5F9]"
                     }`}
                   >
-                    <span className={`${isActive ? "text-[hsl(var(--tenant-primary))]" : (theme === 'dark' ? "text-gray-600 group-hover:text-gray-400" : "text-gray-400 group-hover:text-gray-600")}`}>
+                    <span className={`${isActive ? "text-[#0070F3]" : "text-gray-400 group-hover:text-gray-600"}`}>
                       {item.icon(config.primary_color)}
                     </span>
                     <span className="font-medium">{item.label}</span>
-                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[hsl(var(--tenant-primary))] shadow-[0_0_10px_hsl(var(--tenant-primary))]"></div>}
+                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0070F3] shadow-[0_0_6px_#0070F3]"></div>}
                   </a>
                 );
               })}
@@ -187,37 +168,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[var(--theme-border)] bg-[var(--theme-sidebar)] transition-colors duration-200">
-          <button 
-            onClick={toggleTheme} 
-            className={`flex items-center justify-center gap-2 w-full py-2 mb-3 text-[10px] font-black uppercase transition-all duration-200 border rounded-lg ${
-              theme === 'dark' 
-                ? 'text-white border-white/20 bg-white/5 hover:bg-white/10' 
-                : 'text-black border-black/10 bg-black/5 hover:bg-black/10'
-            }`}
-          >
-            {theme === 'dark' ? '☀️ Visão (Clara)' : '🌙 Visão (Black)'}
-          </button>
-          
-          <div className={`p-3 rounded-xl flex items-center gap-3 mb-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-100'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${theme === 'dark' ? 'bg-gray-800 text-gray-500' : 'bg-gray-200 text-gray-700'}`}>AD</div>
+        <div className="p-4 border-t border-[#EAEAEA] bg-[#FAFAFA]">
+          <div className="p-3 rounded-md flex items-center gap-3 mb-4 bg-gray-100">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-gray-200 text-gray-700">AD</div>
             <div className="overflow-hidden">
-              <p className={`text-xs font-bold truncate ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Administrador</p>
+              <p className="text-xs font-bold truncate text-[#171717]">Administrador</p>
               <p className="text-[10px] text-gray-500 truncate">Permetal SaaS</p>
             </div>
           </div>
-          <a href="/api/logout" className={`flex items-center justify-center gap-2 w-full py-2 text-[10px] font-black uppercase transition-colors border rounded-lg ${
-            theme === 'dark'
-              ? 'text-gray-500 hover:text-red-400 border-gray-800/50 hover:border-red-400/30'
-              : 'text-gray-600 hover:text-red-600 border-gray-200 hover:border-red-600/30'
-          }`}>
+          <a href="/api/logout" className="flex items-center justify-center gap-2 w-full py-2 text-[10px] font-black uppercase transition-colors border border-gray-200 rounded-md text-gray-600 hover:text-red-600 hover:border-red-600/30 bg-white">
             Encerrar Sessão
           </a>
         </div>
       </aside>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 relative h-full overflow-hidden flex flex-col bg-[var(--theme-bg)] transition-colors duration-200">
+      <main className="flex-1 relative h-full overflow-hidden flex flex-col bg-[#FAFAFA]">
         <div className="flex-1 overflow-y-auto relative z-10">
           {children}
         </div>

@@ -77,33 +77,61 @@ export default function UsuariosPage() {
 
   return (
     <div className="p-6 md:p-10 w-full h-full text-[var(--theme-fg)] overflow-y-auto">
-      <header className="mb-8 border-b border-[var(--theme-border)] pb-6">
-        <h2 className="text-3xl font-bold">Gestão de Usuários</h2>
-        <p className="text-[var(--theme-muted)] mt-2">Controle quem pode acessar o sistema e suas permissões.</p>
+      <header className="mb-8 border-b border-[#EAEAEA] pb-6">
+        <h2 className="text-3xl font-bold text-[#171717]">Gestão de Usuários</h2>
+        <p className="text-[#666666] mt-2">Controle quem pode acessar o sistema e suas permissões.</p>
       </header>
 
-      {msg && <div className="bg-green-900/30 border border-green-800 text-green-400 px-4 py-2 rounded mb-6 text-sm">{msg}</div>}
+      {msg && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg mb-6 text-sm font-medium shadow-sm animate-fade-in">
+          {msg}
+        </div>
+      )}
 
       {/* Tabela de Permissões */}
-      <div className="bg-[var(--theme-card)] p-5 rounded-lg border border-[var(--theme-border)] mb-8 max-w-3xl">
-        <h3 className="text-sm font-bold text-[var(--theme-muted)] mb-3">Tabela de Permissões por Perfil</h3>
+      <div className="bg-white p-6 rounded-lg border border-[#EAEAEA] mb-8 max-w-3xl shadow-sm">
+        <h3 className="text-xs font-bold text-[#666666] uppercase tracking-wider mb-4">Tabela de Permissões por Perfil</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[var(--theme-muted)] border-b border-[var(--theme-border)]">
-                <th className="text-left pb-2">Perfil</th>
-                <th className="pb-2">Dashboard</th>
-                <th className="pb-2">Pipeline</th>
-                <th className="pb-2">Regras</th>
-                <th className="pb-2">Skills</th>
-                <th className="pb-2">Config</th>
-                <th className="pb-2">Usuários</th>
+              <tr className="text-[#666666] border-b border-[#EAEAEA]">
+                <th className="text-left pb-3 font-semibold">Perfil</th>
+                <th className="pb-3 font-semibold text-center">Dashboard</th>
+                <th className="pb-3 font-semibold text-center">Pipeline</th>
+                <th className="pb-3 font-semibold text-center">Regras</th>
+                <th className="pb-3 font-semibold text-center">Skills</th>
+                <th className="pb-3 font-semibold text-center">Config</th>
+                <th className="pb-3 font-semibold text-center">Usuários</th>
               </tr>
             </thead>
-            <tbody>
-              <tr className="border-b border-[var(--theme-border)]"><td className="py-2 text-red-400 font-bold">Admin</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td></tr>
-              <tr className="border-b border-[var(--theme-border)]"><td className="py-2 text-yellow-400 font-bold">Gestor</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">✅</td><td className="text-center">❌</td><td className="text-center">❌</td></tr>
-              <tr><td className="py-2 text-blue-400 font-bold">Vendedor</td><td className="text-center">❌</td><td className="text-center">✅</td><td className="text-center">❌</td><td className="text-center">❌</td><td className="text-center">❌</td><td className="text-center">❌</td></tr>
+            <tbody className="divide-y divide-[#EAEAEA]">
+              <tr>
+                <td className="py-3 text-red-600 font-bold">Admin</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+              </tr>
+              <tr>
+                <td className="py-3 text-amber-600 font-bold">Gestor</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">❌</td>
+                <td className="text-center py-3">❌</td>
+              </tr>
+              <tr>
+                <td className="py-3 text-blue-600 font-bold">Vendedor</td>
+                <td className="text-center py-3">❌</td>
+                <td className="text-center py-3">✅</td>
+                <td className="text-center py-3">❌</td>
+                <td className="text-center py-3">❌</td>
+                <td className="text-center py-3">❌</td>
+                <td className="text-center py-3">❌</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -111,11 +139,11 @@ export default function UsuariosPage() {
 
       {/* Botão + Lista */}
       <div className="max-w-3xl">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold">Usuários Cadastrados ({users.length})</h3>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-bold text-[#171717]">Usuários Cadastrados ({users.length})</h3>
           <button
             onClick={() => { setEditing(null); setForm({ name: "", email: "", password: "", role: "vendedor", whatsapp_number: "" }); setShowForm(true); }}
-            className="bg-[hsl(var(--tenant-primary))] px-4 py-2 rounded text-sm font-bold text-black hover:opacity-90"
+            className="bg-black hover:bg-neutral-800 text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors shadow-sm"
           >
             + Novo Usuário
           </button>
@@ -123,54 +151,101 @@ export default function UsuariosPage() {
 
         {/* Form */}
         {showForm && (
-          <div className="bg-[var(--theme-card)] p-5 rounded-lg border border-[var(--theme-border)] mb-6">
-            <h4 className="font-bold mb-4">{editing ? "Editar Usuário" : "Novo Usuário"}</h4>
-            <form onSubmit={saveUser} className="space-y-3">
-              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" required />
-              <div className="grid grid-cols-2 gap-3">
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="E-mail" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" required />
-                <input type="text" value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} placeholder="WhatsApp (5511...)" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" />
+          <div className="bg-white p-6 rounded-lg border border-[#EAEAEA] mb-6 shadow-md animate-slide-down">
+            <h4 className="font-bold text-[#171717] mb-4">{editing ? "Editar Usuário" : "Novo Usuário"}</h4>
+            <form onSubmit={saveUser} className="space-y-4">
+              <input 
+                type="text" 
+                value={form.name} 
+                onChange={(e) => setForm({ ...form, name: e.target.value })} 
+                placeholder="Nome completo" 
+                className="w-full bg-white border border-[#EAEAEA] rounded-md p-2.5 text-[#171717] text-sm outline-none focus:border-[#A1A1AA] transition-colors" 
+                required 
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input 
+                  type="email" 
+                  value={form.email} 
+                  onChange={(e) => setForm({ ...form, email: e.target.value })} 
+                  placeholder="E-mail" 
+                  className="w-full bg-white border border-[#EAEAEA] rounded-md p-2.5 text-[#171717] text-sm outline-none focus:border-[#A1A1AA] transition-colors" 
+                  required 
+                />
+                <input 
+                  type="text" 
+                  value={form.whatsapp_number} 
+                  onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} 
+                  placeholder="WhatsApp (5511...)" 
+                  className="w-full bg-white border border-[#EAEAEA] rounded-md p-2.5 text-[#171717] text-sm outline-none focus:border-[#A1A1AA] transition-colors" 
+                />
               </div>
-              <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={editing ? "Nova senha (deixe vazio para manter)" : "Senha *"} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none" />
-              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none">
+              <input 
+                type="password" 
+                value={form.password} 
+                onChange={(e) => setForm({ ...form, password: e.target.value })} 
+                placeholder={editing ? "Nova senha (deixe vazio para manter)" : "Senha *"} 
+                className="w-full bg-white border border-[#EAEAEA] rounded-md p-2.5 text-[#171717] text-sm outline-none focus:border-[#A1A1AA] transition-colors" 
+              />
+              <select 
+                value={form.role} 
+                onChange={(e) => setForm({ ...form, role: e.target.value })} 
+                className="w-full bg-white border border-[#EAEAEA] rounded-md p-2.5 text-[#171717] text-sm outline-none focus:border-[#A1A1AA] transition-colors"
+              >
                 <option value="admin">Administrador</option>
                 <option value="gestor">Gestor</option>
                 <option value="vendedor">Vendedor</option>
               </select>
-              <div className="flex gap-3">
-                <button type="submit" className="flex-1 bg-[hsl(var(--tenant-primary))] text-black font-bold py-2 rounded hover:opacity-90">{editing ? "Atualizar" : "Criar Usuário"}</button>
-                <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="flex-1 border border-gray-700 py-2 rounded hover:bg-gray-800">Cancelar</button>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" className="flex-1 bg-black text-white font-bold py-2.5 rounded-md hover:bg-neutral-800 transition-colors shadow-sm">{editing ? "Atualizar" : "Criar Usuário"}</button>
+                <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="flex-1 border border-[#D4D4D8] text-[#171717] bg-white font-medium py-2.5 rounded-md hover:bg-[#F1F5F9] transition-colors">Cancelar</button>
               </div>
             </form>
           </div>
         )}
 
         {/* Lista */}
-        {loading ? <p className="text-gray-500">Carregando...</p> : (
+        {loading ? (
+          <p className="text-gray-500 text-sm">Carregando...</p>
+        ) : (
           <div className="space-y-3">
             {users.map((u) => {
               const role = ROLES[u.role] || ROLES.vendedor;
               return (
-                <div key={u.id} className={`bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] flex justify-between items-center group ${!u.active ? "opacity-50" : ""}`}>
+                <div key={u.id} className={`bg-white p-4 rounded-lg border border-[#EAEAEA] flex justify-between items-center group shadow-sm hover:shadow-md transition-all ${!u.active ? "opacity-60" : ""}`}>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-sm">{u.name}</h4>
-                      <span className="text-[10px] px-2 py-0.5 rounded font-bold" style={{ background: role.color + "22", color: role.color }}>{role.label}</span>
-                      {!u.active && <span className="text-[10px] text-red-400">(inativo)</span>}
+                      <h4 className="font-bold text-sm text-[#171717]">{u.name}</h4>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold tracking-wide uppercase" style={{ background: role.color + "15", color: role.color }}>
+                        {role.label}
+                      </span>
+                      {!u.active && <span className="text-[10px] text-red-500 font-medium">(inativo)</span>}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{u.email} • {u.whatsapp_number || "Sem WhatsApp"}</p>
+                    <p className="text-xs text-[#666666] mt-1">{u.email} • {u.whatsapp_number || "Sem WhatsApp"}</p>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => toggleActive(u)} className={`text-[10px] px-2 py-1 rounded ${u.active ? "bg-yellow-900/50 text-yellow-400" : "bg-green-900/50 text-green-400"}`}>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => toggleActive(u)} 
+                      className={`text-[10px] px-2.5 py-1 rounded-md font-semibold border ${u.active ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"} transition-colors`}
+                    >
                       {u.active ? "Desativar" : "Ativar"}
                     </button>
-                    <button onClick={() => startEdit(u)} className="text-[10px] bg-gray-800 px-2 py-1 rounded hover:bg-gray-700">Editar</button>
-                    <button onClick={() => deleteUser(u.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded hover:bg-red-900">X</button>
+                    <button 
+                      onClick={() => startEdit(u)} 
+                      className="text-[10px] bg-white text-[#171717] border border-[#D4D4D8] px-2.5 py-1 rounded-md font-semibold hover:bg-gray-50 transition-colors"
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      onClick={() => deleteUser(u.id)} 
+                      className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 rounded-md font-semibold hover:bg-red-100 transition-colors"
+                    >
+                      Excluir
+                    </button>
                   </div>
                 </div>
               );
             })}
-            {users.length === 0 && <p className="text-gray-600 text-sm text-center py-8">Nenhum usuário cadastrado.</p>}
+            {users.length === 0 && <p className="text-gray-500 text-sm text-center py-8">Nenhum usuário cadastrado.</p>}
           </div>
         )}
       </div>

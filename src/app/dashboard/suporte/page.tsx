@@ -6,7 +6,7 @@ import {
   PieChart, Pie, Cell, LineChart, Line, Legend 
 } from "recharts";
 
-const COLORS = ["#10b981", "#f59e0b", "#ef4444", "#6366f1", "#8b5cf6"];
+const COLORS = ["#10B981", "#F5A623", "#E5484D", "#3B82F6", "#8B5CF6"];
 
 export default function SupportDashboard() {
   const [loading, setLoading] = useState(true);
@@ -164,9 +164,9 @@ export default function SupportDashboard() {
   }
 
   const getSeverityColor = (severity: string) => {
-    if (severity === 'critical') return 'text-red-500 bg-red-500/10 border-red-500/20';
-    if (severity === 'high') return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
-    return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
+    if (severity === 'critical') return 'text-[#E5484D] bg-[#E5484D]/10 border-[#E5484D]/20';
+    if (severity === 'high') return 'text-[#F5A623] bg-[#F5A623]/10 border-[#F5A623]/20';
+    return 'text-yellow-700 bg-yellow-50 border-yellow-200';
   };
 
   return (
@@ -177,8 +177,8 @@ export default function SupportDashboard() {
         </div>
       )}
       <header className="mb-8">
-        <h1 className="text-3xl font-black tracking-tighter">LINO SUPORTE 🚨</h1>
-        <p className="text-gray-400">Monitoramento de Fiscalização e Gargalos de Atendimento B2B</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-[#171717]">LINO SUPORTE 🚨</h1>
+        <p className="text-[#666666]">Monitoramento de Fiscalização e Gargalos de Atendimento B2B</p>
       </header>
 
       {loading ? (
@@ -203,11 +203,11 @@ export default function SupportDashboard() {
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.bottlenecksByType}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                    <XAxis dataKey="name" stroke="#666" fontSize={10} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#666" fontSize={10} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }} />
-                    <Bar dataKey="value" fill="hsl(var(--tenant-primary))" radius={[4, 4, 0, 0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EAEAEA" vertical={false} />
+                    <XAxis dataKey="name" stroke="#888888" fontSize={12} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#888888" fontSize={12} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '6px', color: '#171717' }} />
+                    <Bar dataKey="value" fill="#0070F3" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -218,11 +218,11 @@ export default function SupportDashboard() {
               <h3 className="font-bold mb-6 flex items-center gap-2">🏆 Performance (Leads vs Escalações)</h3>
               <div className="space-y-4">
                 {stats.sellerPerformance.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-[var(--theme-hover)] rounded-lg border border-[var(--theme-border)]">
-                    <span className="text-sm font-medium">{s.name}</span>
+                  <div key={i} className="flex items-center justify-between p-3 bg-[#FFFFFF] rounded-lg border border-[#EAEAEA]">
+                    <span className="text-sm font-medium text-[#171717]">{s.name}</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-[10px] bg-green-900/20 text-green-400 px-2 py-1 rounded">L: {s.leads}</span>
-                      {s.escalations > 0 && <span className="text-[10px] bg-red-900/20 text-red-400 px-2 py-1 rounded">E: {s.escalations}</span>}
+                      <span className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-2 py-1 rounded">Leads: {s.leads}</span>
+                      {s.escalations > 0 && <span className="text-[10px] bg-red-50 text-red-700 border border-red-200 px-2 py-1 rounded">Escalações: {s.escalations}</span>}
                     </div>
                   </div>
                 ))}
@@ -236,32 +236,32 @@ export default function SupportDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-gray-500 text-[10px] uppercase tracking-widest border-b border-gray-800">
-                    <th className="pb-4 font-black">Lead</th>
-                    <th className="pb-4 font-black">Status</th>
-                    <th className="pb-4 font-black">Vendedor</th>
-                    <th className="pb-4 font-black">Tempo de Espera</th>
-                    <th className="pb-4 font-black text-right">Ações</th>
+                  <tr className="text-[#666666] text-[10px] uppercase tracking-wider border-b border-[#EAEAEA]">
+                    <th className="pb-4 font-semibold">Lead</th>
+                    <th className="pb-4 font-semibold">Status</th>
+                    <th className="pb-4 font-semibold">Vendedor</th>
+                    <th className="pb-4 font-semibold">Tempo de Espera</th>
+                    <th className="pb-4 font-semibold text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--theme-border)]">
                   {stats.criticalLeads.map((l, i) => {
                     const waitMin = Math.round((new Date().getTime() - new Date(l.updated_at).getTime()) / (1000 * 60));
                     return (
-                      <tr key={i} className="group hover:bg-[var(--theme-hover)] transition-colors">
+                      <tr key={i} className="group hover:bg-[#F1F5F9] transition-colors border-b border-[#EAEAEA]">
                         <td className="py-4">
-                          <div className="font-bold text-sm">{l.name}</div>
-                          <div className="text-[10px] text-gray-500">{l.whatsapp_number}</div>
+                          <div className="font-semibold text-sm text-[#171717]">{l.name}</div>
+                          <div className="text-[10px] text-[#666666]">{l.whatsapp_number}</div>
                         </td>
                         <td className="py-4">
-                          <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${waitMin > 80 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'}`}>
+                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase ${waitMin > 80 ? 'bg-[#E5484D]/10 text-[#E5484D] border border-[#E5484D]/20' : 'bg-[#F5A623]/10 text-yellow-800 border border-[#F5A623]/20'}`}>
                             {l.status}
                           </span>
                         </td>
-                        <td className="py-4 text-xs text-gray-400">{l.admin_users?.name || 'Não atribuído'}</td>
+                        <td className="py-4 text-xs text-[#666666]">{l.admin_users?.name || 'Não atribuído'}</td>
                         <td className="py-4">
                           <div className="flex items-center gap-2 text-sm">
-                            <span className={waitMin > 80 ? 'text-red-500' : 'text-yellow-500'}>{waitMin} min</span>
+                            <span className={waitMin > 80 ? 'text-[#E5484D] font-semibold' : 'text-yellow-700 font-semibold'}>{waitMin} min</span>
                             {waitMin > 80 ? '🚨' : '⚠️'}
                           </div>
                         </td>
@@ -269,14 +269,14 @@ export default function SupportDashboard() {
                            <button 
                              onClick={() => handleNotify(l.id)} 
                              disabled={actionLoading === `notify-${l.id}` || actionLoading === `escalate-${l.id}`}
-                             className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/20 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
+                             className="text-[11px] bg-white border border-[#D4D4D8] text-[#171717] px-3 py-1.5 rounded-md hover:bg-[#F1F5F9] font-medium transition-all disabled:opacity-50"
                            >
                              {actionLoading === `notify-${l.id}` ? 'Enviando...' : 'Notificar'}
                            </button>
                            <button 
                              onClick={() => handleEscalate(l.id)} 
                              disabled={actionLoading === `notify-${l.id}` || actionLoading === `escalate-${l.id}`}
-                             className="text-[10px] bg-red-600/20 text-red-400 px-2 py-1 rounded border border-red-500/20 hover:bg-red-600 hover:text-white transition-all disabled:opacity-50"
+                             className="text-[11px] bg-[#E5484D] text-white px-3 py-1.5 rounded-md hover:bg-[#c93b40] font-medium transition-all disabled:opacity-50"
                            >
                              {actionLoading === `escalate-${l.id}` ? 'Escalando...' : 'Escalar'}
                            </button>
@@ -313,17 +313,17 @@ export default function SupportDashboard() {
               <h3 className="font-bold mb-6 flex items-center gap-2">👨‍✈️ Escalações de Supervisão</h3>
               <div className="space-y-4">
                 {stats.escalations.map((e, i) => (
-                  <div key={i} className="flex items-start gap-4 p-4 bg-[var(--theme-hover)] rounded-xl border border-[var(--theme-border)]">
-                    <div className="w-10 h-10 bg-red-500/10 flex items-center justify-center rounded-lg text-lg">🚩</div>
+                  <div key={i} className="flex items-start gap-4 p-4 bg-[#FFFFFF] rounded-xl border border-[#EAEAEA]">
+                    <div className="w-10 h-10 bg-red-50 flex items-center justify-center rounded-lg text-lg">🚩</div>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
-                        <h4 className="text-sm font-bold">{e.leads?.name}</h4>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${e.resolved ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'}`}>
+                        <h4 className="text-sm font-semibold text-[#171717]">{e.leads?.name}</h4>
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold border ${e.resolved ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                           {e.resolved ? 'Resolvido' : 'Pendente'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">Vendedor: {e.admin_users?.name}</p>
-                      <p className="text-[10px] text-[var(--theme-muted)] mt-2 bg-[var(--theme-hover)] p-2 rounded italic">"{e.escalation_reason}"</p>
+                      <p className="text-xs text-[#666666] mt-0.5">Vendedor: {e.admin_users?.name}</p>
+                      <p className="text-[10px] text-[#666666] mt-2 bg-[#F1F5F9] p-2 rounded border border-[#EAEAEA] italic">"{e.escalation_reason}"</p>
                     </div>
                   </div>
                 ))}
@@ -337,18 +337,18 @@ export default function SupportDashboard() {
   );
 }
 
-function StatCard({ title, value, sub, icon, color = "text-[hsl(var(--tenant-primary))]" }: any) {
+function StatCard({ title, value, sub, icon, color = "text-[#0070F3]" }: any) {
   return (
-    <div className="bg-[var(--theme-card)] p-6 rounded-2xl border border-[var(--theme-border)] shadow-xl hover:border-[hsl(var(--tenant-primary))]/50 transition-all">
+    <div className="bg-[#FFFFFF] p-6 rounded-2xl border border-[#EAEAEA] shadow-sm hover:border-[#D4D4D8] transition-all">
       <div className="flex justify-between items-start mb-4">
-        <div className="w-10 h-10 bg-[var(--theme-input-bg)] rounded-xl flex items-center justify-center text-xl shadow-inner border border-[var(--theme-border)]">
+        <div className="w-10 h-10 bg-[#FAFAFA] rounded-xl flex items-center justify-center text-xl border border-[#EAEAEA]">
           {icon}
         </div>
       </div>
       <div>
-        <h4 className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">{title}</h4>
-        <div className={`text-2xl font-black ${color}`}>{value}</div>
-        <p className="text-[10px] text-gray-600 mt-1 font-medium">{sub}</p>
+        <h4 className="text-xs text-[#666666] font-semibold uppercase tracking-wider mb-1">{title}</h4>
+        <div className={`text-2xl font-semibold ${color}`}>{value}</div>
+        <p className="text-[10px] text-[#888888] mt-1 font-medium">{sub}</p>
       </div>
     </div>
   );
