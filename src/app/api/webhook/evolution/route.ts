@@ -270,8 +270,11 @@ export async function POST(request: Request) {
           const especParts = [aiResult.demanda?.dimensoes, aiResult.demanda?.acabamento, aiResult.demanda?.material].filter(Boolean);
           if (especParts.length > 0) leadUpdate.especificacao = especParts.join(' | ');
           
-          if (acao_executada.includes('outro_setor')) {
-            leadUpdate.status = 'CANCELED';
+          const intent = (aiResult.intent || '').toUpperCase();
+          const isNonCommercialIntent = ['VAGAS', 'FORNECEDOR', 'LOGISTICA', 'FINANCEIRO', 'COMEX', 'MARKETING'].includes(intent);
+          
+          if (acao_executada.includes('outro_setor') || isNonCommercialIntent) {
+            leadUpdate.status = 'OTHER_DEPARTMENT';
           }
           
           // Salvar com log de erro explícito
