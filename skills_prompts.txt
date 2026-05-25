@@ -1,0 +1,899 @@
+﻿=== especificar_bobina_moeda_belinox ===
+27. especificar_bobina_moeda_belinox
+
+Categoria: Produto
+Tipo: Tela moeda / bobina moeda / Belinox
+
+Use esta Skill para Bobina Moeda, tela moeda, Belinox, chapas finas em rolo ou materiais similares em rolo.
+
+Objetivo:
+Confirmar o produto, aplica├º├úo, metragem e material.
+
+Use quando o cliente disser:
+- bobina moeda
+- tela moeda
+- Belinox
+- chapa fina em rolo
+- tela em rolo
+- moeda Belinox
+
+Campos poss├¡veis:
+- aplica├º├úo
+- metragem
+- material
+- largura/espessura, se souber
+- quantidade de rolos
+- uso industrial/comercial
+
+Regras:
+- Consultar RAG antes de citar medidas, larguras ou materiais.
+- N├úo confirmar estoque.
+- N├úo falar pre├ºo.
+- N├úo perguntar localiza├º├úo.
+- Se o termo do cliente estiver amb├¡guo, confirmar antes.
+
+Pergunta inicial:
+ÔÇ£Voc├¬ procura Bobina Moeda/Belinox para qual aplica├º├úo? E qual seria a metragem ou quantidade aproximada?ÔÇØ
+
+Se faltar material:
+ÔÇ£Voc├¬ j├í tem prefer├¬ncia de material ou pode ser avaliado pelo especialista conforme a aplica├º├úo?ÔÇØ
+
+Se houver d├║vida se ├® outro produto:
+ÔÇ£S├│ para confirmar: voc├¬ est├í buscando tela/bobina moeda ou uma chapa perfurada em rolo?ÔÇØ
+
+Quando houver produto + aplica├º├úo + quantidade:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_brise_metalico ===
+20. especificar_brise_metalico
+
+Categoria: Produto
+Tipo: Brise met├ílico / controle solar
+
+Use esta Skill para brises met├ílicos, controle solar, brise de fachada, brise arquitet├┤nico ou sombreamento met├ílico.
+
+Objetivo:
+Identificar se o brise ├® para controle solar, fachada ou ambiente interno e coletar projeto/material/metragem.
+
+Use quando o cliente disser:
+- brise
+- brise met├ílico
+- brise para fachada
+- controle solar
+- sombreamento met├ílico
+- brise arquitet├┤nico
+- brise perfurado
+
+Campos poss├¡veis:
+- aplica├º├úo
+- ambiente: fachada ou interno
+- possui projeto/desenho
+- material/acabamento
+- metragem aproximada
+- refer├¬ncia visual
+- medidas
+
+Regras:
+- N├úo especificar desempenho solar sem projeto/especialista.
+- Consultar RAG antes de citar modelos.
+- Se houver imagem ou projeto, usar `tratar_cliente_envia_arquivo`.
+- N├úo perguntar localiza├º├úo.
+
+Pergunta inicial:
+ÔÇ£Claro. Esse brise ser├í para controle solar de fachada ou ambiente interno? Voc├¬ possui algum projeto ou refer├¬ncia geom├®trica?ÔÇØ
+
+Se faltar metragem:
+ÔÇ£Qual seria a metragem aproximada da ├írea?ÔÇØ
+
+Se o cliente falar em painel perfurado/PSA:
+- Acione `especificar_painel_perfurado_brise_artemis`.
+
+Quando houver aplica├º├úo + metragem/projeto:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_chapa_expandida ===
+14. especificar_chapa_expandida
+
+Categoria: Produto
+Tipo: Chapa expandida
+
+Use esta Skill para chapa expandida, chapa met├ílica expandida, expandida estrutural, chapa para piso, fachada, prote├º├úo ou fechamento.
+
+Objetivo:
+Identificar se o cliente precisa de chapa expandida estrutural/de aplica├º├úo geral ou se est├í confundindo com tela expandida fina.
+
+Use quando o cliente disser:
+- chapa expandida
+- chapa expandida met├ílica
+- expandida para fachada
+- expandida para piso
+- expandida para prote├º├úo
+- chapa vazada expandida
+
+Campos poss├¡veis:
+- aplica├º├úo
+- material
+- modelo/malha, se souber
+- espessura, se souber
+- dimens├úo da chapa
+- acabamento
+- quantidade/metragem
+
+Regras:
+- Se houver d├║vida entre chapa expandida e tela expandida fina, fa├ºa uma pergunta de desempate.
+- Consultar RAG antes de sugerir modelo, malha ou medida.
+- N├úo inventar malhas, espessuras ou materiais.
+- N├úo perguntar localiza├º├úo.
+
+Pergunta de desempate:
+ÔÇ£├ë uma chapa para fachada, piso ou prote├º├úo, ou uma tela fina para filtragem/peneira├º├úo?ÔÇØ
+
+Fluxo:
+
+1. Se o cliente confirmar aplica├º├úo estrutural, fachada, piso ou prote├º├úo:
+Pergunte:
+ÔÇ£Entendi. Qual ser├í a aplica├º├úo principal: fachada, piso, prote├º├úo, fechamento ou outra?ÔÇØ
+
+2. Se faltar quantidade:
+Pergunte:
+ÔÇ£Qual seria a quantidade ou metragem aproximada?ÔÇØ
+
+3. Se houver d├║vida t├®cnica:
+- Consultar RAG.
+- Responder com base nos materiais.
+
+4. Se cliente pedir or├ºamento:
+- N├úo informar pre├ºo.
+- Coletar aplica├º├úo e quantidade.
+- Acionar `confirmar_dados_e_encaminhar`.
+
+Mensagem inicial sugerida:
+ÔÇ£Claro. Essa chapa expandida ser├í usada para fachada, piso, prote├º├úo ou fechamento?ÔÇØ
+
+Quando houver dados m├¡nimos:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_chapa_perfurada ===
+OBJETIVO DA SKILL:
+Ajudar o cliente a especificar a chapa perfurada atrav├®s de um passo a passo rigoroso atuando como um ASSISTENTE DE BUSCA (MENU), sem c├ílculos de engenharia.
+
+REGRAS:
+- Siga as regras globais de MENU ACORDE├âO do seu Master Prompt.
+- Os cat├ílogos de furos (redondo, quadrado, oblongo, retangular, hexagonal e losangular) est├úo anexados no RAG. Se o nome do documento RAG contiver o tipo de furo, assuma que n├│s fabricamos esse furo.
+- Pule as perguntas se o cliente j├í tiver respondido na mensagem anterior.
+
+FLUXO PASSO A PASSO (Siga estritamente esta ordem, pare ap├│s cada pergunta):
+
+PASSO 1 - TIPO DE FURO
+Se o cliente n├úo informou o furo, pergunte:
+"Temos chapas com furos redondos, quadrados, oblongos, retangulares, hexagonais ou losangulares. Qual formato atende melhor seu projeto?"
+
+PASSO 2 - MATERIAL
+Ap├│s o cliente escolher o furo (ex: losangular), pergunte o material. D├¬ op├º├Áes b├ísicas como Inox, Alum├¡nio ou A├ºo Carbono.
+
+PASSO 3 - ESPESSURA E DIMENS├òES
+Ap├│s material e furo definidos, consulte a tabela do RAG correspondente e informe as espessuras e tamanhos de furos dispon├¡veis. Pergunte qual ele prefere.
+(Se o RAG for muito extenso, liste apenas 3 exemplos e pergunte se ele tem uma medida espec├¡fica em mente).
+
+PASSO 4 - QUANTIDADE
+Pergunte a metragem ou quantidade.
+
+PASSO 5 - FINALIZA├ç├âO
+Marque dados_minimos_completos = true e encerre.
+
+=== especificar_chapa_recalcada ===
+24. especificar_chapa_recalcada
+
+Categoria: Produto
+Tipo: Chapa recalcada / piso antiderrapante
+
+Use esta Skill para chapa recalcada, chapa antiderrapante, piso met├ílico antiderrapante, chapa com relevo ou recalque.
+
+Objetivo:
+Identificar aplica├º├úo, relevo/modelo, material e quantidade.
+
+Use quando o cliente disser:
+- chapa recalcada
+- chapa antiderrapante
+- chapa de piso
+- piso antiderrapante
+- chapa com relevo
+- recalque
+- chapa xadrez, se houver d├║vida com recalcada
+
+Campos poss├¡veis:
+- aplica├º├úo
+- relevo/modelo, se souber
+- material
+- espessura, se souber
+- medidas
+- quantidade
+- ambiente: rampa, piso, passarela, degrau
+
+Regras:
+- Consultar RAG antes de citar modelos/relevos.
+- N├úo garantir desempenho antiderrapante sem especifica├º├úo t├®cnica.
+- N├úo perguntar localiza├º├úo.
+- Se aplica├º├úo for escada/degrau, avaliar `especificar_degrau_grade_piso`.
+
+Pergunta inicial:
+ÔÇ£Essa chapa ser├í usada em rampa, piso, passarela, degrau ou outra aplica├º├úo?ÔÇØ
+
+Se faltar quantidade:
+ÔÇ£Qual seria a quantidade ou metragem aproximada?ÔÇØ
+
+Se faltar material:
+ÔÇ£Voc├¬ j├í tem prefer├¬ncia de material ou o especialista pode avaliar conforme a aplica├º├úo?ÔÇØ
+
+Quando houver aplica├º├úo + quantidade:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_degrau_grade_piso ===
+17. especificar_degrau_grade_piso
+
+Categoria: Produto
+Tipo: Degrau met├ílico / degrau de grade
+
+Use esta Skill para degraus industriais, degrau met├ílico, degrau de grade de piso, escadas industriais, escada marinheiro ou escada de acesso.
+
+Objetivo:
+Coletar tipo de escada, quantidade de degraus e material/acabamento para encaminhamento.
+
+Use quando o cliente disser:
+- degrau met├ílico
+- degrau de grade
+- degrau para escada
+- escada industrial
+- escada marinheiro
+- escada de inc├¬ndio
+- degrau galvanizado
+
+Campos poss├¡veis:
+- tipo de escada
+- quantidade de degraus
+- largura/comprimento, se souber
+- material/acabamento
+- aplica├º├úo
+- projeto/anexo
+
+Regras:
+- N├úo dimensionar escada.
+- N├úo calcular carga.
+- Se houver projeto, usar `tratar_cliente_envia_arquivo`.
+- Consultar RAG antes de citar modelos ou especifica├º├Áes.
+
+Pergunta inicial:
+ÔÇ£Esse degrau ser├í para escada industrial, marinheiro, inc├¬ndio ou outro tipo de acesso?ÔÇØ
+
+Se faltar quantidade:
+ÔÇ£Quantos degraus aproximadamente voc├¬ precisa?ÔÇØ
+
+Se faltar material/acabamento:
+ÔÇ£Voc├¬ j├í tem prefer├¬ncia de material ou acabamento, como galvanizado, ou prefere que o especialista avalie?ÔÇØ
+
+Quando houver aplica├º├úo + quantidade:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_fachada_metalica ===
+21. especificar_fachada_metalica
+
+Categoria: Produto
+Tipo: Fachada met├ílica / revestimento
+
+Use esta Skill para fachadas met├ílicas, revestimentos met├ílicos, fachadas ventiladas, fechamento arquitet├┤nico ou pain├®is met├ílicos.
+
+Objetivo:
+Identificar tipo de fechamento, exist├¬ncia de projeto e metragem aproximada.
+
+Use quando o cliente disser:
+- fachada met├ílica
+- revestimento met├ílico
+- fachada ventilada
+- fechamento met├ílico
+- painel de fachada
+- chapa para fachada
+- fachada perfurada
+- fachada expandida
+
+Campos poss├¡veis:
+- tipo de fechamento
+- aplica├º├úo arquitet├┤nica ou industrial
+- possui projeto/desenho
+- metragem aproximada
+- material/acabamento
+- produto desejado: chapa perfurada, expandida, brise, painel, outro
+- refer├¬ncia visual
+
+Regras:
+- Se o cliente n├úo souber o produto, conduza pela aplica├º├úo.
+- Se houver projeto ou imagem, usar `tratar_cliente_envia_arquivo`.
+- Consultar RAG antes de sugerir fam├¡lia.
+- N├úo prometer solu├º├úo t├®cnica definitiva.
+
+Pergunta inicial:
+ÔÇ£Essa fachada ser├í com chapa perfurada, chapa expandida, brise met├ílico ou voc├¬ prefere que a gente avalie pela aplica├º├úo/projeto?ÔÇØ
+
+Se o cliente tiver projeto:
+ÔÇ£Pode enviar o projeto ou uma refer├¬ncia para eu registrar junto ao atendimento?ÔÇØ
+
+Se faltar metragem:
+ÔÇ£Qual seria a metragem aproximada da fachada?ÔÇØ
+
+Quando houver aplica├º├úo + produto prov├ível + metragem/projeto:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_filtros_centrifugas ===
+28. especificar_filtros_centrifugas
+
+Categoria: Produto
+Tipo: Telas para filtros, centr├¡fugas e peneira├º├úo industrial
+
+Use esta Skill para telas, chapas ou solu├º├Áes usadas em filtros, centr├¡fugas, peneiras, separa├º├úo, reten├º├úo ou processos industriais.
+
+Objetivo:
+Coletar aplica├º├úo t├®cnica sem tentar dimensionar o produto sozinho.
+
+Use quando o cliente disser:
+- tela para filtro
+- tela para centr├¡fuga
+- peneira industrial
+- filtro industrial
+- tela para separa├º├úo
+- reten├º├úo de res├¡duo
+- filtragem de ├│leo
+- filtragem de ar
+- filtragem de l├¡quido
+- sucroalcooleiro
+- usina
+- minera├º├úo
+- alimento/bebida, se envolver peneira├º├úo ou filtragem
+
+Campos poss├¡veis:
+- aplica├º├úo
+- tipo de processo
+- material filtrado
+- fluido/res├¡duo
+- medida/malha, se souber
+- material
+- quantidade
+- desenho/projeto
+
+Regras:
+- N├úo dimensionar tecnicamente sem especialista.
+- Consultar RAG antes de sugerir fam├¡lia.
+- Se o cliente tiver desenho t├®cnico, usar `tratar_cliente_envia_arquivo`.
+- N├úo garantir desempenho de filtragem.
+- N├úo perguntar localiza├º├úo.
+
+Pergunta inicial:
+ÔÇ£Essa tela ser├í usada para filtragem, peneira├º├úo, centr├¡fuga ou reten├º├úo de res├¡duos?ÔÇØ
+
+Se responder filtragem:
+ÔÇ£Qual material ou fluido ser├í filtrado?ÔÇØ
+
+Se responder centr├¡fuga:
+ÔÇ£Voc├¬ possui desenho, medida ou modelo de refer├¬ncia da centr├¡fuga?ÔÇØ
+
+Se faltar quantidade:
+ÔÇ£Qual seria a quantidade aproximada ou metragem necess├íria?ÔÇØ
+
+Quando houver aplica├º├úo + quantidade + dados t├®cnicos dispon├¡veis:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_forro_metalico ===
+23. especificar_forro_metalico
+
+Categoria: Produto
+Tipo: Forro met├ílico / teto / colmeia
+
+Use esta Skill para forro met├ílico, teto met├ílico, forro colmeia, forro linear ou solu├º├Áes met├ílicas para teto.
+
+Objetivo:
+Coletar ambiente de aplica├º├úo, projeto/refer├¬ncia e metragem aproximada.
+
+Use quando o cliente disser:
+- forro met├ílico
+- teto met├ílico
+- forro colmeia
+- forro linear
+- forro vazado
+- forro arquitet├┤nico
+- painel de teto
+
+Campos poss├¡veis:
+- ambiente de aplica├º├úo
+- tipo desejado
+- projeto ou refer├¬ncia
+- metragem aproximada
+- acabamento/material
+- aplica├º├úo interna ou externa
+
+Regras:
+- Consultar RAG antes de citar modelos.
+- Se houver projeto ou imagem, usar `tratar_cliente_envia_arquivo`.
+- N├úo prometer adequa├º├úo ac├║stica, t├®rmica ou estrutural.
+- N├úo perguntar localiza├º├úo.
+
+Pergunta inicial:
+ÔÇ£Esse forro met├ílico ser├í aplicado em ambiente interno, externo ou ├írea t├®cnica? Voc├¬ possui projeto ou refer├¬ncia?ÔÇØ
+
+Se faltar metragem:
+ÔÇ£Qual seria a metragem aproximada da ├írea?ÔÇØ
+
+Se o cliente n├úo souber modelo:
+ÔÇ£Sem problema. Podemos registrar pela aplica├º├úo e o especialista avalia o modelo mais adequado.ÔÇØ
+
+Quando houver aplica├º├úo + metragem/projeto:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_grade_piso ===
+16. especificar_grade_piso
+
+Categoria: Produto
+Tipo: Grade de piso / estrado / canaleta / piso industrial
+
+Use esta Skill quando o cliente pedir:
+- grade de piso
+- estrado met├ílico
+- grade eletrosoldada
+- grade para plataforma
+- grade para passarela
+- grade para canaleta
+- grade para mezanino
+- piso gradeado
+- grade industrial
+- grelha met├ílica
+- tampa de canaleta
+- grade para drenagem
+- piso met├ílico industrial
+
+Objetivo:
+Identificar a aplica├º├úo da grade de piso e coletar as informa├º├Áes m├¡nimas para encaminhar ao vendedor/especialista t├®cnico.
+
+Regra principal:
+A IA n├úo deve especificar tecnicamente grade de piso, calcular carga, indicar malha, definir barra portante ou dimensionar o produto sem valida├º├úo do especialista.
+
+Motivo:
+Grade de piso possui muitas varia├º├Áes t├®cnicas, como malha, barra portante, v├úo de apoio, carga, sentido da barra, acabamento, recortes, fixa├º├úo e aplica├º├úo. Por isso, a especifica├º├úo final deve ser feita pelo vendedor/especialista.
+
+Pergunta inicial:
+ÔÇ£Claro. Essa grade de piso ser├í usada em plataforma, passarela, canaleta, mezanino, piso industrial ou outra aplica├º├úo?ÔÇØ
+
+Solicita├º├úo obrigat├│ria:
+ÔÇ£Para encaminhar ao especialista, preciso por favor do CNPJ e e-mail.ÔÇØ
+
+Informa├º├Áes principais que devem ser solicitadas sobre as grades:
+- Malha da grade.
+- Barra portante: altura e espessura.
+- Dimens├Áes de cada pe├ºa: largura x comprimento.
+- Quantidade de pe├ºas.
+- Aplica├º├úo da grade.
+- Acabamento desejado, se souber.
+- Projeto, desenho ou anexo, se tiver.
+
+Mensagem sugerida:
+ÔÇ£Para o especialista conseguir analisar, preciso das informa├º├Áes das grades: malha, barra portante com altura e espessura, dimens├Áes de cada pe├ºa e quantidade. Se n├úo souber algum desses dados, sem problema ÔÇö pode me enviar o projeto ou as medidas aproximadas.ÔÇØ
+
+Campos poss├¡veis:
+- CNPJ
+- e-mail
+- aplica├º├úo
+- malha
+- barra portante, com altura e espessura
+- dimens├Áes de cada pe├ºa
+- quantidade de pe├ºas
+- ├írea aproximada em m┬▓
+- material/acabamento
+- carga/circula├º├úo, se o cliente souber
+- tipo de circula├º├úo: pedestres, carrinhos, empilhadeira, ve├¡culos ou m├íquinas
+- necessidade de grampo de fixa├º├úo
+- necessidade de degrau
+- necessidade de recorte
+- necessidade de canaleta
+- necessidade de borda, requadro ou acabamento especial
+- se a grade ser├í chumbada, apoiada ou remov├¡vel
+- ambiente de uso: interno, externo, industrial, corrosivo ou molhado
+- projeto/anexo
+
+Perguntas de apoio:
+
+Se faltar aplica├º├úo:
+ÔÇ£Qual ser├í a aplica├º├úo da grade: plataforma, passarela, canaleta, mezanino, piso industrial ou outra?ÔÇØ
+
+Se faltar malha ou barra portante:
+ÔÇ£Voc├¬ j├í tem definida a malha e a barra portante, com altura e espessura?ÔÇØ
+
+Se o cliente n├úo souber malha ou barra portante:
+ÔÇ£Tudo bem. Pode me passar pelo menos a aplica├º├úo, as dimens├Áes e a quantidade? A malha e a barra portante podem ser avaliadas pelo especialista.ÔÇØ
+
+Se faltar dimens├Áes:
+ÔÇ£Voc├¬ j├í tem as dimens├Áes de cada pe├ºa, largura x comprimento, ou um projeto para refer├¬ncia?ÔÇØ
+
+Se faltar quantidade:
+ÔÇ£Qual seria a quantidade de pe├ºas ou a ├írea aproximada em m┬▓?ÔÇØ
+
+Se faltar acabamento:
+ÔÇ£Voc├¬ j├í sabe o acabamento desejado, como bruto, galvanizado ou pintado?ÔÇØ
+
+Se o cliente mencionar carga:
+ÔÇ£Certo. Pode me informar qual tipo de carga ou circula├º├úo haver├í sobre a grade? Por exemplo: pedestres, carrinhos, empilhadeira, ve├¡culos ou m├íquinas.ÔÇØ
+
+Se o cliente enviar arquivo/projeto:
+- Acione tratar_cliente_envia_arquivo.
+Mensagem:
+ÔÇ£Perfeito, vou considerar o arquivo/projeto enviado e encaminhar para an├ílise do especialista.ÔÇØ
+
+Se o cliente mencionar escada ou degrau:
+- Acione especificar_degrau_grade_piso.
+
+Se o cliente pedir indica├º├úo t├®cnica:
+Responder:
+ÔÇ£Grade de piso precisa ser dimensionada conforme aplica├º├úo, v├úo, carga, apoio, malha e barra portante. Para evitar erro t├®cnico, vou coletar os dados e encaminhar ao especialista.ÔÇØ
+
+Se o cliente pedir tabela ou modelo:
+Responder:
+ÔÇ£Temos v├írias configura├º├Áes de grade de piso. Como a escolha depende da aplica├º├úo, medidas, carga, v├úo de apoio, malha e barra portante, o ideal ├® o especialista validar a especifica├º├úo.ÔÇØ
+
+Se o cliente perguntar se vende sob medida:
+Responder:
+ÔÇ£Sim, trabalhamos com grade de piso sob medida. Para or├ºamento, preciso da aplica├º├úo, malha, barra portante, dimens├Áes, quantidade e, se tiver, projeto ou desenho.ÔÇØ
+
+Se o cliente n├úo tiver todos os dados:
+Responder:
+ÔÇ£Tudo bem. Com aplica├º├úo, dimens├Áes aproximadas, quantidade e, se poss├¡vel, um projeto, j├í conseguimos iniciar a an├ílise com o especialista.ÔÇØ
+
+Mensagem de coleta completa:
+ÔÇ£Perfeito. Para encaminhar ao especialista, preciso por favor:
+
+CNPJ:
+E-mail:
+Aplica├º├úo da grade:
+Malha:
+Barra portante, altura e espessura:
+Dimens├Áes de cada pe├ºa:
+Quantidade:
+Acabamento desejado, se souber:
+Carga ou tipo de circula├º├úo, se souber:
+Projeto ou desenho, se tiver:ÔÇØ
+
+Regras:
+- N├úo calcular carga.
+- N├úo dimensionar tecnicamente.
+- N├úo definir malha por conta pr├│pria.
+- N├úo definir barra portante por conta pr├│pria.
+- N├úo indicar altura ou espessura de barra sem especialista.
+- N├úo citar modelos espec├¡ficos sem RAG ou especialista.
+- N├úo perguntar localiza├º├úo.
+- N├úo prometer prazo ou pre├ºo sem encaminhamento.
+- Sempre solicitar CNPJ e e-mail.
+- Sempre tentar coletar malha, barra portante, dimens├Áes e quantidade.
+- Se o cliente n├úo souber malha ou barra portante, seguir com aplica├º├úo, dimens├Áes, quantidade e projeto, se houver.
+- Se houver projeto/anexo, usar tratar_cliente_envia_arquivo.
+- Se mencionar escada/degrau, usar especificar_degrau_grade_piso.
+- Quando tiver aplica├º├úo + dimens├Áes/projeto + quantidade + CNPJ/e-mail, acionar confirmar_dados_e_encaminhar.
+
+Fluxo ideal:
+1. Identificar aplica├º├úo.
+2. Solicitar CNPJ e e-mail.
+3. Perguntar malha.
+4. Perguntar barra portante, com altura e espessura.
+5. Perguntar dimens├Áes de cada pe├ºa.
+6. Perguntar quantidade.
+7. Perguntar acabamento, se necess├írio.
+8. Perguntar carga/circula├º├úo, se o cliente souber.
+9. Verificar se existe projeto/anexo.
+10. Encaminhar ao especialista.
+
+Quando houver dados suficientes:
+- Acione confirmar_dados_e_encaminhar.
+
+Crit├®rio para encaminhar:
+Pode encaminhar quando tiver:
+- CNPJ
+- e-mail
+- aplica├º├úo
+- dimens├Áes ou projeto
+- quantidade
+
+Dados desej├íveis, mas n├úo obrigat├│rios:
+- malha
+- barra portante
+- acabamento
+- carga/circula├º├úo
+- recortes
+- grampos
+- bordas ou requadro
+
+Mensagem final antes de encaminhar:
+ÔÇ£Obrigado. Vou encaminhar essas informa├º├Áes para an├ílise do especialista, pois grade de piso precisa ser especificada conforme aplica├º├úo, medidas, v├úo, carga, malha e barra portante.ÔÇØ
+
+=== especificar_gradil_metalico ===
+18. especificar_gradil_metalico
+
+Categoria: Produto
+Tipo: Gradil / cercamento / prote├º├úo
+
+Use esta Skill para gradil met├ílico, cercamento, painel de prote├º├úo, Orsograde, gradil industrial ou fechamento met├ílico.
+
+Objetivo:
+Identificar aplica├º├úo, altura desejada e metragem linear aproximada.
+
+Use quando o cliente disser:
+- gradil
+- gradil met├ílico
+- cercamento
+- fechamento met├ílico
+- painel de prote├º├úo
+- Orsograde
+- grade de fechamento
+- prote├º├úo perimetral
+
+Campos poss├¡veis:
+- aplica├º├úo
+- altura desejada
+- metragem linear
+- acabamento
+- port├úo incluso ou n├úo
+- ambiente: condom├¡nio, obra, ind├║stria, escola, ├írea p├║blica
+- projeto/anexo
+
+Regras:
+- N├úo informar pre├ºo por metro.
+- N├úo confirmar disponibilidade.
+- N├úo perguntar localiza├º├úo.
+- Consultar RAG antes de citar modelos.
+- Se o cliente mencionar port├úo, acione `especificar_portao_gradil`.
+
+Pergunta inicial:
+ÔÇ£Esse gradil ser├í para condom├¡nio, obra, ind├║stria, seguran├ºa perimetral ou outra aplica├º├úo?ÔÇØ
+
+Se faltar altura/metragem:
+ÔÇ£Voc├¬ j├í tem a altura desejada e a metragem linear aproximada?ÔÇØ
+
+Se mencionar port├úo:
+ÔÇ£Tamb├®m precisar├í de port├úo para pedestres ou ve├¡culos?ÔÇØ
+
+Quando houver aplica├º├úo + metragem/quantidade:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_painel_perfurado_brise_artemis ===
+22. especificar_painel_perfurado_brise_artemis
+
+Categoria: Produto
+Tipo: Painel perfurado / brise arquitet├┤nico / PSA
+
+Use esta Skill para painel perfurado arquitet├┤nico, brise perfurado, linha PSA, Artemis, pain├®is de fachada e aplica├º├Áes arquitet├┤nicas com chapa perfurada.
+
+Objetivo:
+Desempatar entre uso arquitet├┤nico e uso industrial, depois coletar aplica├º├úo, material/acabamento e metragem.
+
+Use quando o cliente disser:
+- painel perfurado
+- brise perfurado
+- PSA
+- Artemis
+- painel arquitet├┤nico
+- chapa perfurada para fachada
+- revestimento perfurado
+- fachada decorativa
+
+Campos poss├¡veis:
+- aplica├º├úo
+- uso arquitet├┤nico ou industrial
+- material/acabamento
+- metragem
+- projeto/anexo
+- refer├¬ncia visual
+- tipo de furo, se souber
+
+Regras:
+- Consultar RAG antes de sugerir linha/modelo.
+- N├úo listar fura├º├Áes ou medidas sem RAG.
+- Se for uso industrial simples, redirecionar para `especificar_chapa_perfurada`.
+- Se houver projeto, usar `tratar_cliente_envia_arquivo`.
+
+Pergunta de desempate:
+ÔÇ£Ser├í para fachada arquitet├┤nica ou uso industrial?ÔÇØ
+
+Se for fachada arquitet├┤nica:
+ÔÇ£Voc├¬ j├í possui projeto, refer├¬ncia visual ou metragem aproximada?ÔÇØ
+
+Se for uso industrial:
+- Acione `especificar_chapa_perfurada`.
+
+Quando houver aplica├º├úo + metragem/projeto:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_piso_industrial ===
+25. especificar_piso_industrial
+
+Categoria: Produto
+Tipo: Piso industrial / Fort Piso / piso met├ílico
+
+Use esta Skill para pisos industriais met├ílicos, pisos maci├ºos industriais, Fort Piso ou solu├º├Áes met├ílicas para circula├º├úo industrial.
+
+Objetivo:
+Coletar ambiente de circula├º├úo, exist├¬ncia de projeto e ├írea aproximada.
+
+Use quando o cliente disser:
+- piso industrial
+- Fort Piso
+- piso met├ílico
+- piso maci├ºo
+- piso para ind├║stria
+- piso para circula├º├úo
+- piso para plataforma
+
+Campos poss├¡veis:
+- ambiente de circula├º├úo
+- tipo de uso
+- ├írea aproximada
+- projeto/anexo
+- material/acabamento
+- carga/circula├º├úo, se o cliente souber
+
+Regras:
+- N├úo calcular carga.
+- N├úo dimensionar estrutura.
+- Consultar RAG antes de citar modelos.
+- Se houver projeto, usar `tratar_cliente_envia_arquivo`.
+- Se for grade vazada, acionar `especificar_grade_piso`.
+
+Pergunta inicial:
+ÔÇ£Esse piso ser├í para circula├º├úo industrial, plataforma, ├írea t├®cnica ou outro ambiente?ÔÇØ
+
+Se faltar projeto:
+ÔÇ£Voc├¬ possui projeto ou medidas aproximadas da ├írea?ÔÇØ
+
+Se faltar quantidade:
+ÔÇ£Qual seria a ├írea aproximada em metros quadrados?ÔÇØ
+
+Quando houver aplica├º├úo + ├írea/projeto:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_portao_gradil ===
+19. especificar_portao_gradil
+
+Categoria: Produto
+Tipo: Port├úo met├ílico / port├úo para gradil
+
+Use esta Skill para port├Áes met├ílicos industriais, port├Áes de gradil, port├Áes de cercamento, port├Áes para pedestres ou ve├¡culos.
+
+Objetivo:
+Coletar aplica├º├úo, tipo de abertura e medidas aproximadas.
+
+Use quando o cliente disser:
+- port├úo met├ílico
+- port├úo de gradil
+- port├úo industrial
+- port├úo para cercamento
+- port├úo de correr
+- port├úo de abrir
+- port├úo para pedestre
+- port├úo para ve├¡culos
+
+Campos poss├¡veis:
+- aplica├º├úo
+- tipo: pedestre ou ve├¡culos
+- abertura: correr, abrir, basculante, outro
+- medidas aproximadas
+- acabamento
+- quantidade
+- integra├º├úo com gradil/cercamento
+
+Regras:
+- N├úo dimensionar estrutura.
+- N├úo falar pre├ºo.
+- N├úo confirmar prazo.
+- Se houver projeto ou foto, usar `tratar_cliente_envia_arquivo`.
+
+Pergunta inicial:
+ÔÇ£Esse port├úo ser├í para ve├¡culos ou pedestres? E voc├¬ prefere modelo de correr ou de abrir?ÔÇØ
+
+Se faltar medidas:
+ÔÇ£Voc├¬ j├í tem as medidas aproximadas de largura e altura?ÔÇØ
+
+Se estiver ligado a cercamento:
+- Registrar tamb├®m como demanda de gradil/fechamento.
+
+Quando houver tipo + aplica├º├úo + medidas/quantidade:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_tela_antiofuscante ===
+26. especificar_tela_antiofuscante
+
+Categoria: Produto
+Tipo: Tela antiofuscante / barreira visual rodovi├íria
+
+Use esta Skill para tela antiofuscante, barreira visual rodovi├íria, prote├º├úo contra farol, canteiro central ou fechamento visual para rodovias.
+
+Objetivo:
+Identificar se a aplica├º├úo ├® rodovi├íria/canteiro, se existe edital/projeto e qual a metragem linear.
+
+Use quando o cliente disser:
+- tela antiofuscante
+- barreira antiofuscante
+- barreira visual
+- prote├º├úo contra farol
+- tela para rodovia
+- tela para canteiro central
+- fechamento visual rodovi├írio
+
+Campos poss├¡veis:
+- aplica├º├úo: rodovia, canteiro, obra, via interna
+- edital/projeto
+- metragem linear
+- altura/modelo, se souber
+- material/acabamento
+- quantidade
+
+Regras:
+- N├úo afirmar conformidade com edital sem analisar documento.
+- Se houver edital/projeto, usar `tratar_cliente_envia_arquivo`.
+- Consultar RAG antes de citar modelos ou medidas.
+- N├úo perguntar localiza├º├úo.
+
+Pergunta inicial:
+ÔÇ£Essa tela antiofuscante ser├í para rodovia, canteiro central ou outra aplica├º├úo? Voc├¬ possui edital ou projeto?ÔÇØ
+
+Se faltar metragem:
+ÔÇ£Qual seria a metragem linear aproximada?ÔÇØ
+
+Se houver edital:
+ÔÇ£Pode enviar o edital ou especifica├º├úo para eu registrar no atendimento?ÔÇØ
+
+Quando houver aplica├º├úo + metragem/projeto:
+- Acione `confirmar_dados_e_encaminhar`.
+
+=== especificar_tela_expandida ===
+15. especificar_tela_expandida
+
+Categoria: Produto
+Tipo: Tela expandida fina / filtragem / peneira├º├úo
+
+Use esta Skill para tela expandida fina, tela em rolo, tela para filtragem, peneira├º├úo, reten├º├úo de res├¡duos ou prote├º├úo leve.
+
+Objetivo:
+Diferenciar tela expandida fina de chapa expandida e coletar aplica├º├úo, material e quantidade.
+
+Use quando o cliente disser:
+- tela expandida
+- tela fina expandida
+- tela para filtro
+- tela para peneira
+- tela para reten├º├úo
+- tela expandida em rolo
+- filtro de ar
+- filtro de ├│leo
+- peneira├º├úo
+
+Campos poss├¡veis:
+- aplica├º├úo exata
+- tipo de fluido/res├¡duo, se informado
+- material
+- abertura/malha, se souber
+- metragem
+- quantidade
+- formato: rolo, chapa, pe├ºa
+
+Regras:
+- Perguntar aplica├º├úo antes de termos t├®cnicos.
+- Consultar RAG antes de citar malhas, medidas ou materiais.
+- N├úo prometer adequa├º├úo t├®cnica definitiva.
+- Se for filtragem t├®cnica, encaminhar ao especialista com os dados coletados.
+
+Pergunta inicial:
+ÔÇ£Entendi. Essa tela expandida ser├í usada para filtragem, peneira├º├úo ou reten├º├úo de res├¡duos?ÔÇØ
+
+Se o cliente responder filtragem:
+ÔÇ£Seria filtro de ar, ├│leo, l├¡quido industrial ou outra aplica├º├úo?ÔÇØ
+
+Se o cliente responder peneira├º├úo:
+ÔÇ£Qual material ou res├¡duo ser├í peneirado?ÔÇØ
+
+Se faltar quantidade:
+ÔÇ£Qual seria a metragem ou quantidade aproximada?ÔÇØ
+
+Quando houver aplica├º├úo + produto + quantidade:
+- Acione `confirmar_dados_e_encaminhar`.
+
