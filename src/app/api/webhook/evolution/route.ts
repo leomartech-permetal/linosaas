@@ -129,7 +129,6 @@ export async function POST(request: Request) {
       }
 
       // 5. SISTEMA DE BUFFER (DEBOUNCE)
-      // Plano de Ação - Correção 1: Garantir texto de qualquer campo
       const finalContent = messageContent 
         || (messageData as any).texto_completo 
         || (messageData as any).texto_midia 
@@ -148,8 +147,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'error', reason: 'BUFFER_INSERT_FAILED', detail: bufferError });
       }
 
-      // Plano de Ação - Correção 2: Forçar processamento se for a primeira ou se já passou o tempo
-      // Primeiro, verificamos se há outras mensagens não processadas ANTES desta
+      // Buffer Wait
       const { data: previousMessages } = await supabase
         .from('conversation_buffers')
         .select('id')
@@ -158,8 +156,6 @@ export async function POST(request: Request) {
         .eq('processed', false);
 
       const isPrimeiraMensagem = !previousMessages || previousMessages.length === 0;
-      
-      // Se for a primeira mensagem, podemos esperar menos ou processar logo
       const waitTime = isPrimeiraMensagem ? 4000 : 10000; 
       console.log(`[Webhook] Aguardando ${waitTime}ms (Primeira: ${isPrimeiraMensagem})`);
       
@@ -192,7 +188,7 @@ export async function POST(request: Request) {
 
       const fullContext = allUnprocessed.map(m => m.content).filter(Boolean).join(' | ');
 
-      // 6. SALVAR INTERAÇÃO E LOG DE DECISÃO
+      // 6. SALVAR INTERAÇÃO
       await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: fullContext }]);
 
       // 7. LÓGICA DE RESPOSTA (SDR OU ESPERA)
@@ -205,77 +201,83 @@ export async function POST(request: Request) {
         if (aiResult && !aiResult.erro_openai) {
           const resposta_whatsapp = aiResult.resposta_whatsapp;
           const acao_executada = (aiResult.acao_executada || '').toLowerCase();
-          const skill_usada = aiResult.skill_usada || 'SDR_GENERAL';
 
-          // Log de Auditoria (Estilo n8n)
+          // Log de Auditoria
           await supabase.from('debug_logs').insert([{
             lead_id: lead.id,
             level: 'DEBUG',
             module: 'AI_SDR',
-            action: `Skill: ${skill_usada}`,
+            action: `Qualificacao_Schemas`,
             details: {
               intent: aiResult.intent,
               acao: acao_executada,
+              campo_solicitado: aiResult.campo_solicitado_nesta_rodada,
               dados_coletados: aiResult.cliente,
               demanda: aiResult.demanda,
               observacoes: aiResult.observacoes
             }
           }]);
           
-          // ⚠️ DDD: SEMPRE extrair do número de telefone. A IA NÃO tem acesso ao número real.
+          // DDD
           const rawPhone = remoteJid.replace(/\D/g, '');
           const systemDdd = rawPhone.length >= 12 && rawPhone.startsWith('55') ? rawPhone.substring(2, 4) : null;
-          
-          // Sanitizar ddd_regiao da IA: rejeitar placeholders e strings inválidas
           const aiDdd = aiResult.cliente?.ddd_regiao;
           const aiDddClean = aiDdd && /^\d{2}$/.test(String(aiDdd).trim()) ? String(aiDdd).trim() : null;
-          
-          // systemDdd tem prioridade máxima (extraído do número real)
           const dddToUse = systemDdd || aiDddClean || null;
 
-          // Segmento normalizado da IA
-          const segmentoNormalizado = aiResult.demanda?.segmento_normalizado || null;
+          // Roteamento e qualificação baseada em schemas
+          const { data: leadAtual } = await supabase.from('leads').select('*').eq('id', lead.id).single();
+          const qState = leadAtual?.qualification_state || { valores: {}, tentativas: {} };
+          if (!qState.valores) qState.valores = {};
+          if (!qState.tentativas) qState.tentativas = {};
 
-          const variaveis = {
-            produto: aiResult.demanda?.produto_normalizado || aiResult.demanda?.produto_familia || aiResult.demanda?.produto_modelo || null,
-            ddd: dddToUse,
-            quantidade: aiResult.demanda?.quantidade_metragem || null,
-            aplicacao: aiResult.demanda?.segmento_aplicacao || segmentoNormalizado || null,
-            nome_cliente: aiResult.cliente?.nome || null,
-            empresa: aiResult.cliente?.empresa || null,
-            cnpj: aiResult.cliente?.cnpj || null,
-            email: aiResult.cliente?.email || null,
-            segmento_detectado: segmentoNormalizado || aiResult.demanda?.segmento_aplicacao || null
-          };
+          // 1. Atualizar valores extraídos pela IA no estado estruturado
+          const camposCliente = ['nome', 'empresa', 'cnpj', 'email'];
+          camposCliente.forEach(c => {
+            const key = c === 'nome' ? 'nome_cliente' : c;
+            if (aiResult.cliente?.[c]) {
+              qState.valores[key] = aiResult.cliente[c];
+            }
+          });
 
-          console.log(`[Webhook] DDD → sistema: ${systemDdd} | IA: ${aiDdd} | usando: ${dddToUse}`);
-          console.log(`[Webhook] Empresa: ${variaveis.empresa} | Email: ${variaveis.email} | CNPJ: ${variaveis.cnpj}`);
-          
+          const camposDemanda = ['produto_normalizado', 'quantidade_metragem', 'material', 'acabamento', 'dimensoes', 'ec', 'segmento_normalizado'];
+          camposDemanda.forEach(c => {
+            const key = c === 'quantidade_metragem' ? 'quantidade' : (c === 'produto_normalizado' ? 'produto' : c);
+            if (aiResult.demanda?.[c]) {
+              qState.valores[key] = aiResult.demanda[c];
+            }
+          });
+
+          // 2. Incrementar contador de tentativas da variável que a IA acabou de tentar perguntar
+          const campoSolicitado = aiResult.campo_solicitado_nesta_rodada;
+          if (campoSolicitado && campoSolicitado !== 'null' && campoSolicitado !== 'none') {
+            qState.tentativas[campoSolicitado] = (qState.tentativas[campoSolicitado] || 0) + 1;
+          }
+
+          // 3. Atualizar o banco de dados
           const leadUpdate: any = { 
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            qualification_state: qState
           };
-          // Produto e DDD — sempre atualiza se disponível
-          if (variaveis.produto) {
-            leadUpdate.detected_product = variaveis.produto;
-            leadUpdate.produto = variaveis.produto;
+
+          // Sincronizar com as colunas nativas da tabela leads para compatibilidade
+          if (qState.valores.produto) {
+            leadUpdate.detected_product = qState.valores.produto;
+            leadUpdate.produto = qState.valores.produto;
           }
           if (dddToUse) leadUpdate.detected_ddd = dddToUse;
-          
-          // Dados profissionais — atualiza APENAS se vier preenchido (não apaga existente)
-          if (variaveis.empresa) {
-            leadUpdate.company = variaveis.empresa;
-            leadUpdate.empresa = variaveis.empresa;
+          if (qState.valores.empresa) {
+            leadUpdate.company = qState.valores.empresa;
+            leadUpdate.empresa = qState.valores.empresa;
           }
-          if (variaveis.nome_cliente) leadUpdate.name = variaveis.nome_cliente;
-          if (variaveis.cnpj) leadUpdate.cnpj = variaveis.cnpj;
-          if (variaveis.email) leadUpdate.email_corporativo = variaveis.email;
-          if (aiResult.cliente?.cargo) leadUpdate.cargo = aiResult.cliente.cargo;
-          if (variaveis.quantidade) leadUpdate.quantidade = variaveis.quantidade;
-          
-          // Especificação técnica
-          const especParts = [aiResult.demanda?.dimensoes, aiResult.demanda?.acabamento, aiResult.demanda?.material].filter(Boolean);
+          if (qState.valores.nome_cliente) leadUpdate.name = qState.valores.nome_cliente;
+          if (qState.valores.cnpj) leadUpdate.cnpj = qState.valores.cnpj;
+          if (qState.valores.email) leadUpdate.email_corporativo = qState.valores.email;
+          if (qState.valores.quantidade) leadUpdate.quantidade = qState.valores.quantidade;
+
+          const especParts = [qState.valores.dimensoes, qState.valores.acabamento, qState.valores.material].filter(Boolean);
           if (especParts.length > 0) leadUpdate.especificacao = especParts.join(' | ');
-          
+
           const intent = (aiResult.intent || '').toUpperCase();
           const isNonCommercialIntent = ['VAGAS', 'FORNECEDOR', 'LOGISTICA', 'FINANCEIRO', 'COMEX', 'MARKETING'].includes(intent);
           
@@ -283,17 +285,9 @@ export async function POST(request: Request) {
             leadUpdate.status = 'OTHER_DEPARTMENT';
           }
           
-          // Salvar com log de erro explícito
           const { error: updateError } = await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
           if (updateError) {
             console.error('[Webhook] ❌ ERRO ao salvar lead:', updateError);
-            await supabase.from('debug_logs').insert([{
-              lead_id: lead.id, level: 'ERROR', module: 'WEBHOOK',
-              action: 'LEAD_UPDATE_FAILED',
-              details: { error: updateError, leadUpdate }
-            }]);
-          } else {
-            console.log('[Webhook] ✅ Lead salvo:', Object.keys(leadUpdate).join(', '));
           }
 
           if (resposta_whatsapp) {
@@ -309,51 +303,78 @@ export async function POST(request: Request) {
               await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgSetores);
             }
           } else {
-            // --- ROTEAMENTO ROBUSTO ---
+            // --- ROTEAMENTO BASEADO EM SCHEMAS ---
+            let schema: any = null;
+            const prodNome = qState.valores.produto || leadUpdate.produto || leadAtual?.produto;
+            if (prodNome) {
+              const { data: productData } = await supabase
+                .from('products')
+                .select('qualification_schema')
+                .ilike('name', `%${prodNome}%`)
+                .limit(1)
+                .maybeSingle();
+              if (productData?.qualification_schema) {
+                schema = productData.qualification_schema;
+              }
+            }
+
+            if (!schema) {
+              schema = {
+                obrigatorias: ["nome_cliente", "empresa", "email", "quantidade"],
+                opcionais: []
+              };
+            }
+
+            // Mesclar para checagem determinística
+            const todasVariaveis = {
+              nome_cliente: leadUpdate.name || leadAtual?.name || null,
+              empresa: leadUpdate.company || leadAtual?.company || null,
+              email: leadUpdate.email_corporativo || leadAtual?.email_corporativo || null,
+              cnpj: leadUpdate.cnpj || leadAtual?.cnpj || null,
+              produto: prodNome || null,
+              quantidade: leadUpdate.quantidade || leadAtual?.quantidade || null,
+              ...qState.valores
+            };
+
+            const dddValido = !!(dddToUse || leadAtual?.detected_ddd);
+            const temTodasObrigatorias = schema.obrigatorias.every((f: string) => !!todasVariaveis[f]) && dddValido;
+
             const acaoEhRoteamento = acao_executada.includes('roteamento') 
                                   || acao_executada.includes('encaminhar') 
                                   || acao_executada.includes('transfer');
 
-            // Dados comerciais mínimos para rotear
-            const temDadosComerciais = !!(variaveis.empresa || variaveis.email || variaveis.cnpj);
+            const deveRotear = temTodasObrigatorias && acaoEhRoteamento;
 
-            // Contar tentativas de coleta já feitas (recuperar do banco)
-            const { data: leadAtual } = await supabase.from('leads').select('tentativas_coleta').eq('id', lead.id).single();
-            const tentativasColeta = leadAtual?.tentativas_coleta || 0;
-
-            // Se ação é coleta_dados, incrementar contador
-            if (acao_executada.includes('coleta')) {
-              await supabase.from('leads').update({ tentativas_coleta: tentativasColeta + 1 }).eq('id', lead.id);
-            }
-
-            // Critérios para rotear:
-            // 1. Tem produto + DDD (obrigatórios)
-            // 2. IA marcou roteamento E tem dados comerciais OU já tentou 2+ vezes coletar
-            const temMinimo = !!(variaveis.produto && dddToUse);
-            const podeRotearComDados = acaoEhRoteamento && temDadosComerciais;
-            const forcaRoteamentoPorTentativas = acaoEhRoteamento && tentativasColeta >= 2;
-            const deveRotear = temMinimo && (podeRotearComDados || forcaRoteamentoPorTentativas);
-
-            console.log(`[Webhook] Roteamento check — acao: ${acao_executada}, produto: ${variaveis?.produto}, ddd: ${dddToUse}, empresa: ${variaveis.empresa}, tentativas: ${tentativasColeta}, deveRotear: ${deveRotear}`);
+            console.log(`[Webhook] Roteamento check — produto: ${prodNome}, ddd: ${dddValido}, obrigatórias satisfeitas: ${temTodasObrigatorias}, acao: ${acao_executada}, deveRotear: ${deveRotear}`);
 
             if (deveRotear) {
-              console.log(`[Webhook] ✅ Roteando lead ${lead.id} — dados comerciais: ${temDadosComerciais}, tentativas: ${tentativasColeta}`);
+              console.log(`[Webhook] ✅ Roteando lead ${lead.id} deterministicamente.`);
               if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
                 await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, "Estou te transferindo para o especialista agora...");
               }
-              await routeLead(lead.id, lead.tenant_id, variaveis);
+              const variaveisRoteamento = {
+                produto: prodNome || null,
+                ddd: dddToUse || leadAtual?.detected_ddd || null,
+                quantidade: todasVariaveis.quantidade,
+                aplicacao: todasVariaveis.segmento_normalizado || todasVariaveis.segmento_aplicacao || null,
+                nome_cliente: todasVariaveis.nome_cliente,
+                empresa: todasVariaveis.empresa,
+                cnpj: todasVariaveis.cnpj,
+                email: todasVariaveis.email,
+                segmento_detectado: todasVariaveis.segmento_normalizado || null
+              };
+              await routeLead(lead.id, lead.tenant_id, variaveisRoteamento);
             } else {
-              const motivo = !temMinimo ? `produto ou DDD ausente (produto=${variaveis?.produto}, ddd=${dddToUse})` 
-                           : !acaoEhRoteamento ? `IA ainda coletando (tentativas=${tentativasColeta})`
-                           : `aguardando dados comerciais (tentativas=${tentativasColeta}/2)`;
-              console.log(`[Webhook] ⏳ Não rotear — motivo: ${motivo}`);
+              const motivo = !temTodasObrigatorias ? 'faltam dados obrigatorios do schema' 
+                           : !acaoEhRoteamento ? 'IA ainda no fluxo conversacional'
+                           : 'aguardando confirmacao final do lead';
+              console.log(`[Webhook] ⏳ Não rotear ainda — motivo: ${motivo}`);
             }
           }
 
         }
       } else if (lead.status === 'WAITING_SELLER' || lead.status === 'SENT_TO_SELLER' || lead.status === 'SELLER_RECEIVED' || lead.status === 'ATTENDANCE_STARTED') {
-        // LINO SUPORTE — só ativa APÓS vendedor estar realmente atribuído
-        // Regra: current_owner_id deve existir. Se não, SDR ainda não concluiu o roteamento.
+        // LINO SUPORTE
         if (!lead.current_owner_id) {
           console.log(`[Webhook] Lead ${lead.id} em status de suporte mas SEM vendedor atribuído. Retornando ao SDR.`);
           await supabase.from('leads').update({ status: 'SDR_QUALIFICATION', updated_at: new Date().toISOString() }).eq('id', lead.id);
@@ -366,19 +387,15 @@ export async function POST(request: Request) {
           return NextResponse.json({ status: 'success', reason: 'REDIRECTED_TO_SDR_NO_SELLER' });
         }
 
-        // Vendedor confirmado — Lino Suporte assume a conversa
         const result = await handleClientReturn(remoteJid, fullContext);
-        
         console.log(`[Webhook] Lino Suporte ação: ${result.action}`);
         
-        // Registrar interação
         await supabase.from('interactions').insert([{ 
           lead_id: lead.id, 
           sender_type: 'sdr_ai', 
           message_content: result.message 
         }]);
         
-        // Enviar resposta baseada na ação
         if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
           await sendTextMessage(
             globalConfig.evolution_instance_name, 
@@ -389,12 +406,9 @@ export async function POST(request: Request) {
           );
         }
 
-        // Ações especiais baseadas no retorno
         if (result.action === 'NOTIFY_SELLER' || result.action === 'NOTIFY_SELLER_URGENT') {
-          // O handleClientReturn já cuidou da notificação internamente
           console.log(`[Webhook] Notificação ao vendedor acionada`);
         } else if (result.action === 'ESCALATE_SUPERVISOR') {
-          // Escalação handled internally
           console.log(`[Webhook] Escalação para supervisor acionada`);
         }
       }

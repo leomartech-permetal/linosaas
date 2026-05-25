@@ -4,94 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 /**
- * buildContext — Inteligente e Seletivo
- * 
- * Quando `detectedProduct` é passado:
- *   → carrega a skill vinculada àquele produto + seu RAG específico
- *   → completa com skills genéricas para preencher até o limite de 6
- * 
- * Quando `detectedProduct` é null/undefined:
- *   → carrega apenas skills genéricas (sem product_tag) para a fase inicial de coleta
+ * buildContext — Cria o contexto de prompt do sistema a partir do prompt mestre e RAG
  */
-async function buildContext(detectedProduct?: string | null): Promise<string> {
+async function buildContext(ragContent?: string | null): Promise<string> {
   const { data: config } = await supabase.from('tenant_config').select('master_prompt').limit(1).single();
   let context = config?.master_prompt || 'Você é Lino, um assistente SDR comercial focado em qualificar leads e prepará-los para o atendimento com um vendedor humano.';
 
-  let selectedSkills: any[] = [];
-  const processedIds = new Set<string>();
-
-  if (detectedProduct) {
-    // --- QUERY 1: Skill específica do produto (sempre entra primeiro) ---
-    const { data: productSkills } = await supabase
-      .from('skills')
-      .select('*')
-      .eq('active', true)
-      .ilike('product_tag', `%${detectedProduct}%`);
-
-    if (productSkills && productSkills.length > 0) {
-      for (const s of productSkills) {
-        selectedSkills.push(s);
-        processedIds.add(s.id);
-      }
-      console.log(`[buildContext] Skill de produto carregada: ${productSkills.map((s: any) => s.name).join(', ')}`);
-    }
-  }
-
-  // Se nenhuma skill de produto foi carregada, busca a principal genérica (SDR_GERAL)
-  if (selectedSkills.length === 0) {
-    const { data: generalSkill } = await supabase
-      .from('skills')
-      .select('*')
-      .eq('active', true)
-      .eq('name', 'SDR_GERAL')
-      .maybeSingle();
-
-    if (generalSkill) {
-      selectedSkills.push(generalSkill);
-      processedIds.add(generalSkill.id);
-      console.log(`[buildContext] Skill genérica SDR_GERAL carregada`);
-    } else {
-      // Fallback: carregar a primeira skill geral ativa
-      const { data: fallbackSkill } = await supabase
-        .from('skills')
-        .select('*')
-        .eq('active', true)
-        .is('product_tag', null)
-        .limit(1);
-      if (fallbackSkill && fallbackSkill.length > 0) {
-        selectedSkills.push(fallbackSkill[0]);
-        processedIds.add(fallbackSkill[0].id);
-      }
-    }
-  }
-
-  // Sempre incluir a skill preparar_payload_roteamento (independente de produto)
-  const { data: payloadSkill } = await supabase
-    .from('skills')
-    .select('*')
-    .ilike('name', '%payload_roteamento%')
-    .eq('active', true)
-    .single();
-  if (payloadSkill && !processedIds.has(payloadSkill.id)) {
-    selectedSkills.push(payloadSkill);
-    console.log('[buildContext] Skill preparar_payload_roteamento adicionada ao contexto');
-  }
-
-  if (selectedSkills && selectedSkills.length > 0) {
-    context += `\n\n=== HABILIDADES ATIVAS ===`;
-    for (const skill of selectedSkills) {
-      context += `\n\n### ${skill.name} (${skill.type})\n${(skill.prompt || '').substring(0, 10000)}`;
-
-      const { data: links } = await supabase.from('skill_rag_links').select('rag_document_id').eq('skill_id', skill.id);
-      if (links && links.length > 0) {
-        const ragIds = links.map(l => l.rag_document_id);
-        const { data: ragDocs } = await supabase.from('rag_documents').select('name, content').in('id', ragIds).eq('active', true);
-        if (ragDocs && ragDocs.length > 0) {
-          context += '\n📚 Base de Conhecimento Técnica:';
-          for (const doc of ragDocs) { context += `\n--- ${doc.name} ---\n${doc.content?.substring(0, 8000) || ''}`; }
-        }
-      }
-    }
+  if (ragContent) {
+    context += `\n\n${ragContent}`;
   }
 
   // Catálogo de produtos (sempre presente para identificação inicial)
@@ -126,6 +46,9 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
   // 2. Recuperar dados do lead no banco para guiar a coleta estruturada
   let detectedProduct: string | null = null;
   let leadInfoText = '';
+  let qualificationInstructions = '';
+  let ragContent = '';
+
   if (leadId) {
     const { data: leadData } = await supabase
       .from('leads')
@@ -134,31 +57,123 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
       .single();
     if (leadData) {
       detectedProduct = leadData.detected_product || leadData.produto || null;
+      
+      // Buscar o schema de qualificação do produto
+      let schema: any = null;
+      if (detectedProduct) {
+        const { data: productData } = await supabase
+          .from('products')
+          .select('qualification_schema')
+          .ilike('name', `%${detectedProduct}%`)
+          .limit(1)
+          .maybeSingle();
+        if (productData?.qualification_schema) {
+          schema = productData.qualification_schema;
+        }
+      }
+
+      // Se não houver schema de produto específico, usamos um padrão genérico
+      if (!schema) {
+        schema = {
+          obrigatorias: ["nome_cliente", "empresa", "email", "quantidade"],
+          opcionais: []
+        };
+      }
+
+      // Recuperar estado estruturado (qualification_state)
+      const qState = leadData.qualification_state || {};
+      const valoresSalvos = qState.valores || {};
+      const tentativasSalvas = qState.tentativas || {};
+
+      // Dados preenchidos mapeados
+      const preenchidos: Record<string, any> = {
+        nome_cliente: leadData.name || null,
+        empresa: leadData.company || leadData.empresa || null,
+        cnpj: leadData.cnpj || null,
+        email: leadData.email_corporativo || null,
+        produto: detectedProduct || null,
+        quantidade: leadData.quantidade || null
+      };
+
+      // Mesclar valores salvos no estado de qualificação com os campos raiz do lead
+      const todasVariaveis = { ...preenchidos, ...valoresSalvos };
+
+      const pendentesObrigatorias = schema.obrigatorias.filter((f: string) => !todasVariaveis[f]);
+      const pendentesOpcionais = (schema.opcionais || []).filter((opt: any) => {
+        const campo = opt.campo;
+        const valor = todasVariaveis[campo];
+        const tentativas = tentativasSalvas[campo] || 0;
+        return !valor && tentativas < (opt.max_tentativas || 1);
+      });
+
       leadInfoText = `
 === DADOS DO CLIENTE JÁ CADASTRADOS NO BANCO ===
-- Nome: ${leadData.name || 'Não informado'}
-- Empresa: ${leadData.company || leadData.empresa || 'Não informado'}
-- CNPJ: ${leadData.cnpj || 'Não informado'}
-- E-mail: ${leadData.email_corporativo || 'Não informado'}
-- Produto: ${leadData.detected_product || leadData.produto || 'Não informado'}
-- Quantidade: ${leadData.quantidade || 'Não informado'}
-- Especificação Técnica: ${leadData.especificacao || 'Não informado'}
+${Object.entries(todasVariaveis)
+  .map(([k, v]) => `- ${k.toUpperCase()}: ${v || 'Não informado'}`)
+  .join('\n')}
 ================================================
-IMPORTANTE: As informações acima já estão salvas no banco de dados. 
-1. NÃO pergunte novamente nenhum dado que já esteja preenchido.
-2. Se o E-mail ou o CNPJ estiverem como "Não informado", você DEVE perguntar e coletar essas informações ativamente antes de tentar realizar o resumo e a confirmação para o roteamento comercial.
 `;
+
+      qualificationInstructions = `
+=== INSTRUÇÕES DE QUALIFICAÇÃO DO DIÁLOGO ===
+Você atua como um agente de IA ultra moderno, empático e de alta fluidez conversacional.
+Seu objetivo de qualificação é coletar os dados necessários para o atendimento comercial sem parecer um robô ou um formulário engessado.
+
+1. VARIÁVEIS OBRIGATÓRIAS PENDENTES: [${pendentesObrigatorias.join(', ')}]
+2. VARIÁVEIS OPCIONAIS PENDENTES (Dentro do limite de tentativas): [${pendentesOpcionais.map((o: any) => o.campo).join(', ')}]
+
+REGRAS DE CONVERSAÇÃO ULTRA FLUIDA:
+- NUNCA pergunte dados que já estejam cadastrados acima como preenchidos.
+- Se o cliente fizer uma pergunta, desviar de assunto ou pedir informações sobre o produto, use as informações técnicas do catálogo abaixo para responder primeiro com atenção e clareza, e depois tente reintroduzir a coleta de forma natural.
+- Não insista na mesma pergunta seguidamente se o cliente a ignorar. Introduza as perguntas em momentos oportunos.
+- Apresente opções curtas de resposta no estilo catálogo/e-commerce quando aplicável (ex: espessuras disponíveis, tipos de furo).
+- IMPORTANTE: No JSON de retorno, indique obrigatoriamente qual variável você tentou coletar na chave "campo_solicitado_nesta_rodada". Se você não tentou coletar nenhuma variável específica nesta resposta, retorne null.
+`;
+
+      // Carregar RAG associado se especificado no schema do produto
+      if (schema.valores_validos_rag || schema.rag_document_name) {
+        const docName = schema.valores_validos_rag || schema.rag_document_name;
+        const { data: ragDoc } = await supabase
+          .from('rag_documents')
+          .select('name, content')
+          .ilike('name', `%${docName}%`)
+          .eq('active', true)
+          .limit(1)
+          .maybeSingle();
+        if (ragDoc) {
+          ragContent = `
+=== BASE DE CONHECIMENTO TÉCNICA (RAG: ${ragDoc.name}) ===
+${ragDoc.content || ''}
+=========================================================
+`;
+        }
+      } else if (detectedProduct) {
+        // Fallback RAG pelo nome do produto
+        const { data: ragDocs } = await supabase
+          .from('rag_documents')
+          .select('name, content')
+          .eq('active', true)
+          .limit(1);
+        if (ragDocs && ragDocs.length > 0) {
+          ragContent = `
+=== BASE DE CONHECIMENTO TÉCNICA (RAG: ${ragDocs[0].name}) ===
+${ragDocs[0].content || ''}
+=========================================================
+`;
+        }
+      }
     }
   }
 
   const dynamicOpenai = new OpenAI({ apiKey });
-  // buildContext recebe o produto detectado → carrega skill especializada
-  const systemContext = await buildContext(detectedProduct);
+  const systemContext = await buildContext(ragContent);
   console.log(`[OpenAI Debug] Produto detectado: ${detectedProduct || 'nenhum (fase inicial)'}`);
 
   const extractionPrompt = `${systemContext}
 
 ${leadInfoText}
+
+${qualificationInstructions}
 
 ---
 INSTRUÇÃO FINAL — LEIA COM ATENÇÃO:
@@ -173,8 +188,6 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
 
 2. GUIA EM CASCATA (MENU): Se o cliente escolheu um material, consulte o RAG e apresente as opções reais. Nunca invente especificações.
 
-3. ACIONAMENTO DE SKILLS: Se existe skill específica do produto ativa, use-a para coletar detalhes técnicos antes de rotear.
-
 5. PROIBIÇÃO DE ROTEAMENTO PREMATURO E OBRIGATORIEDADE DE CONFIRMAÇÃO:
    - FASE 1 (COLETA): Se você ainda está perguntando algo, use SEMPRE "acao_executada": "coleta_dados".
    - FASE 2 (RESUMO E CONFIRMAÇÃO): Quando você já coletou Empresa/CNPJ, Email, Produto, Aplicação e as Especificações, você DEVE enviar um resumo formatado em bullet points para o cliente e perguntar se está tudo certo (Ex: "Tudo certinho? Me diga 'sim' para confirmar ou 'corrigir'"). Nesse turno, use OBRIGATORIAMENTE "acao_executada": "confirmacao".
@@ -183,9 +196,9 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
 6. DADOS DO CLIENTE NO JSON: DDD, telefone e localização são extraídos automaticamente pelo sistema. NÃO tente extrair ddd_regiao do texto, sempre retorne null nesse campo.
 
 {
-  "pensamento_critico": "<OBRIGATÓRIO: 1. Qual produto e skill ativa? 2. Apresentei opções do RAG? 3. Tentei empresa e e-mail ao menos uma vez? 4. Posso rotear?>",
+  "pensamento_critico": "<OBRIGATÓRIO: 1. Qual variável pendente estou tentando coletar de forma sutil? 2. Apresentei opções do RAG? 3. Tom de diálogo humanizado e fluido?>",
   "resposta_whatsapp": "<sua mensagem — máximo 2 frases, tom humano, chame pelo nome se souber>",
-  "skill_usada": "<nome_exato_da_skill ou SDR_GERAL>",
+  "campo_solicitado_nesta_rodada": "<nome_da_variavel_solicitada_como_empresa_ou_email_ou_espessura_etc | null>",
   "intent": "<PRODUTO | VAGAS | FORNECEDOR | LOGISTICA | FINANCEIRO | COMEX | MARKETING | OUTRO>",
   "confidence": "<0 a 100>",
   "cliente": {
@@ -212,7 +225,7 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
     "urgencia": "<alta, media, baixa ou null>"
   },
   "estado_lead": {
-    "dados_minimos_completos": <true SOMENTE se: produto + quantidade + especificação técnica mínima (ou cliente diz não saber) + aplicação/segmento definidos. DDD é automático. Caso contrário: false>,
+    "dados_minimos_completos": <true SOMENTE se: produto + quantidade + especificação técnica mínima + aplicação/segmento definidos. Caso contrário: false>,
     "motivo_faltante": "<o que ainda falta, ex: faltando_tipo_furo, faltando_quantidade>"
   },
   "rag": {
@@ -239,7 +252,6 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
     }
   }
 
-  console.log(`[OpenAI Debug] System Context Length: ${systemContext.length} caracteres`);
   console.log(`[OpenAI Debug] Mensagens: ${messages.length}`);
 
   try {
@@ -341,7 +353,7 @@ export async function generateSupportResponse(leadData: any, history: any[], act
     if (seller?.name) vendedorNome = seller.name;
   }
 
-  // Prompt separado de Suporte (lê do campo support_prompt da config, ou usa padrão)
+  // Prompt separado de Suporte
   const supportPromptBase = config?.support_prompt || `Você é o Lino Suporte, assistente da Permetal S.A.
 Você atua como ponte entre o cliente e o vendedor responsável pelo atendimento.
 Tom: humano, empático, direto. Máximo 2 frases por mensagem.`;
@@ -356,7 +368,7 @@ CONTEXTO DO ATENDIMENTO ATUAL:
 REGRAS OBRIGATÓRIAS:
 1. Nunca diga que não sabe quem é o vendedor — o vendedor é ${vendedorNome}.
 2. Nunca use frases prontas como "Entendo sua urgência" ou "Vou verificar".
-3. Se o cliente estiver bravo, reconheça o problema sem inventar justificativas.
+3. Se o cliente estiver bravo, reconheça o problem sem inventar justificativas.
 4. Nunca diga "alta demanda" sem ter certeza do contexto real.
 5. Não prometa prazos específicos.
 6. CLASSIFICAÇÃO: Analise se a última mensagem do cliente trouxe uma nova especificação técnica (nova medida, mudança de material, alteração de quantidade, envio de projeto, etc.) que o vendedor precisa saber. Se sim, defina "nova_informacao" como true.
@@ -387,4 +399,3 @@ Você deve retornar EXCLUSIVAMENTE um objeto JSON neste formato:
     return { message: "Um momento, estou verificando com o vendedor.", nova_informacao: false };
   }
 }
-
