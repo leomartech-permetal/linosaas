@@ -66,17 +66,29 @@ export default function SkillsPage() {
   // Skill-RAG links
   const [skillRagLinks, setSkillRagLinks] = useState<any[]>([]);
 
+  // Variaveis de Extracao
+  const [variables, setVariables] = useState<any[]>([]);
+  const [showVarForm, setShowVarForm] = useState(false);
+  const [varForm, setVarForm] = useState({ name: "", description: "", required: false });
+  const [editingVarIndex, setEditingVarIndex] = useState<number | null>(null);
+
   useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
     setLoading(true);
     const [configRes, skillsRes, linksRes] = await Promise.all([
-      supabase.from("tenant_config").select("master_prompt").limit(1).single(),
+      supabase.from("tenant_config").select("master_prompt, extraction_variables").limit(1).single(),
       supabase.from("skills").select("*").order("created_at", { ascending: false }),
       supabase.from("skill_rag_links").select("*"),
     ]);
     if (configRes.data?.master_prompt) setMasterPrompt(configRes.data.master_prompt);
     else setMasterPrompt(DEFAULT_MASTER_PROMPT);
+    if (configRes.data?.extraction_variables) setVariables(configRes.data.extraction_variables);
+    else setVariables([
+      { name: "empresa", description: "Nome da empresa do cliente", required: false },
+      { name: "email", description: "E-mail corporativo", required: false },
+      { name: "cnpj", description: "CNPJ da empresa", required: false }
+    ]);
     if (skillsRes.data) setSkills(skillsRes.data);
     if (linksRes.data) setSkillRagLinks(linksRes.data);
 
@@ -96,6 +108,40 @@ export default function SkillsPage() {
       await supabase.from("tenant_config").update({ master_prompt: masterPrompt }).eq("id", data.id);
     }
     flash("✔ Prompt mestre salvo com sucesso!");
+  }
+
+  // === VARIAVEIS ===
+  async function saveVariablesToDb(newVars: any[]) {
+    const { data } = await supabase.from("tenant_config").select("id").limit(1).single();
+    if (data) {
+      await supabase.from("tenant_config").update({ extraction_variables: newVars }).eq("id", data.id);
+    }
+    setVariables(newVars);
+    flash("✔ Variáveis atualizadas!");
+  }
+
+  function handleSaveVariable(e: React.FormEvent) {
+    e.preventDefault();
+    if (!varForm.name.trim()) return;
+    const cleanName = varForm.name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    
+    let updatedVars = [...variables];
+    if (editingVarIndex !== null) {
+      updatedVars[editingVarIndex] = { ...varForm, name: cleanName };
+    } else {
+      updatedVars.push({ ...varForm, name: cleanName });
+    }
+    
+    saveVariablesToDb(updatedVars);
+    setVarForm({ name: "", description: "", required: false });
+    setEditingVarIndex(null);
+    setShowVarForm(false);
+  }
+
+  function deleteVariable(index: number) {
+    if (!confirm("Excluir esta variável?")) return;
+    const updatedVars = variables.filter((_, i) => i !== index);
+    saveVariablesToDb(updatedVars);
   }
 
   // === SKILLS ===
@@ -273,6 +319,70 @@ export default function SkillsPage() {
                 Salvar Prompt Mestre
               </button>
               <p className="text-[10px] text-[var(--text-tertiary)] italic">* Aplicação imediata para todas as novas interações.</p>
+            </div>
+          </div>
+
+          {/* VARIAVEIS DE EXTRACAO */}
+          <div className="card-base mb-8 max-w-4xl">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-base font-bold flex items-center text-[var(--text-primary)]">
+                  <span className="bg-emerald-500 w-1 h-5 mr-2 rounded-full"></span>
+                  Variáveis de Extração (Dados do Lead)
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">Defina quais dados o Cérebro IA deve perguntar e extrair do cliente. Igual ao n8n.</p>
+              </div>
+              <button onClick={() => { setVarForm({ name: "", description: "", required: false }); setEditingVarIndex(null); setShowVarForm(!showVarForm); }} className="btn-primary py-1.5 text-xs">
+                {showVarForm ? "Fechar" : "+ Nova Variável"}
+              </button>
+            </div>
+
+            {showVarForm && (
+              <form onSubmit={handleSaveVariable} className="bg-[var(--bg-app)] p-4 rounded-md border border-[var(--border-subtle)] mb-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-1">Nome da Variável (Chave)</label>
+                    <input type="text" value={varForm.name} onChange={(e) => setVarForm({ ...varForm, name: e.target.value })} placeholder="ex: cnpj" className="input-search-clean py-2 text-xs" required />
+                  </div>
+                  <div className="flex items-center mt-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={varForm.required} onChange={(e) => setVarForm({ ...varForm, required: e.target.checked })} className="accent-emerald-500 w-4 h-4" />
+                      <span className="text-xs font-bold text-emerald-600">Obrigatória para Roteamento</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-1">Descrição (Instrução para a IA)</label>
+                  <input type="text" value={varForm.description} onChange={(e) => setVarForm({ ...varForm, description: e.target.value })} placeholder="ex: CNPJ da empresa do cliente" className="input-search-clean py-2 text-xs" required />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="submit" className="flex-1 btn-primary py-2 text-xs bg-emerald-600 hover:bg-emerald-700">{editingVarIndex !== null ? "Atualizar Variável" : "Adicionar Variável"}</button>
+                  <button type="button" onClick={() => setShowVarForm(false)} className="flex-1 btn-secondary py-2 text-xs">Cancelar</button>
+                </div>
+              </form>
+            )}
+
+            <div className="space-y-2">
+              {variables.map((v, i) => (
+                <div key={i} className="bg-[var(--bg-surface)] p-3 rounded-md border border-[var(--border-subtle)] flex justify-between items-center group">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-sm text-[var(--text-primary)]">{v.name}</h4>
+                      {v.required ? (
+                         <span className="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase font-bold">Obrigatória</span>
+                      ) : (
+                         <span className="text-[9px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase font-bold">Opcional</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">{v.description}</p>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => { setVarForm(v); setEditingVarIndex(i); setShowVarForm(true); }} className="text-[10px] btn-secondary px-2 py-1 h-auto">Editar</button>
+                    <button onClick={() => deleteVariable(i)} className="text-[10px] btn-secondary text-[var(--status-error)] border-[var(--status-error)]/30 hover:bg-[var(--status-error)]/10 px-2 py-1 h-auto">Excluir</button>
+                  </div>
+                </div>
+              ))}
+              {variables.length === 0 && <p className="text-xs text-[var(--text-tertiary)] text-center py-4">Nenhuma variável configurada.</p>}
             </div>
           </div>
 

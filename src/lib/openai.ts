@@ -72,11 +72,21 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
         }
       }
 
-      // Se não houver schema de produto específico, usamos um padrão genérico
+      // Extrair variáveis configuradas no Front End
+      const extVars = config?.extraction_variables || [
+        { name: "empresa", description: "Nome da empresa do cliente", required: false },
+        { name: "email", description: "E-mail corporativo", required: false },
+        { name: "cnpj", description: "CNPJ da empresa", required: false }
+      ];
+
+      const schemaObrigatorias = extVars.filter((v: any) => v.required).map((v: any) => v.name);
+      const schemaOpcionais = extVars.filter((v: any) => !v.required).map((v: any) => ({ campo: v.name, max_tentativas: 1 }));
+
+      // Se não houver schema de produto específico, usamos as variáveis do Painel
       if (!schema) {
         schema = {
-          obrigatorias: ["nome_cliente", "empresa", "email", "quantidade"],
-          opcionais: []
+          obrigatorias: schemaObrigatorias,
+          opcionais: schemaOpcionais
         };
       }
 
@@ -88,12 +98,16 @@ export async function processLeadWithSkills(history: { sender_type: string, mess
       // Dados preenchidos mapeados
       const preenchidos: Record<string, any> = {
         nome_cliente: leadData.name || null,
-        empresa: leadData.company || leadData.empresa || null,
-        cnpj: leadData.cnpj || null,
-        email: leadData.email_corporativo || null,
         produto: detectedProduct || null,
         quantidade: leadData.quantidade || null
       };
+      
+      // Carrega os dados das variáveis dinâmicas se já existirem no lead raiz
+      for (const v of extVars) {
+        if (leadData[v.name] !== undefined && leadData[v.name] !== null) {
+          preenchidos[v.name] = leadData[v.name];
+        }
+      }
 
       // Mesclar valores salvos no estado de qualificação com os campos raiz do lead
       const todasVariaveis = { ...preenchidos, ...valoresSalvos };
@@ -169,6 +183,14 @@ ${ragDocs[0].content || ''}
   const systemContext = await buildContext(ragContent);
   console.log(`[OpenAI Debug] Produto detectado: ${detectedProduct || 'nenhum (fase inicial)'}`);
 
+  // Gerar campos JSON dinâmicos para instruir a extração
+  const extVars = config?.extraction_variables || [
+    { name: "empresa", description: "Nome da empresa do cliente", required: false },
+    { name: "email", description: "E-mail corporativo", required: false },
+    { name: "cnpj", description: "CNPJ da empresa", required: false }
+  ];
+  const dynamicJsonFields = extVars.map((v: any) => `    "${v.name}": "<extraia: ${v.description} ou null>"`).join(',\n');
+
   const extractionPrompt = `${systemContext}
 
 ${leadInfoText}
@@ -202,9 +224,7 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
   "confidence": "<0 a 100>",
   "cliente": {
     "nome": "<extraia o nome ou null>",
-    "empresa": "<extraia a empresa ou null>",
-    "cnpj": "<extraia o cnpj ou null>",
-    "email": "<extraia o email ou null>",
+${dynamicJsonFields},
     "telefone": null,
     "ddd_regiao": null,
     "canal_origem": "whatsapp"
