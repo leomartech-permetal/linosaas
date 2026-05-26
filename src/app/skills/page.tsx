@@ -291,7 +291,7 @@ export default function SkillsPage() {
                   <div className="group relative">
                     <span className="cursor-help text-[var(--brand-accent)] text-[10px] border border-[var(--brand-accent)]/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
                     <div className="absolute left-6 top-0 w-72 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[var(--text-secondary)]">
-                      <b className="text-[var(--text-primary)] block mb-2 font-bold uppercase tracking-wider">🧠 Como escrever o Prompt:</b>
+                      <b className="text-[var(--text-primary)] block mb-2 font-bold uppercase tracking-wider">Como escrever o Prompt:</b>
                       Instrua o assistente como se fosse um atendente real.
                       <ul className="mt-2 space-y-1 text-[var(--text-secondary)]">
                         <li>• <b>Identidade:</b> &quot;Você é Lino, assistente comercial...&quot;</li>
@@ -356,7 +356,7 @@ export default function SkillsPage() {
                   <input type="text" value={varForm.description} onChange={(e) => setVarForm({ ...varForm, description: e.target.value })} placeholder="ex: CNPJ da empresa do cliente" className="input-search-clean py-2 text-xs" required />
                 </div>
                 <div className="flex gap-3 pt-2">
-                  <button type="submit" className="flex-1 btn-primary py-2 text-xs bg-emerald-600 hover:bg-emerald-700">{editingVarIndex !== null ? "Atualizar Variável" : "Adicionar Variável"}</button>
+                  <button type="submit" className="flex-1 btn-primary py-2 text-xs bg-[#111111] hover:opacity-90">{editingVarIndex !== null ? "Atualizar Variável" : "Adicionar Variável"}</button>
                   <button type="button" onClick={() => setShowVarForm(false)} className="flex-1 btn-secondary py-2 text-xs">Cancelar</button>
                 </div>
               </form>
@@ -399,7 +399,7 @@ export default function SkillsPage() {
                   <div className="group relative">
                     <span className="cursor-help text-[var(--chart-purple)] text-[10px] border border-[var(--chart-purple)]/30 rounded-full w-4 h-4 flex items-center justify-center">?</span>
                     <div className="absolute left-6 top-0 w-80 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none text-xs leading-relaxed text-[var(--text-secondary)]">
-                      <b className="text-[var(--text-primary)] block mb-2 font-bold uppercase tracking-wider">📚 RAG (Biblioteca)</b>
+                      <b className="text-[var(--text-primary)] block mb-2 font-bold uppercase tracking-wider">RAG (Biblioteca)</b>
                       Permite que a IA leia e pesquise em manuais técnicos, PDFs, planilhas CSV ou textos antes de enviar uma resposta técnica.
                     </div>
                   </div>
@@ -417,14 +417,14 @@ export default function SkillsPage() {
                   onClick={() => { setEditingRag(null); setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(!showRagForm); }} 
                   className="btn-primary py-1.5 text-xs"
                 >
-                  {showRagForm ? "Fechar" : "+ Novo Documento"}
+                  {showRagForm ? "Fechar" : "+ Novo RAG"}
                 </button>
               </div>
             </div>
 
             {showRagForm && (
               <div className="bg-[var(--bg-app)] p-4 rounded-md border border-[var(--border-subtle)] mb-4">
-                <h4 className="font-bold text-xs mb-3 text-[var(--text-primary)]">{editingRag ? "✏️ Editar Documento RAG" : "Adicionar Documento RAG"}</h4>
+                <h4 className="font-bold text-xs mb-3 text-[var(--text-primary)]">{editingRag ? "Editar Documento RAG" : "Adicionar Documento RAG"}</h4>
                 <form onSubmit={uploadRag} className="space-y-3">
                   <input 
                     type="text" 
@@ -447,13 +447,13 @@ export default function SkillsPage() {
                     <label htmlFor="rag-file-input" className="cursor-pointer">
                       {ragFile ? (
                         <div className="flex items-center justify-center gap-2">
-                          <span className="text-[var(--chart-purple)] text-xs font-bold">📄 {ragFile.name}</span>
+                          <span className="text-[var(--chart-purple)] text-xs font-bold">{ragFile.name}</span>
                           <span className="text-[var(--text-secondary)] text-[10px]">({formatSize(ragFile.size)})</span>
-                          <button type="button" onClick={(e) => { e.preventDefault(); setRagFile(null); }} className="text-[var(--status-error)] text-xs ml-2 hover:underline">✕ Remover</button>
+                          <button type="button" onClick={(e) => { e.preventDefault(); setRagFile(null); }} className="text-[var(--status-error)] text-xs ml-2 hover:underline">Remover</button>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-[var(--text-secondary)] text-xs font-medium">📎 Clique para anexar arquivo</p>
+                          <p className="text-[var(--text-secondary)] text-xs font-medium">Clique para anexar arquivo</p>
                           <p className="text-[var(--text-tertiary)] text-[9px] mt-0.5">PDF, DOCX, XLSX, CSV, TXT (até 10MB)</p>
                         </div>
                       )}
@@ -546,14 +546,14 @@ export default function SkillsPage() {
                   type="text" 
                   value={skillSearch} 
                   onChange={(e) => setSkillSearch(e.target.value)} 
-                  placeholder="Pesquisar Skills..." 
+                  placeholder="Pesquisar Habilidades..." 
                   className="input-search-clean w-48 py-1.5 text-xs"
                 />
                 <button
                   onClick={() => { setEditing(null); setForm({ name: "", type: "product", prompt: "" }); setSelectedRags([]); setShowForm(true); }}
                   className="btn-primary py-1.5 text-xs"
                 >
-                  + Adicionar Skill
+                  + Adicionar Habilidade
                 </button>
               </div>
             </div>
@@ -562,7 +562,7 @@ export default function SkillsPage() {
             {showForm && (
               <div className="card-base mb-8">
                 <h4 className="font-bold text-sm mb-4 text-[var(--text-primary)]">
-                  {editing ? "✏️ Editar Habilidade" : "✨ Criar Nova Habilidade"}
+                  {editing ? "Editar Habilidade" : "Criar Nova Habilidade"}
                 </h4>
                 <form onSubmit={saveSkill} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -607,7 +607,7 @@ export default function SkillsPage() {
                   {ragDocs.length > 0 && (
                     <div>
                       <label className="block text-[10px] font-bold text-[var(--text-secondary)] uppercase mb-2">
-                        📚 Vincular Conhecimento RAG Relacionado
+                        Vincular Conhecimento RAG Relacionado
                       </label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-36 overflow-y-auto bg-[var(--bg-app)] rounded-md border border-[var(--border-subtle)] p-2">
                         {ragDocs.map(doc => (
@@ -671,7 +671,7 @@ export default function SkillsPage() {
                           <div className="flex flex-wrap gap-1.5 mt-3 pt-2">
                             {linked.map((doc: any) => (
                               <span key={doc.id} className="text-[9px] bg-[#8B5CF6]/5 text-[#8B5CF6] px-2.5 py-0.5 rounded-full border border-[#8B5CF6]/20 flex items-center gap-1 font-medium">
-                                📚 {doc.name}
+                                {doc.name}
                               </span>
                             ))}
                           </div>
@@ -680,24 +680,21 @@ export default function SkillsPage() {
                       <div className="flex gap-2">
                         <button 
                           onClick={() => toggleActive(s)} 
-                          className="btn-secondary w-7 h-7 p-0 flex items-center justify-center" 
-                          title={s.active ? "Desativar" : "Ativar"}
+                          className="btn-secondary px-2.5 py-1 h-auto text-[11px] font-semibold" 
                         >
-                          {s.active ? "⏸️" : "▶️"}
+                          {s.active ? "Pausar" : "Ativar"}
                         </button>
                         <button 
                           onClick={() => startEdit(s)} 
-                          className="btn-secondary w-7 h-7 p-0 flex items-center justify-center text-blue-500" 
-                          title="Editar"
+                          className="btn-secondary px-2.5 py-1 h-auto text-[11px] font-semibold" 
                         >
-                          ✏️
+                          Editar
                         </button>
                         <button 
                           onClick={() => deleteSkill(s.id)} 
-                          className="btn-secondary w-7 h-7 p-0 flex items-center justify-center text-[var(--status-error)] border-[var(--status-error)]/30 hover:bg-[var(--status-error)]/10" 
-                          title="Excluir"
+                          className="btn-secondary px-2.5 py-1 h-auto text-[11px] font-semibold text-[var(--status-error)] border-[var(--status-error)]/30 hover:bg-[var(--status-error)]/10" 
                         >
-                          🗑️
+                          Excluir
                         </button>
                       </div>
                     </div>

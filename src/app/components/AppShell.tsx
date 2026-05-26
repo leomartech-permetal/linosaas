@@ -107,55 +107,50 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#FAFAFA] text-[#171717]" style={{ 
-      "--tenant-primary": primaryHSL,
-      "--font-heading": (config as any).font_heading || 'Roboto Condensed',
-      "--font-body": (config as any).font_body || 'Assistant'
+    <div className="app-container" style={{ 
+      "--font-heading": "Geist, Inter, sans-serif",
+      "--font-body": "Geist, Inter, sans-serif"
     } as any}>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=${((config as any).font_heading || 'Roboto Condensed').replace(/ /g, '+')}&family=${((config as any).font_body || 'Assistant').replace(/ /g, '+')}&display=swap');
-        
         h1, h2, h3, h4, h5, h6, .font-heading {
-          font-family: var(--font-heading), sans-serif !important;
+          font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         }
-        body, p, span, div, .font-body {
-          font-family: var(--font-body), sans-serif;
+        body, p, span, div, .font-body, table, td, th {
+          font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
       `}</style>
-      {/* Sidebar SaaS Minimalista */}
-      <aside className="sidebar flex flex-col z-50">
-        <div className="p-4 flex flex-col gap-4">
+      
+      {/* Sidebar Ultra-Limpa (Referência Vercel Style) */}
+      <aside className="sidebar">
+        <div className="mb-2">
           <a href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             {config.logo_url ? (
-              <img src={config.logo_url} alt="Logo" className="h-7 object-contain" />
+              <img src={config.logo_url} alt="Logo" className="h-6 object-contain" />
             ) : (
-              <div className="w-6 h-6 rounded flex items-center justify-center text-white font-black text-xs" style={{ backgroundColor: "#111111" }}>
+              <div className="w-6 h-6 rounded bg-[#111111] flex items-center justify-center text-white font-black text-xs">
                 P
               </div>
             )}
             {!config.logo_url && (
-              <span className="font-bold tracking-tight text-base text-[var(--text-primary)]">{config.company_name}</span>
+              <span className="font-bold tracking-tight text-[15px] text-[var(--text-primary)]">{config.company_name}</span>
             )}
           </a>
-          
-          {/* Campo de Busca Minimalista */}
-          <div className="relative flex items-center">
-            <input 
-              type="text" 
-              placeholder="Buscar..." 
-              className="search w-full pr-8 text-xs h-8"
-            />
-            <span className="absolute right-2 text-[10px] font-mono text-[var(--text-soft)] bg-[var(--surface-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded pointer-events-none">
-              F
-            </span>
-          </div>
         </div>
 
-        <nav className="flex-1 px-2 py-2 overflow-y-auto scrollbar-hide">
+        {/* Campo de Busca Minimalista */}
+        <div className="search-container">
+          <input 
+            type="text" 
+            placeholder="Buscar..." 
+            className="search-input"
+          />
+          <span className="search-shortcut">F</span>
+        </div>
+
+        <nav className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
           {menuGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-1 mb-4">
-              {gIdx > 0 && <div className="sidebar-divider" />}
-              <h4 className="px-3 text-[10px] font-bold text-[var(--text-soft)] uppercase tracking-wider mb-2">{group.title}</h4>
+            <div key={gIdx} className="nav-group">
+              <h4 className="nav-label">{group.title}</h4>
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.href === "/" && pathname === "/");
                 return (
@@ -164,11 +159,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     href={item.href}
                     className={`nav-item ${isActive ? "active" : ""}`}
                   >
-                    <span className="icon flex items-center justify-center w-4 h-4 text-current">
+                    <span className="flex-shrink-0 flex items-center justify-center text-current">
                       {item.icon(config.primary_color)}
                     </span>
-                    <span className="font-normal text-xs">{item.label}</span>
-                    {isActive && <div className="ml-auto w-1 h-1 rounded-full bg-[var(--text-primary)]"></div>}
+                    <span>{item.label}</span>
                   </a>
                 );
               })}
@@ -176,8 +170,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-[var(--border)] bg-[var(--sidebar-bg)]">
-          <div className="p-2 rounded-md flex items-center gap-3 mb-3 bg-[var(--surface-muted)] border border-[var(--border)]">
+        <div className="pt-4 border-t border-[var(--border-light)] flex flex-col gap-3">
+          <div className="p-2 rounded bg-[var(--bg-surface-muted)] flex items-center gap-3">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#eaeaea] text-[#111111]">AD</div>
             <div className="overflow-hidden">
               <p className="text-xs font-semibold truncate text-[var(--text-primary)]">Administrador</p>
@@ -186,18 +180,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <a 
             href="/api/logout" 
-            className="flex items-center justify-center gap-2 w-full py-2 text-xs font-medium border border-[var(--border-strong)] rounded-md text-[var(--text-secondary)] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all bg-white"
+            className="btn-secondary w-full h-8 text-xs font-medium"
           >
             Encerrar Sessão
           </a>
         </div>
       </aside>
 
-      {/* Conteúdo Principal */}
-      <main className="flex-1 relative h-full overflow-hidden flex flex-col bg-white">
-        <div className="flex-1 overflow-y-auto relative z-10">
-          {children}
-        </div>
+      {/* Área de Conteúdo Principal */}
+      <main className="main-content">
+        {children}
       </main>
     </div>
   );

@@ -97,46 +97,46 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="p-6 md:p-10 w-full h-full bg-[var(--theme-bg)] text-[var(--theme-fg)] flex flex-col overflow-hidden transition-colors duration-200">
-      <header className="flex justify-between items-center mb-10">
+    <div className="p-6 md:p-8 w-full h-full bg-white text-[var(--text-primary)] flex flex-col overflow-hidden transition-colors duration-200">
+      <header className="flex justify-between items-center mb-8 pb-4 border-b border-[var(--border-light)]">
         <div>
-          <h2 className="text-4xl font-black tracking-tighter">Fluxo Comercial</h2>
-          <p className="text-gray-400 mt-1 font-medium">Gestão tática do pipeline de vendas em tempo real</p>
+          <h2 className="text-2xl font-bold tracking-tight">Fluxo Comercial</h2>
+          <p className="text-[var(--text-muted)] mt-1 text-xs font-medium">Gestão tática do pipeline de vendas em tempo real</p>
         </div>
         <button 
           onClick={() => setShowNewModal(true)} 
-          className="bg-[hsl(var(--tenant-primary))] text-white font-black py-3 px-8 rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_hsl(var(--tenant-primary)/0.3)] uppercase text-xs tracking-widest cursor-pointer"
+          className="btn-primary"
         >
           + Inserir Lead Manual
         </button>
       </header>
 
-      {/* Kanban Premium */}
-      <div className="flex-1 flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
+      {/* Kanban Minimalista */}
+      <div className="flex-1 flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
         {COLUMNS.map((col) => {
           const colLeads = leads.filter((l) => l.status === col.key);
           return (
             <div
               key={col.key}
-              className="w-80 min-w-[320px] flex-shrink-0 flex flex-col"
+              className="w-80 min-w-[300px] flex-shrink-0 flex flex-col"
               onDragOver={handleDragOver}
               onDrop={() => handleDrop(col.key)}
             >
               {/* Header da coluna */}
               <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: col.color }}></div>
-                  <h3 className="font-black text-xs uppercase tracking-widest text-gray-400">{col.label}</h3>
+                  <div className="w-1.5 h-4 bg-[#111111] rounded"></div>
+                  <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">{col.label}</h3>
                 </div>
-                <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-gray-100 border border-[#EAEAEA] text-[#666666]">{colLeads.length}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-muted)] border border-[var(--border-light)] text-[var(--text-muted)]">{colLeads.length}</span>
               </div>
               {/* Área de Cards */}
-              <div className="flex-1 bg-gray-50/50 border border-[var(--theme-border)] rounded-2xl p-3 space-y-4 overflow-y-auto scrollbar-hide">
+              <div className="flex-1 bg-[var(--bg-sidebar)] border border-[var(--border-light)] rounded-lg p-3 space-y-3 overflow-y-auto scrollbar-hide">
                 {loading ? (
-                  <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>
+                  <div className="flex justify-center py-10"><div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div></div>
                 ) : colLeads.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 gap-2 border-2 border-dashed border-gray-200 rounded-2xl">
-                    <span className="text-[10px] font-black text-gray-400 uppercase">Vazio</span>
+                  <div className="flex flex-col items-center justify-center py-20 gap-2 border border-dashed border-[var(--border-strong)] rounded-lg">
+                    <span className="text-[10px] font-semibold text-[var(--text-soft)] uppercase">Vazio</span>
                   </div>
                 ) : (
                   colLeads.map((lead) => {
@@ -147,28 +147,35 @@ export default function PipelinePage() {
                         draggable
                         onDragStart={() => handleDragStart(lead.id)}
                         onClick={() => setSelectedLead(lead)}
-                        className="bg-[var(--theme-card)] p-5 rounded-xl border border-[var(--theme-border)] cursor-grab active:cursor-grabbing hover:border-[hsl(var(--tenant-primary)/0.4)] transition-all hover:bg-[var(--theme-hover)] shadow-sm hover:shadow group relative overflow-hidden"
+                        className="metric-card bg-white p-4 border border-[var(--border-light)] hover:border-[var(--border-strong)] cursor-grab active:cursor-grabbing transition-all group relative overflow-hidden"
                       >
-                        <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-20 transition-opacity">
+                        <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-30 transition-opacity">
                           <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path></svg>
                         </div>
-                        <h4 className="font-bold text-sm text-[var(--theme-fg)] mb-1 group-hover:text-[hsl(var(--tenant-primary))]">{lead.name || "Interesse Anônimo"}</h4>
-                        <p className="text-[10px] text-gray-400 font-medium mb-1">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</p>
+                        <h4 className="font-bold text-sm text-[var(--text-primary)] mb-1">{lead.name || "Interesse Anônimo"}</h4>
+                        <p className="text-[10px] text-[var(--text-muted)] font-mono mb-2">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</p>
                         
                         {seller && (
-                          <p className="text-[10px] text-yellow-500/90 font-bold mb-3 flex items-center gap-1 bg-yellow-500/5 border border-yellow-500/20 px-2 py-0.5 rounded w-fit">
-                            <span>👤 {seller.name}</span>
+                          <p className="text-[10px] text-[var(--text-secondary)] font-semibold mb-3 flex items-center gap-1 bg-[var(--bg-surface-muted)] border border-[var(--border-light)] px-2 py-0.5 rounded w-fit">
+                            <span>Vendedor: {seller.name}</span>
                           </p>
                         )}
                         {!seller && <div className="h-2"></div>}
  
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-bold uppercase text-[#0070F3] bg-[#0070F3]/10 px-2 py-0.5 rounded-md border border-[#0070F3]/20 truncate max-w-[150px]">
+                          <span className="text-[9px] font-bold uppercase text-[var(--text-primary)] bg-[var(--bg-surface-muted)] px-2 py-0.5 rounded border border-[var(--border-light)] truncate max-w-[150px]">
                             {lead.produto || lead.detected_product || "Sem Produto"}
                           </span>
-                          <div className="w-5 h-5 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[8px] font-semibold text-[#171717]">
-                            {lead.support_attempts > 0 ? '🚨' : (lead.name || '?').charAt(0).toUpperCase()}
-                          </div>
+                          
+                          {lead.support_attempts > 0 ? (
+                            <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-[var(--status-critical-bg)] text-[var(--status-critical-text)] border border-[var(--status-critical-border)] rounded">
+                              SLA Alerta ({lead.support_attempts})
+                            </span>
+                          ) : (
+                            <div className="w-5 h-5 rounded bg-[var(--bg-surface-muted)] flex items-center justify-center text-[9px] font-semibold text-[var(--text-secondary)] border border-[var(--border-light)]">
+                              {(lead.name || '?').charAt(0).toUpperCase()}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -182,25 +189,25 @@ export default function PipelinePage() {
 
       {/* Modal Novo Lead */}
       {showNewModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={() => setShowNewModal(false)}>
-          <div className="bg-[var(--theme-card)] p-8 rounded-3xl border border-[var(--theme-border)] w-full max-w-md shadow-2xl text-[var(--theme-fg)]" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-2xl font-black mb-6 tracking-tighter">Inserção Tática</h3>
-            <form onSubmit={criarLead} className="space-y-5">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowNewModal(false)}>
+          <div className="bg-white p-6 rounded-lg border border-[var(--border-strong)] w-full max-w-sm text-[var(--text-primary)]" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4">Inserção Manual</h3>
+            <form onSubmit={criarLead} className="space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Nome do Cliente</label>
-                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded-xl p-3 text-sm text-[var(--theme-fg)] outline-none focus:border-[hsl(var(--tenant-primary))]" placeholder="Ex: João Silva" required />
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 block">Nome do Cliente</label>
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-search-clean w-full h-9 px-3" placeholder="Ex: João Silva" required />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">WhatsApp</label>
-                <input type="text" value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} placeholder="5511999999999" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded-xl p-3 text-sm text-[var(--theme-fg)] outline-none focus:border-[hsl(var(--tenant-primary))]" required />
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 block">WhatsApp</label>
+                <input type="text" value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} placeholder="5511999999999" className="input-search-clean w-full h-9 px-3" required />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Código de Origem (GTM)</label>
-                <input type="text" value={form.gtm_tag} onChange={(e) => setForm({ ...form, gtm_tag: e.target.value })} placeholder="LINO.ADS" className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded-xl p-3 text-sm text-[var(--theme-fg)] outline-none focus:border-[hsl(var(--tenant-primary))]" />
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 block">Código de Origem (GTM)</label>
+                <input type="text" value={form.gtm_tag} onChange={(e) => setForm({ ...form, gtm_tag: e.target.value })} placeholder="LINO.ADS" className="input-search-clean w-full h-9 px-3" />
               </div>
-              <div className="flex gap-4 pt-4">
-                <button type="submit" className="flex-1 bg-[hsl(var(--tenant-primary))] text-white font-black py-3 rounded-xl hover:opacity-90 uppercase text-xs tracking-widest cursor-pointer">Criar Lead</button>
-                <button type="button" onClick={() => setShowNewModal(false)} className="flex-1 border border-[#D4D4D8] text-[#666666] py-3 rounded-xl hover:bg-gray-100 uppercase text-xs tracking-widest cursor-pointer">Cancelar</button>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" className="flex-1 btn-primary">Criar Lead</button>
+                <button type="button" onClick={() => setShowNewModal(false)} className="flex-1 btn-secondary">Cancelar</button>
               </div>
             </form>
           </div>

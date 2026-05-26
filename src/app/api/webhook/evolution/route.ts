@@ -248,6 +248,15 @@ export async function POST(request: Request) {
             }
           });
 
+          // Mesclar dinamicamente os valores_campos_pendentes extraídos pelo LLM
+          if (aiResult.valores_campos_pendentes && typeof aiResult.valores_campos_pendentes === 'object') {
+            Object.entries(aiResult.valores_campos_pendentes).forEach(([k, v]) => {
+              if (v !== null && v !== undefined && v !== 'null' && v !== '') {
+                qState.valores[k] = v;
+              }
+            });
+          }
+
           // 2. Incrementar contador de tentativas da variável que a IA acabou de tentar perguntar
           const campoSolicitado = aiResult.campo_solicitado_nesta_rodada;
           if (campoSolicitado && campoSolicitado !== 'null' && campoSolicitado !== 'none') {

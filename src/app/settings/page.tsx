@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 const TABS = [
-  { key: "regions", label: "Regiões", icon: "🗺️" },
-  { key: "products", label: "Produtos", icon: "📦" },
-  { key: "segments", label: "Segmentos", icon: "🏭" },
-  { key: "teams", label: "Equipes", icon: "👥" },
-  { key: "sellers", label: "Vendedores", icon: "🧑‍💼" },
-  { key: "rules", label: "Regras", icon: "⚙️" },
-  { key: "cerebro", label: "Cérebro IA", icon: "🧠" },
+  { key: "regions", label: "Regiões" },
+  { key: "products", label: "Produtos" },
+  { key: "segments", label: "Segmentos" },
+  { key: "teams", label: "Equipes" },
+  { key: "sellers", label: "Vendedores" },
+  { key: "rules", label: "Regras" },
+  { key: "cerebro", label: "Cérebro IA" },
 ];
 
 export default function SettingsPage() {
@@ -58,7 +58,6 @@ export default function SettingsPage() {
   useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
-    setLoading(true);
     const [r, p, sg, t, u, b, rl] = await Promise.all([
       supabase.from("regions").select("*").order("name"),
       supabase.from("products").select("*, brands(name)").order("name"),
@@ -222,8 +221,6 @@ export default function SettingsPage() {
       setEditingUser(null); 
       flash("✔ Usuário/Vendedor atualizado!");
     } else {
-      // Para novos via regras comerciais, vamos pedir uma senha padrão ou email?
-      // O ideal é que o usuário já exista, mas se for criar aqui:
       flash("⚠️ Use a aba 'Usuários' para criar novos acessos. Aqui você edita o perfil comercial.");
       return;
     }
@@ -285,7 +282,7 @@ export default function SettingsPage() {
     const { id, created_at, ...cleanRule } = rule;
     const payload = {
       ...cleanRule,
-      priority: (rule.priority || 0) + 1 // Sugere uma prioridade próxima
+      priority: (rule.priority || 0) + 1
     };
     const { error } = await supabase.from("routing_rules").insert([payload]);
     if (error) { flash("Erro ao duplicar: " + error.message); return; }
@@ -293,50 +290,56 @@ export default function SettingsPage() {
     loadAll();
   }
 
-  const inputCls = "w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded p-2 text-[var(--theme-fg)] text-sm outline-none focus:border-[hsl(var(--tenant-primary))] transition-all";
-  const btnCls = "w-full py-2 rounded font-bold text-sm hover:opacity-90 transition-all cursor-pointer";
+  const inputCls = "input-search-clean w-full h-9 px-3 text-sm";
+  const btnCls = "btn-primary w-full";
 
   return (
-    <div className="p-6 md:p-10 w-full h-full text-[var(--theme-fg)] bg-[var(--theme-bg)] overflow-y-auto transition-colors duration-200">
-      <header className="mb-6 border-b border-[var(--theme-border)] pb-4">
-        <h2 className="text-3xl font-bold">Regras Comerciais</h2>
-        <p className="text-[var(--theme-muted)] mt-1 text-sm">Configure sua operação comercial e vincule seus usuários.</p>
+    <div className="p-6 md:p-8 w-full h-full text-[var(--text-primary)] bg-white overflow-y-auto transition-colors duration-200">
+      <header className="mb-6 border-b border-[var(--border-light)] pb-4">
+        <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Regras Comerciais</h2>
+        <p className="text-[var(--text-muted)] mt-1 text-xs font-medium">Configure sua operação comercial e vincule seus usuários.</p>
       </header>
 
       {/* TABS (Sticky) */}
-      <div className="sticky top-0 z-20 bg-[var(--theme-bg)] pt-2 pb-6 border-b border-[var(--theme-border)] mb-6 transition-colors">
+      <div className="sticky top-0 z-20 bg-white pt-2 pb-6 border-b border-[var(--border-light)] mb-6 transition-colors">
         <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${tab === t.key ? "bg-[hsl(var(--tenant-primary))] text-white shadow-sm" : "bg-[var(--theme-card)] border border-[var(--theme-border)] text-[var(--theme-muted)] hover:bg-[var(--theme-hover)] hover:text-[var(--theme-fg)]"}`}>
-              {t.icon} {t.label}
+            <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-md text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${tab === t.key ? "bg-[var(--btn-primary-bg)] text-white shadow-sm" : "bg-white border border-[var(--border-light)] text-[var(--text-muted)] hover:bg-[var(--bg-surface-muted)] hover:text-[var(--text-primary)]"}`}>
+              {t.label}
             </button>
           ))}
         </div>
       </div>
 
-      {loading ? <p className="text-[var(--theme-muted)]">Carregando...</p> : (
+      {loading ? <p className="text-[var(--text-muted)] text-sm">Carregando...</p> : (
         <div className="max-w-4xl">
           
           {/* REGIÕES */}
           {tab === "regions" && (
             <div className="space-y-4">
-              <div className="sticky top-[80px] z-10 bg-[var(--theme-bg)] pb-4 transition-colors">
-                <form onSubmit={addRegion} className="bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] space-y-3 shadow-sm">
-                  <h3 className="font-bold text-sm">Nova Região</h3>
+              <div className="bg-white pb-4 transition-colors">
+                <form onSubmit={addRegion} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+                  <h3 className="font-bold text-sm text-[var(--text-primary)]">Nova Região</h3>
                   <input type="text" value={regionForm.name} onChange={e => setRegionForm({...regionForm, name: e.target.value})} placeholder="Nome (ex: SP01, SUL, NORDESTE)" className={inputCls} required />
                   <input type="text" value={regionForm.ddd_codes} onChange={e => setRegionForm({...regionForm, ddd_codes: e.target.value})} placeholder="DDDs separados por vírgula (ex: 11,12,13,15)" className={inputCls} required />
-                  <button type="submit" className={`${btnCls} bg-blue-600 text-white`}>+ Criar Região</button>
-                  {msg && tab === 'regions' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                  <button type="submit" className="btn-primary w-full">+ Criar Região</button>
+                  {msg && tab === 'regions' && <p className="text-[10px] text-green-600 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
               <div className="space-y-2">
                 {regions.map(r => (
-                  <div key={r.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-center group">
+                  <div key={r.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
                     <div>
-                      <h4 className="font-bold text-sm">{r.name}</h4>
-                      <div className="flex flex-wrap gap-1 mt-1">{(r.ddd_codes || []).map((d: string) => <span key={d} className="text-[10px] bg-blue-900/10 text-blue-600 px-1.5 py-0.5 rounded border border-blue-500/10">{d}</span>)}</div>
+                      <h4 className="font-bold text-sm text-[var(--text-primary)]">{r.name}</h4>
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {(r.ddd_codes || []).map((d: string) => (
+                          <span key={d} className="text-[10px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">
+                            {d}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <button onClick={() => deleteRegion(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100 cursor-pointer">X</button>
+                    <button onClick={() => deleteRegion(r.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 cursor-pointer transition-colors">Excluir</button>
                   </div>
                 ))}
               </div>
@@ -346,9 +349,9 @@ export default function SettingsPage() {
           {/* PRODUTOS */}
           {tab === "products" && (
             <div className="space-y-4">
-              <div className="sticky top-[80px] z-10 bg-[var(--theme-bg)] pb-4 transition-colors">
-                <form onSubmit={addProduct} className="bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] space-y-3 shadow-sm">
-                  <h3 className="font-bold text-sm">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
+              <div className="bg-white pb-4 transition-colors">
+                <form onSubmit={addProduct} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+                  <h3 className="font-bold text-sm text-[var(--text-primary)]">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
                     <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
@@ -364,9 +367,9 @@ export default function SettingsPage() {
                         type="checkbox" 
                         checked={productForm.is_express_eligible} 
                         onChange={e => setProductForm({...productForm, is_express_eligible: e.target.checked})} 
-                        className="w-4 h-4 accent-green-500" 
+                        className="w-4 h-4 accent-black" 
                       />
-                      <span className="text-sm font-bold text-green-600">Elegível para Express</span>
+                      <span className="text-sm font-bold text-[var(--text-primary)]">Elegível para Express</span>
                     </label>
                     {productForm.is_express_eligible && (
                       <input 
@@ -380,28 +383,28 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex gap-3">
-                    <button type="submit" className={`${btnCls} bg-green-700 text-white flex-1`}>{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
-                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", is_express_eligible: false, express_max_qty: "" }); }} className={`${btnCls} border border-[var(--theme-border)] text-[var(--theme-fg)] flex-1`}>Cancelar</button>}
+                    <button type="submit" className="btn-primary flex-1">{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
+                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", is_express_eligible: false, express_max_qty: "" }); }} className="btn-secondary flex-1">Cancelar</button>}
                   </div>
-                  {msg && tab === 'products' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                  {msg && tab === 'products' && <p className="text-[10px] text-green-600 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
               <div className="space-y-2">
                 {products.map(p => (
-                  <div key={p.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-start group">
+                  <div key={p.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-sm">{p.name}</h4>
-                        {p.brands?.name && <span className="text-[10px] bg-purple-900/10 text-purple-600 px-1.5 py-0.5 rounded border border-purple-500/10">{p.brands.name}</span>}
+                        <h4 className="font-bold text-sm text-[var(--text-primary)]">{p.name}</h4>
+                        {p.brands?.name && <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{p.brands.name}</span>}
                         {p.is_express_eligible && (
-                          <span className="text-[10px] bg-green-900/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/20 font-bold">
+                          <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-1.5 py-0.5 rounded border border-[var(--border-light)] font-bold">
                             Express ({p.express_max_qty || "Qtd ilimitada"})
                           </span>
                         )}
                       </div>
-                      {(p.synonyms || []).length > 0 && <p className="text-[10px] text-[var(--theme-muted)] mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
+                      {(p.synonyms || []).length > 0 && <p className="text-[10px] text-[var(--text-muted)] mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 ml-2">
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 ml-2">
                       <button 
                         onClick={() => {
                            setEditingProduct(p);
@@ -413,11 +416,11 @@ export default function SettingsPage() {
                              express_max_qty: p.express_max_qty || ""
                            });
                         }} 
-                        className="text-[10px] bg-[var(--theme-hover)] px-2 py-1 rounded text-[var(--theme-fg)] border border-[var(--theme-border)] cursor-pointer"
+                        className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors"
                       >
                         Editar
                       </button>
-                      <button onClick={() => deleteProduct(p.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded cursor-pointer">X</button>
+                      <button onClick={() => deleteProduct(p.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded cursor-pointer transition-colors">Excluir</button>
                     </div>
                   </div>
                 ))}
@@ -428,30 +431,30 @@ export default function SettingsPage() {
           {/* SEGMENTOS */}
           {tab === "segments" && (
             <div className="space-y-4">
-              <div className="sticky top-[80px] z-10 bg-[var(--theme-bg)] pb-4 transition-colors">
-                <form onSubmit={addSegment} className="bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] space-y-3 shadow-sm">
-                  <h3 className="font-bold text-sm">Novo Segmento</h3>
+              <div className="bg-white pb-4 transition-colors">
+                <form onSubmit={addSegment} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+                  <h3 className="font-bold text-sm text-[var(--text-primary)]">Novo Segmento</h3>
                   <input type="text" value={segmentForm.name} onChange={e => setSegmentForm({...segmentForm, name: e.target.value})} placeholder="Nome (ex: Indústria, Construção)" className={inputCls} required />
                   <input type="text" value={segmentForm.keywords} onChange={e => setSegmentForm({...segmentForm, keywords: e.target.value})} placeholder="Keywords separadas por vírgula" className={inputCls} />
                   <select value={segmentForm.collection_type} onChange={e => setSegmentForm({...segmentForm, collection_type: e.target.value})} className={inputCls}>
                     <option value="normal">Coleta Normal (todos os campos)</option>
                     <option value="short">Coleta Curta (nome, email, produto)</option>
                   </select>
-                  <button type="submit" className={`${btnCls} bg-purple-700 text-white`}>+ Criar Segmento</button>
-                  {msg && tab === 'segments' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                  <button type="submit" className="btn-primary w-full">+ Criar Segmento</button>
+                  {msg && tab === 'segments' && <p className="text-[10px] text-green-600 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
               <div className="space-y-2">
                 {segments.map(s => (
-                  <div key={s.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-start group">
+                  <div key={s.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-sm">{s.name}</h4>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${s.collection_type === 'short' ? 'bg-yellow-900/10 text-yellow-600 border border-yellow-500/10' : 'bg-[var(--theme-hover)] text-[var(--theme-muted)] border border-[var(--theme-border)]'}`}>{s.collection_type === 'short' ? 'Coleta Curta' : 'Coleta Normal'}</span>
+                        <h4 className="font-bold text-sm text-[var(--text-primary)]">{s.name}</h4>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border border-[var(--border-light)] ${s.collection_type === 'short' ? 'bg-[var(--bg-surface-muted)] text-[var(--text-primary)] font-bold' : 'bg-white text-[var(--text-muted)]'}`}>{s.collection_type === 'short' ? 'Coleta Curta' : 'Coleta Normal'}</span>
                       </div>
-                      {(s.keywords || []).length > 0 && <p className="text-[10px] text-[var(--theme-muted)] mt-1">Keywords: {s.keywords.join(", ")}</p>}
+                      {(s.keywords || []).length > 0 && <p className="text-[10px] text-[var(--text-muted)] mt-1">Keywords: {s.keywords.join(", ")}</p>}
                     </div>
-                    <button onClick={() => deleteSegment(s.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded opacity-0 group-hover:opacity-100 cursor-pointer">X</button>
+                    <button onClick={() => deleteSegment(s.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 cursor-pointer transition-colors">Excluir</button>
                   </div>
                 ))}
               </div>
@@ -461,9 +464,9 @@ export default function SettingsPage() {
           {/* EQUIPES */}
           {tab === "teams" && (
             <div className="space-y-4">
-              <div className="sticky top-[80px] z-10 bg-[var(--theme-bg)] pb-4 transition-colors">
-                <form onSubmit={addTeam} className="bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] space-y-3 shadow-sm">
-                  <h3 className="font-bold text-sm">{editingTeam ? "Editar Equipe" : "Nova Equipe"}</h3>
+              <div className="bg-white pb-4 transition-colors">
+                <form onSubmit={addTeam} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+                  <h3 className="font-bold text-sm text-[var(--text-primary)]">{editingTeam ? "Editar Equipe" : "Nova Equipe"}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input 
                       type="text" 
@@ -485,27 +488,27 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div className="flex gap-2">
-                    <button type="submit" className={`${btnCls} bg-blue-600 text-white`}>{editingTeam ? "Salvar Alterações" : "+ Criar Equipe"}</button>
-                    {editingTeam && <button type="button" onClick={() => setEditingTeam(null)} className={`${btnCls} border border-[var(--theme-border)] text-[var(--theme-fg)]`}>Cancelar</button>}
+                    <button type="submit" className="btn-primary flex-1">{editingTeam ? "Salvar Alterações" : "+ Criar Equipe"}</button>
+                    {editingTeam && <button type="button" onClick={() => setEditingTeam(null)} className="btn-secondary flex-1">Cancelar</button>}
                   </div>
                 </form>
-                {msg && tab === 'teams' && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
+                {msg && tab === 'teams' && <p className="text-[10px] text-green-600 font-bold animate-pulse mt-2">{msg}</p>}
               </div>
               <div className="space-y-2">
                 {teams.map(t => {
                   const manager = users.find(u => u.id === t.manager_id);
                   return (
-                    <div key={t.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-center group">
+                    <div key={t.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
                       <div>
-                        <span className="font-bold text-sm">{t.name}</span>
+                        <span className="font-bold text-sm text-[var(--text-primary)]">{t.name}</span>
                         <div className="flex flex-col gap-1 mt-1">
-                          <p className="text-[10px] text-[var(--theme-muted)]">Gestor: <span className="text-[var(--theme-fg)] font-medium">{manager?.name || "Não atribuído"}</span></p>
-                          {manager?.whatsapp_number && <p className="text-[10px] text-[var(--theme-muted)]">WhatsApp: {manager.whatsapp_number}</p>}
+                          <p className="text-[10px] text-[var(--text-muted)]">Gestor: <span className="text-[var(--text-primary)] font-medium">{manager?.name || "Não atribuído"}</span></p>
+                          {manager?.whatsapp_number && <p className="text-[10px] text-[var(--text-muted)]">WhatsApp: {manager.whatsapp_number}</p>}
                         </div>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                        <button onClick={() => { setEditingTeam(t); setEditTeamName(t.name); }} className="text-[10px] bg-[var(--theme-hover)] px-2 py-1 rounded text-[var(--theme-fg)] border border-[var(--theme-border)] cursor-pointer">Editar</button>
-                        <button onClick={() => deleteTeam(t.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded cursor-pointer">X</button>
+                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100">
+                        <button onClick={() => { setEditingTeam(t); setEditTeamName(t.name); }} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors">Editar</button>
+                        <button onClick={() => deleteTeam(t.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded cursor-pointer transition-colors">Excluir</button>
                       </div>
                     </div>
                   );
@@ -517,53 +520,53 @@ export default function SettingsPage() {
           {/* VENDEDORES */}
           {tab === "sellers" && (
             <div className="space-y-4">
-              <div className="sticky top-[80px] z-10 bg-[var(--theme-bg)] pb-4 transition-colors">
+              <div className="bg-white pb-4 transition-colors">
                 {editingUser ? (
-                  <form onSubmit={addUser} className="bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] space-y-3 shadow-sm">
+                  <form onSubmit={addUser} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-sm text-blue-500">Vincular Vendedor: {editingUser.name}</h3>
-                      <a href="/usuarios" className="text-[10px] text-[var(--theme-muted)] hover:text-[var(--theme-fg)] underline">Editar dados cadastrais</a>
+                      <h3 className="font-bold text-sm text-[var(--text-primary)]">Vincular Vendedor: {editingUser.name}</h3>
+                      <a href="/usuarios" className="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] underline">Editar dados cadastrais</a>
                     </div>
                     <div>
-                      <label className="block text-[10px] text-[var(--theme-muted)] mb-1">Equipe</label>
+                      <label className="block text-[10px] text-[var(--text-muted)] mb-1">Equipe</label>
                       <select value={userForm.team_id} onChange={e => setUserForm({...userForm, team_id: e.target.value})} className={inputCls}>
                         <option value="">Sem equipe (Inativo no roteamento)</option>
                         {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                     </div>
                     <div className="flex gap-3 pt-2">
-                      <button type="submit" className={`${btnCls} bg-green-700 text-white`}>Salvar Atribuição</button>
-                      <button type="button" onClick={() => { setEditingUser(null); setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); }} className={`${btnCls} border border-[var(--theme-border)] text-[var(--theme-fg)]`}>Cancelar</button>
+                      <button type="submit" className="btn-primary flex-1">Salvar Atribuição</button>
+                      <button type="button" onClick={() => { setEditingUser(null); setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); }} className="btn-secondary flex-1">Cancelar</button>
                     </div>
                   </form>
                 ) : (
-                  <div className="bg-blue-900/10 border border-blue-900/20 p-4 rounded-lg text-xs text-blue-600">
-                    💡 <strong>Entidade Usuário:</strong> Todas as informações de nome, e-mail e whatsapp são gerenciadas em <strong>Configurações &gt; Usuários</strong>. Aqui você apenas atribui cada vendedor à sua equipe.
+                  <div className="bg-[var(--bg-surface-muted)] border border-[var(--border-light)] p-3 rounded-lg text-xs text-[var(--text-secondary)]">
+                    Como funciona: Todas as informações de nome, e-mail e whatsapp são gerenciadas em Usuários. Aqui você apenas atribui cada vendedor à sua equipe.
                   </div>
                 )}
                 {msg && tab === 'sellers' && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
               </div>
               <div className="space-y-2">
                 {users.filter(u => u.role === 'vendedor' || u.role === 'seller').map(u => (
-                  <div key={u.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-center group">
+                  <div key={u.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-sm">{u.name}</p>
-                        <span className="text-[10px] bg-blue-900/10 text-blue-600 px-1.5 py-0.5 rounded border border-blue-500/10 font-bold uppercase">Vendedor</span>
+                        <p className="font-bold text-sm text-[var(--text-primary)]">{u.name}</p>
+                        <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-1.5 py-0.5 rounded border border-[var(--border-light)] font-bold uppercase">Vendedor</span>
                       </div>
-                      <p className="text-[10px] text-[var(--theme-muted)] mt-1">
-                        {u.whatsapp_number ? `📞 ${u.whatsapp_number}` : "🚫 Sem WhatsApp"} • 👥 Equipe: {getName(teams, u.team_id)}
+                      <p className="text-[10px] text-[var(--text-muted)] mt-1.5 font-mono">
+                        {u.whatsapp_number ? `WhatsApp: ${u.whatsapp_number}` : "Sem WhatsApp"} • Equipe: {getName(teams, u.team_id)}
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => { setEditingUser(u); setUserForm({ name: u.name, whatsapp_number: u.whatsapp_number || "", team_id: u.team_id || "", role: u.role }); }} className="text-[10px] bg-[hsl(var(--tenant-primary))] text-white font-bold px-3 py-1 rounded cursor-pointer hover:opacity-90 transition-all">
+                      <button onClick={() => { setEditingUser(u); setUserForm({ name: u.name, whatsapp_number: u.whatsapp_number || "", team_id: u.team_id || "", role: u.role }); }} className="text-[10px] btn-secondary px-3 py-1.5 h-auto">
                         Mudar Equipe
                       </button>
                     </div>
                   </div>
                 ))}
                 {users.filter(u => u.role === 'vendedor' || u.role === 'seller').length === 0 && (
-                  <p className="text-[var(--theme-muted)] text-xs text-center py-8">Nenhum vendedor cadastrado em Usuários.</p>
+                  <p className="text-[var(--text-muted)] text-xs text-center py-8">Nenhum vendedor cadastrado em Usuários.</p>
                 )}
               </div>
             </div>
@@ -572,21 +575,21 @@ export default function SettingsPage() {
           {/* REGRAS */}
           {tab === "rules" && (
             <div className="space-y-4">
-              <div className="bg-[var(--theme-bg)] pb-4 transition-colors">
-                <form onSubmit={addRule} className="bg-[var(--theme-card)] p-4 rounded-lg border border-[var(--theme-border)] space-y-4 shadow-sm">
-                  <h3 className="font-bold text-sm">{editingRule ? "Editar Regra" : "Nova Regra de Roteamento"}</h3>
+              <div className="bg-white pb-4 transition-colors">
+                <form onSubmit={addRule} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-4">
+                  <h3 className="font-bold text-sm text-[var(--text-primary)]">{editingRule ? "Editar Regra" : "Nova Regra de Roteamento"}</h3>
 
                   {/* Equipe + Segmento */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-[var(--theme-muted)] font-bold uppercase tracking-wider block mb-1">Equipe</label>
+                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">Equipe</label>
                       <select value={ruleForm.team_id} onChange={e => setRuleForm({...ruleForm, team_id: e.target.value})} className={inputCls}>
                         <option value="">Qualquer equipe</option>
                         {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-[var(--theme-muted)] font-bold uppercase tracking-wider block mb-1">Segmento</label>
+                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">Segmento</label>
                       <select value={ruleForm.segment_id} onChange={e => setRuleForm({...ruleForm, segment_id: e.target.value})} className={inputCls}>
                         <option value="">Qualquer segmento</option>
                         {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -596,10 +599,10 @@ export default function SettingsPage() {
 
                   {/* Multi-select: REGIÕES */}
                   <div>
-                    <label className="text-[10px] text-[var(--theme-muted)] font-bold uppercase tracking-wider block mb-2">
-                      Regiões <span className="text-[var(--theme-muted)] normal-case font-normal">(selecione uma ou mais)</span>
+                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2">
+                      Regiões <span className="text-[var(--text-muted)] normal-case font-normal">(selecione uma ou mais)</span>
                     </label>
-                    {regions.length === 0 && <p className="text-[10px] text-[var(--theme-muted)]">Nenhuma região cadastrada</p>}
+                    {regions.length === 0 && <p className="text-[10px] text-[var(--text-muted)]">Nenhuma região cadastrada</p>}
                     <div className="flex flex-wrap gap-2">
                       {regions.map(r => {
                         const sel = ruleRegionIds.includes(r.id);
@@ -608,13 +611,13 @@ export default function SettingsPage() {
                             key={r.id}
                             type="button"
                             onClick={() => setRuleRegionIds(toggleChip(ruleRegionIds, r.id))}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded text-xs font-semibold border transition-all cursor-pointer ${
                               sel
-                                ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_8px_rgba(37,99,235,0.3)]'
-                                : 'bg-[var(--theme-card)] border-[var(--theme-border)] text-[var(--theme-muted)] hover:border-blue-700 hover:text-blue-500'
+                                ? 'bg-[#111111] border-[#111111] text-white'
+                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
                             }`}
                           >
-                            {sel ? '✓ ' : ''}{r.name}
+                            {sel ? 'Selecionado: ' : ''}{r.name}
                             {(r.ddd_codes || []).length > 0 && <span className="ml-1 opacity-60 font-normal">({r.ddd_codes.slice(0,2).join(',')}…)</span>}
                           </button>
                         );
@@ -624,10 +627,10 @@ export default function SettingsPage() {
 
                   {/* Multi-select: PRODUTOS */}
                   <div>
-                    <label className="text-[10px] text-[var(--theme-muted)] font-bold uppercase tracking-wider block mb-2">
-                      Produtos <span className="text-[var(--theme-muted)] normal-case font-normal">(selecione um ou mais)</span>
+                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2">
+                      Produtos <span className="text-[var(--text-muted)] normal-case font-normal">(selecione um ou mais)</span>
                     </label>
-                    {products.length === 0 && <p className="text-[10px] text-[var(--theme-muted)]">Nenhum produto cadastrado</p>}
+                    {products.length === 0 && <p className="text-[10px] text-[var(--text-muted)]">Nenhum produto cadastrado</p>}
                     <div className="flex flex-wrap gap-2">
                       {products.map(p => {
                         const sel = ruleProductIds.includes(p.id);
@@ -636,13 +639,13 @@ export default function SettingsPage() {
                             key={p.id}
                             type="button"
                             onClick={() => setRuleProductIds(toggleChip(ruleProductIds, p.id))}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded text-xs font-semibold border transition-all cursor-pointer ${
                               sel
-                                ? 'bg-green-700 border-green-600 text-white shadow-[0_0_8px_rgba(21,128,61,0.3)]'
-                                : 'bg-[var(--theme-card)] border-[var(--theme-border)] text-[var(--theme-muted)] hover:border-green-800 hover:text-green-600'
+                                ? 'bg-[#111111] border-[#111111] text-white'
+                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
                             }`}
                           >
-                            {sel ? '✓ ' : ''}{p.name}
+                            {sel ? 'Selecionado: ' : ''}{p.name}
                           </button>
                         );
                       })}
@@ -651,11 +654,11 @@ export default function SettingsPage() {
 
                   {/* Multi-select: VENDEDORES */}
                   <div>
-                    <label className="text-[10px] text-[var(--theme-muted)] font-bold uppercase tracking-wider block mb-1">
-                      🎰 Roleta de Vendedores <span className="text-[var(--theme-muted)] normal-case font-normal">(leads alternados automaticamente)</span>
+                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">
+                      Roleta de Vendedores <span className="text-[var(--text-muted)] normal-case font-normal">(leads alternados automaticamente)</span>
                     </label>
-                    <p className="text-[10px] text-[var(--theme-muted)] mb-2">Se mais de um vendedor atende a mesma região/produto/segmento, selecione todos — o sistema fará rodízio automático.</p>
-                    {users.length === 0 && <p className="text-[10px] text-[var(--theme-muted)]">Nenhum vendedor cadastrado</p>}
+                    <p className="text-[10px] text-[var(--text-muted)] mb-2">Se mais de um vendedor atende a mesma região/produto/segmento, selecione todos — o sistema fará rodízio automático.</p>
+                    {users.length === 0 && <p className="text-[10px] text-[var(--text-muted)]">Nenhum vendedor cadastrado</p>}
                     <div className="flex flex-wrap gap-2">
                       {users.map(u => {
                         const sel = ruleSellerIds.includes(u.id);
@@ -664,20 +667,20 @@ export default function SettingsPage() {
                             key={u.id}
                             type="button"
                             onClick={() => setRuleSellerIds(toggleChip(ruleSellerIds, u.id))}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                            className={`px-3 py-1.5 rounded text-xs font-semibold border transition-all cursor-pointer ${
                               sel
-                                ? 'bg-purple-700 border-purple-600 text-white shadow-[0_0_8px_rgba(126,34,206,0.3)]'
-                                : 'bg-[var(--theme-card)] border-[var(--theme-border)] text-[var(--theme-muted)] hover:border-purple-800 hover:text-purple-500'
+                                ? 'bg-[#111111] border-[#111111] text-white'
+                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
                             }`}
                           >
-                            {sel ? `✓ ${u.name}` : u.name}
+                            {sel ? `Selecionado: ${u.name}` : u.name}
                           </button>
                         );
                       })}
                     </div>
                     {ruleSellerIds.length > 1 && (
-                      <p className="text-[10px] text-purple-600 mt-2 font-bold animate-pulse">
-                        🎰 {ruleSellerIds.length} vendedores em rodízio — o sistema vai alternar automaticamente
+                      <p className="text-[10px] text-[var(--text-primary)] mt-2 font-bold font-mono">
+                        Rodízio ativo ({ruleSellerIds.length} vendedores) — o sistema alternará automaticamente
                       </p>
                     )}
                   </div>
@@ -685,9 +688,9 @@ export default function SettingsPage() {
                   {/* Prioridade e Express */}
                   <div className="grid grid-cols-2 gap-3 items-end">
                     <div>
-                      <label className="text-[10px] text-[var(--theme-muted)] font-bold uppercase tracking-wider block mb-1">
+                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">
                         Prioridade
-                        <span className="ml-2 text-[var(--theme-muted)] normal-case font-normal">
+                        <span className="ml-2 text-[var(--text-muted)] normal-case font-normal">
                           — menor número = maior prioridade
                         </span>
                       </label>
@@ -705,15 +708,15 @@ export default function SettingsPage() {
                           type="checkbox" 
                           checked={ruleForm.is_express} 
                           onChange={e => setRuleForm({...ruleForm, is_express: e.target.checked})} 
-                          className="w-4 h-4 accent-green-500" 
+                          className="w-4 h-4 accent-black" 
                         />
-                        <span className="text-sm font-bold text-green-600 group-hover:text-green-500">Regra de Atendimento EXPRESS</span>
+                        <span className="text-sm font-bold text-[var(--text-primary)]">Regra de Atendimento EXPRESS</span>
                       </label>
                     </div>
                   </div>
 
                   <div className="flex gap-3">
-                    <button type="submit" className={`${btnCls} bg-purple-700 text-white flex-1`}>{editingRule ? "Atualizar Regra" : "Criar Regra"}</button>
+                    <button type="submit" className="btn-primary flex-1">{editingRule ? "Atualizar Regra" : "Criar Regra"}</button>
                     {editingRule && (
                       <button 
                         type="button" 
@@ -722,24 +725,24 @@ export default function SettingsPage() {
                           setRuleForm({ team_id: "", segment_id: "", priority: 1, is_express: false });
                           setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
                         }} 
-                        className={`${btnCls} border border-[var(--theme-border)] text-[var(--theme-fg)] flex-1`}
+                        className="btn-secondary flex-1"
                       >
                         Cancelar
                       </button>
                     )}
                   </div>
-                  {msg && tab === 'rules' && <p className="text-[10px] text-green-400 font-bold animate-pulse">{msg}</p>}
+                  {msg && tab === 'rules' && <p className="text-[10px] text-green-600 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
 
               {/* Barra de Filtros */}
-              <div className="bg-[var(--theme-card)] p-4 rounded-xl border border-[var(--theme-border)] mb-6 flex flex-wrap gap-4 items-end">
+              <div className="bg-white p-4 rounded-lg border border-[var(--border-light)] mb-6 flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[150px]">
-                  <label className="block text-[10px] text-[var(--theme-muted)] mb-1 uppercase font-bold">Segmento</label>
+                  <label className="block text-[10px] text-[var(--text-muted)] mb-1 uppercase font-bold">Segmento</label>
                   <select 
                     value={filterSegmentId} 
                     onChange={(e) => setFilterSegmentId(e.target.value)}
-                    className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded-lg p-2 text-xs text-[var(--theme-fg)] outline-none focus:border-[#0ecab2]"
+                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)]"
                   >
                     <option value="">Todos</option>
                     {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -747,11 +750,11 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex-1 min-w-[150px]">
-                  <label className="block text-[10px] text-[var(--theme-muted)] mb-1 uppercase font-bold">Equipe</label>
+                  <label className="block text-[10px] text-[var(--text-muted)] mb-1 uppercase font-bold">Equipe</label>
                   <select 
                     value={filterTeamId} 
                     onChange={(e) => setFilterTeamId(e.target.value)}
-                    className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded-lg p-2 text-xs text-[var(--theme-fg)] outline-none focus:border-[#0ecab2]"
+                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)]"
                   >
                     <option value="">Todas</option>
                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -759,11 +762,11 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex-1 min-w-[150px]">
-                  <label className="block text-[10px] text-[var(--theme-muted)] mb-1 uppercase font-bold">Região</label>
+                  <label className="block text-[10px] text-[var(--text-muted)] mb-1 uppercase font-bold">Região</label>
                   <select 
                     value={filterRegionId} 
                     onChange={(e) => setFilterRegionId(e.target.value)}
-                    className="w-full bg-[var(--theme-input-bg)] border border-[var(--theme-input-border)] rounded-lg p-2 text-xs text-[var(--theme-fg)] outline-none focus:border-[#0ecab2]"
+                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)]"
                   >
                     <option value="">Todas</option>
                     {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -772,7 +775,7 @@ export default function SettingsPage() {
 
                 <button 
                   onClick={() => { setFilterSegmentId(""); setFilterTeamId(""); setFilterRegionId(""); }}
-                  className="bg-[var(--theme-hover)] hover:bg-[var(--theme-border)] text-[var(--theme-fg)] px-3 py-2 rounded-lg text-xs transition-colors h-[34px] border border-[var(--theme-border)] cursor-pointer"
+                  className="btn-secondary h-[34px] cursor-pointer"
                 >
                   Limpar
                 </button>
@@ -793,38 +796,38 @@ export default function SettingsPage() {
                   const sellerDisplay = sellerNames.length > 0 ? sellerNames : [getName(users, r.assigned_user_id)];
 
                   return (
-                    <div key={r.id} className="bg-[var(--theme-card)] p-3 rounded border border-[var(--theme-border)] flex justify-between items-start group">
+                    <div key={r.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
                       <div className="flex-1 min-w-0">
                         {/* Vendedores */}
-                        <div className="flex flex-wrap gap-1 mb-1">
+                        <div className="flex flex-wrap gap-1 mb-1.5">
                           {sellerDisplay.filter(Boolean).map((name: string) => (
-                            <span key={name} className="text-[10px] bg-purple-900/10 text-purple-600 px-1.5 py-0.5 rounded font-bold border border-purple-500/10">{name}</span>
+                            <span key={name} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-1.5 py-0.5 rounded border border-[var(--border-light)] font-bold">{name}</span>
                           ))}
                           {sellerDisplay.filter(Boolean).length > 1 && (
-                            <span className="text-[10px] text-purple-500 px-1 font-medium">🎰 rodízio</span>
+                            <span className="text-[10px] text-[var(--text-muted)] px-1 font-mono font-bold">rodízio</span>
                           )}
                           {r.is_express && (
-                            <span className="text-[10px] bg-green-900/10 text-green-600 px-2 py-0.5 rounded font-bold border border-green-500/20 ml-2">EXPRESS</span>
+                            <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-2 py-0.5 rounded border border-[var(--border-light)] font-black">EXPRESS</span>
                           )}
                         </div>
                         {/* Região e Produto */}
-                        <div className="flex flex-wrap gap-1 mb-1">
+                        <div className="flex flex-wrap gap-1.5 mb-1.5">
                           {regionDisplay !== 'Todas' && regionDisplay.split(', ').map((n: string) => (
-                            <span key={n} className="text-[10px] bg-blue-900/10 text-blue-600 px-1.5 py-0.5 rounded border border-blue-500/10">{n}</span>
+                            <span key={n} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{n}</span>
                           ))}
                           {productDisplay !== '—' && productDisplay.split(', ').map((n: string) => (
-                            <span key={n} className="text-[10px] bg-green-900/10 text-green-600 px-1.5 py-0.5 rounded border border-green-500/10">{n}</span>
+                            <span key={n} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{n}</span>
                           ))}
                           {getName(segments, r.segment_id) !== '—' && (
-                            <span className="text-[10px] bg-orange-900/10 text-orange-600 px-1.5 py-0.5 rounded border border-orange-500/10">{getName(segments, r.segment_id)}</span>
+                            <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{getName(segments, r.segment_id)}</span>
                           )}
                         </div>
-                        <p className="text-[10px] text-[var(--theme-muted)]">Prioridade {r.priority} • {getName(teams, r.team_id) !== '—' ? `Equipe: ${getName(teams, r.team_id)}` : 'Qualquer equipe'}</p>
+                        <p className="text-[10px] text-[var(--text-muted)] font-medium">Prioridade {r.priority} • {getName(teams, r.team_id) !== '—' ? `Equipe: ${getName(teams, r.team_id)}` : 'Qualquer equipe'}</p>
                       </div>
-                      <div className="flex gap-1 ml-2 shrink-0">
+                      <div className="flex gap-1.5 ml-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => duplicateRule(r)} 
-                          className="text-[10px] bg-blue-900/10 text-blue-600 px-2 py-1 rounded hover:bg-blue-600 hover:text-white border border-blue-500/10 cursor-pointer"
+                          className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors"
                           title="Duplicar esta regra"
                         >
                           Duplicar
@@ -843,11 +846,11 @@ export default function SettingsPage() {
                             setRuleSellerIds(r.seller_ids || []);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }} 
-                          className="text-[10px] bg-[var(--theme-hover)] px-2 py-1 rounded text-[var(--theme-fg)] border border-[var(--theme-border)] cursor-pointer"
+                          className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors"
                         >
                           Editar
                         </button>
-                        <button onClick={() => deleteRule(r.id)} className="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded cursor-pointer">X</button>
+                        <button onClick={() => deleteRule(r.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded cursor-pointer transition-colors">Excluir</button>
                       </div>
                     </div>
                   );
@@ -857,7 +860,7 @@ export default function SettingsPage() {
                   .filter(r => !filterTeamId || r.team_id === filterTeamId)
                   .filter(r => !filterRegionId || (r.region_ids && r.region_ids.includes(filterRegionId)))
                   .length === 0 && (
-                    <p className="text-[var(--theme-muted)] text-xs text-center py-8 bg-[var(--theme-card)] rounded-xl border border-dashed border-[var(--theme-border)]">
+                    <p className="text-[var(--text-muted)] text-xs text-center py-8 bg-white rounded-lg border border-dashed border-[var(--border-light)]">
                       Nenhuma regra encontrada com os filtros selecionados.
                     </p>
                   )
@@ -868,45 +871,43 @@ export default function SettingsPage() {
           {/* CÉREBRO IA */}
           {tab === "cerebro" && (
             <div className="space-y-6">
-              <div className="bg-[var(--theme-card)] p-6 rounded-xl border border-[var(--theme-border)] shadow-sm">
+              <div className="bg-white p-6 rounded-lg border border-[var(--border-light)]">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">🧠</span>
                   <div>
-                    <h3 className="font-bold text-lg">Prompt do Lino Suporte</h3>
-                    <p className="text-xs text-[var(--theme-muted)]">Define como a IA deve se comportar após o lead ser entregue ao vendedor.</p>
+                    <h3 className="font-bold text-base text-[var(--text-primary)]">Prompt do Lino Suporte</h3>
+                    <p className="text-xs text-[var(--text-muted)]">Define como a IA deve se comportar após o lead ser entregue ao vendedor.</p>
                   </div>
                 </div>
                 
                 <textarea 
                   value={supportPrompt} 
                   onChange={e => setSupportPrompt(e.target.value)}
-                  className={`${inputCls} h-40 resize-none font-mono text-[13px] leading-relaxed mb-4`}
+                  className={`${inputCls} h-40 resize-none font-mono text-[13px] leading-relaxed mb-4 p-3`}
                   placeholder="Ex: Você é o Lino Suporte da Permetal. Seja empático e ajude o cliente enquanto o vendedor não chega..."
                 />
 
-                <div className="border-t border-[var(--theme-border)] pt-6 mt-6">
+                <div className="border-t border-[var(--border-light)] pt-6 mt-6">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="text-2xl">🕒</span>
                     <div>
-                      <h3 className="font-bold text-lg">Regras de SLA e Escalação</h3>
-                      <p className="text-xs text-[var(--theme-muted)]">Configure os tempos de resposta e gatilhos de supervisão.</p>
+                      <h3 className="font-bold text-base text-[var(--text-primary)]">Regras de SLA e Escalação</h3>
+                      <p className="text-xs text-[var(--text-muted)]">Configure os tempos de resposta e gatilhos de supervisão.</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-[10px] text-[var(--theme-muted)] uppercase font-bold mb-1">Tempo Máximo de Espera (Horas)</label>
+                        <label className="block text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Tempo Máximo de Espera (Horas)</label>
                         <input 
                           type="number" 
                           value={slaRules.max_wait_hours} 
                           onChange={e => setSlaRules({...slaRules, max_wait_hours: parseInt(e.target.value)})}
                           className={inputCls}
                         />
-                        <p className="text-[10px] text-[var(--theme-muted)] mt-1">Tempo total antes de escalar para o supervisor.</p>
+                        <p className="text-[10px] text-[var(--text-muted)] mt-1">Tempo total antes de escalar para o supervisor.</p>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-[var(--theme-muted)] uppercase font-bold mb-1">Intervalo de Cobrança (Minutos)</label>
+                        <label className="block text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Intervalo de Cobrança (Minutos)</label>
                         <input 
                           type="number" 
                           value={slaRules.retry_interval_minutes} 
@@ -918,17 +919,17 @@ export default function SettingsPage() {
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-[10px] text-[var(--theme-muted)] uppercase font-bold mb-1">Máximo de Notificações ao Vendedor</label>
+                        <label className="block text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Máximo de Notificações ao Vendedor</label>
                         <input 
                           type="number" 
                           value={slaRules.seller_notify_max} 
                           onChange={e => setSlaRules({...slaRules, seller_notify_max: parseInt(e.target.value)})}
                           className={inputCls}
                         />
-                        <p className="text-[10px] text-[var(--theme-muted)] mt-1">Quantas vezes o Lino deve "cutucar" o vendedor.</p>
+                        <p className="text-[10px] text-[var(--text-muted)] mt-1">Quantas vezes o Lino deve "cutucar" o vendedor.</p>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-[var(--theme-muted)] uppercase font-bold mb-1">Intervalo entre Notificações (Minutos)</label>
+                        <label className="block text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Intervalo entre Notificações (Minutos)</label>
                         <input 
                           type="number" 
                           value={slaRules.seller_notify_interval_minutes} 
@@ -940,25 +941,20 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-[var(--theme-border)]">
+                <div className="mt-8 pt-6 border-t border-[var(--border-light)]">
                   <button 
                     onClick={saveCerebro} 
                     disabled={savingCerebro}
-                    className={`${btnCls} bg-[hsl(var(--tenant-primary))] text-white text-base py-3 shadow-md flex items-center justify-center gap-2`}
+                    className="btn-primary py-3 text-sm flex items-center justify-center gap-2"
                   >
-                    {savingCerebro ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></span>
-                        Salvando...
-                      </>
-                    ) : "Salvar Configurações do Cérebro"}
+                    {savingCerebro ? "Salvando..." : "Salvar Configurações do Cérebro"}
                   </button>
-                  {msg && <p className="text-center text-sm text-green-400 font-bold mt-4 animate-bounce">{msg}</p>}
+                  {msg && <p className="text-center text-xs text-green-600 font-bold mt-4 animate-bounce">{msg}</p>}
                 </div>
               </div>
 
-              <div className="bg-blue-900/10 border border-blue-900/20 p-4 rounded-lg text-xs text-blue-600 leading-relaxed">
-                <strong>💡 Como funciona:</strong> O Lino SDR qualifica o lead usando o Master Prompt e as Skills. Assim que o vendedor é atribuído, o sistema entra em modo de <strong>Monitoramento de Suporte</strong>. A IA passa a usar este Prompt de Suporte para manter o cliente engajado enquanto o vendedor não inicia o atendimento humano.
+              <div className="bg-[var(--bg-surface-muted)] border border-[var(--border-light)] p-3 rounded-lg text-xs text-[var(--text-secondary)] leading-relaxed">
+                Como funciona: O Lino SDR qualifica o lead usando o Master Prompt e as Habilidades. Assim que o vendedor é atribuído, o sistema entra em modo de Monitoramento de Suporte. A IA passa a usar este Prompt de Suporte para manter o cliente engajado enquanto o vendedor não inicia o atendimento humano.
               </div>
             </div>
           )}

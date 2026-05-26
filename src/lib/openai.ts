@@ -3,6 +3,35 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
+const DESCRICOES_PADRAO: Record<string, string> = {
+  nome_cliente: "Nome completo do cliente",
+  empresa: "Nome da empresa do cliente",
+  email: "E-mail corporativo do cliente",
+  cnpj: "CNPJ da empresa",
+  quantidade: "Quantidade/metragem do pedido (peças, m2, metros, rolos)",
+  material: "Material do produto (ex: Aço Carbono, Galvanizado, INOX, Alumínio)",
+  espessura: "Espessura da chapa em mm",
+  tipo_furo: "Tipo de furo (redondo, quadrado, oblongo, hexagonal, retangular ou losangular)",
+  dimensoes: "Medida do furo em mm (diâmetro para redondo, lado para quadrado, A x B para outros furos)",
+  ec: "Entre-centros em mm (espaçamento centro a centro)",
+  disposicao: "Disposição dos furos (AL - Alternada, RE - Reta, DI - Diagonal, etc.)",
+  malha: "Medida da malha A x B em mm (abertura da malha, ex: 10x20 mm)",
+  cordao: "Largura do cordão (passe) em mm",
+  dimensoes_placa: "Dimensões da placa ou rolo (largura x comprimento)",
+  modelo_gradil: "Modelo do gradil (Stadium, Artis, Sigma, Leone, Ômega, etc.)",
+  tipo_portao: "Tipo de portão (deslizante ou pivotante)",
+  altura: "Altura do portão em mm",
+  largura_vao: "Largura do vão ou portão em mm",
+  acabamento: "Acabamento/pintura (galvanizado a fogo, pintura epóxi, etc.)",
+  forma_recalque: "Formato do relevo/recalque (quadrado, oblongo, redondo, modelo GME)",
+  dimensoes_recalque: "Medidas do relevo/recalque em mm",
+  modelo_forro: "Modelo do forro (modular, colmeia, ripado, linear, baffle)",
+  dimensoes_forro: "Medidas das colmeias, réguas ou placas (comprimento x largura x altura)",
+  tipo_furo_forro: "Se o forro é perfurado (tipo de furo) ou liso",
+  modelo_brise: "Modelo do brise metálico",
+  modelo_antiofuscante: "Modelo da tela antiofuscante"
+};
+
 /**
  * buildContext — Cria o contexto de prompt do sistema a partir do prompt mestre e RAG
  */
@@ -128,13 +157,25 @@ ${Object.entries(todasVariaveis)
 ================================================
 `;
 
+      const formatarPendente = (campo: string) => {
+        const opt = (schema.opcionais || []).find((o: any) => o.campo === campo);
+        const desc = opt?.descricao || DESCRICOES_PADRAO[campo] || `Campo técnico ${campo}`;
+        return `- **${campo}**: ${desc}`;
+      };
+
+      const pendentesObrigatoriasText = pendentesObrigatorias.map(formatarPendente).join('\n') || 'Nenhuma';
+      const pendentesOpcionaisText = pendentesOpcionais.map((opt: any) => formatarPendente(opt.campo)).join('\n') || 'Nenhuma';
+
       qualificationInstructions = `
 === INSTRUÇÕES DE QUALIFICAÇÃO DO DIÁLOGO ===
 Você atua como um agente de IA ultra moderno, empático e de alta fluidez conversacional.
 Seu objetivo de qualificação é coletar os dados necessários para o atendimento comercial sem parecer um robô ou um formulário engessado.
 
-1. VARIÁVEIS OBRIGATÓRIAS PENDENTES: [${pendentesObrigatorias.join(', ')}]
-2. VARIÁVEIS OPCIONAIS PENDENTES (Dentro do limite de tentativas): [${pendentesOpcionais.map((o: any) => o.campo).join(', ')}]
+1. VARIÁVEIS OBRIGATÓRIAS PENDENTES:
+${pendentesObrigatoriasText}
+
+2. VARIÁVEIS OPCIONAIS PENDENTES (Dentro do limite de tentativas):
+${pendentesOpcionaisText}
 
 REGRAS DE CONVERSAÇÃO ULTRA FLUIDA:
 - NUNCA pergunte dados que já estejam cadastrados acima como preenchidos.
@@ -142,15 +183,36 @@ REGRAS DE CONVERSAÇÃO ULTRA FLUIDA:
 - Não insista na mesma pergunta seguidamente se o cliente a ignorar. Introduza as perguntas em momentos oportunos.
 - Apresente opções curtas de resposta no estilo catálogo/e-commerce quando aplicável (ex: espessuras disponíveis, tipos de furo).
 - IMPORTANTE: No JSON de retorno, indique obrigatoriamente qual variável você tentou coletar na chave "campo_solicitado_nesta_rodada". Se você não tentou coletar nenhuma variável específica nesta resposta, retorne null.
+- IMPORTANTE: Extraia qualquer valor dessas variáveis pendentes que o cliente tenha mencionado e coloque no objeto "valores_campos_pendentes" do JSON.
 `;
 
       // Carregar RAG associado se especificado no schema do produto
       if (schema.valores_validos_rag || schema.rag_document_name) {
         const docName = schema.valores_validos_rag || schema.rag_document_name;
+        
+        // Se for Chapa Perfurada, podemos buscar um RAG específico do tipo de furo se o cliente já citou
+        let finalDocName = docName;
+        if (detectedProduct && detectedProduct.toLowerCase().includes('perfurada')) {
+          const historicoCompleto = history.map(h => h.message_content).join(' ').toLowerCase();
+          if (historicoCompleto.includes('quadrado')) {
+            finalDocName = 'rag_furo_quadrado.txt';
+          } else if (historicoCompleto.includes('hexagonal')) {
+            finalDocName = 'rag_furo_hexagonal.txt';
+          } else if (historicoCompleto.includes('oblongo')) {
+            finalDocName = 'rag_furo_oblongo.txt';
+          } else if (historicoCompleto.includes('retangular')) {
+            finalDocName = 'rag_furo_retangular.txt';
+          } else if (historicoCompleto.includes('losangular')) {
+            finalDocName = 'rag_furo_losangular.txt';
+          } else if (historicoCompleto.includes('redondo') || historicoCompleto.includes('furo redondo')) {
+            finalDocName = 'rag_furo_redondo.txt';
+          }
+        }
+
         const { data: ragDoc } = await supabase
           .from('rag_documents')
           .select('name, content')
-          .ilike('name', `%${docName}%`)
+          .ilike('name', `%${finalDocName}%`)
           .eq('active', true)
           .limit(1)
           .maybeSingle();
@@ -183,13 +245,47 @@ ${ragDocs[0].content || ''}
   const systemContext = await buildContext(ragContent);
   console.log(`[OpenAI Debug] Produto detectado: ${detectedProduct || 'nenhum (fase inicial)'}`);
 
-  // Gerar campos JSON dinâmicos para instruir a extração
-  const extVars = config?.extraction_variables || [
-    { name: "empresa", description: "Nome da empresa do cliente", required: false },
-    { name: "email", description: "E-mail corporativo", required: false },
-    { name: "cnpj", description: "CNPJ da empresa", required: false }
-  ];
-  const dynamicJsonFields = extVars.map((v: any) => `    "${v.name}": "<extraia: ${v.description} ou null>"`).join(',\n');
+  // Coleta genérica de campos no JSON de retorno
+  let todosPendentes: string[] = [];
+  if (leadId) {
+    const { data: leadData } = await supabase.from('leads').select('*').eq('id', leadId).single();
+    if (leadData) {
+      let schema: any = null;
+      if (detectedProduct) {
+        const { data: productData } = await supabase.from('products').select('qualification_schema').ilike('name', `%${detectedProduct}%`).limit(1).maybeSingle();
+        schema = productData?.qualification_schema;
+      }
+      const extVars = config?.extraction_variables || [
+        { name: "empresa", description: "Nome da empresa do cliente", required: false },
+        { name: "email", description: "E-mail corporativo", required: false },
+        { name: "cnpj", description: "CNPJ da empresa", required: false }
+      ];
+      if (!schema) {
+        const schemaObrigatorias = extVars.filter((v: any) => v.required).map((v: any) => v.name);
+        const schemaOpcionais = extVars.filter((v: any) => !v.required).map((v: any) => ({ campo: v.name }));
+        schema = { obrigatorias: schemaObrigatorias, opcionais: schemaOpcionais };
+      }
+      const qState = leadData.qualification_state || {};
+      const valoresSalvos = qState.valores || {};
+      const preenchidos: Record<string, any> = { nome_cliente: leadData.name || null, produto: detectedProduct || null, quantidade: leadData.quantidade || null };
+      for (const v of extVars) {
+        if ((leadData as any)[v.name] !== undefined && (leadData as any)[v.name] !== null) {
+          preenchidos[v.name] = (leadData as any)[v.name];
+        }
+      }
+      const todasVariaveis = { ...preenchidos, ...valoresSalvos };
+      const pendentesObrigatorias = schema.obrigatorias.filter((f: string) => !todasVariaveis[f]);
+      const pendentesOpcionais = (schema.opcionais || []).filter((opt: any) => !todasVariaveis[opt.campo]);
+      todosPendentes = [...pendentesObrigatorias, ...pendentesOpcionais.map((o: any) => o.campo)];
+    }
+  }
+
+  // Fallback se não há leadId ou lista vazia
+  if (todosPendentes.length === 0) {
+    todosPendentes = ["empresa", "email", "quantidade"];
+  }
+
+  const dynamicJsonFields = todosPendentes.map((campo: string) => `    "${campo}": "<extraia o valor do diálogo para ${campo} ou null>"`).join(',\n');
 
   const extractionPrompt = `${systemContext}
 
@@ -224,7 +320,6 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
   "confidence": "<0 a 100>",
   "cliente": {
     "nome": "<extraia o nome ou null>",
-${dynamicJsonFields},
     "telefone": null,
     "ddd_regiao": null,
     "canal_origem": "whatsapp"
@@ -243,8 +338,11 @@ ${dynamicJsonFields},
     "tem_projeto_anexo": false,
     "urgencia": "<alta, media, baixa ou null>"
   },
+  "valores_campos_pendentes": {
+${dynamicJsonFields}
+  },
   "estado_lead": {
-    "dados_minimos_completos": <true SOMENTE se: produto + quantidade + especificação técnica mínima + aplicação/segmento definidos. Caso contrário: false>,
+    "dados_minimos_completos": <true SOMENTE se as variáveis obrigatórias pendentes estiverem todas preenchidas. Caso contrário: false>,
     "motivo_faltante": "<o que ainda falta, ex: faltando_tipo_furo, faltando_quantidade>"
   },
   "rag": {

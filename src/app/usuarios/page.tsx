@@ -38,7 +38,7 @@ export default function UsuariosPage() {
       if (form.password) payload.password = form.password;
       await supabase.from("admin_users").update(payload).eq("id", editing.id);
       setEditing(null);
-      flash("✔ Usuário atualizado!");
+      flash("Usuário atualizado com sucesso.");
     } else {
       if (!form.password) { flash("Senha é obrigatória para novos usuários"); return; }
       const { error } = await supabase.from("admin_users").insert([{ 
@@ -49,7 +49,7 @@ export default function UsuariosPage() {
         whatsapp_number: form.whatsapp_number 
       }]);
       if (error) { flash("Erro: " + error.message); return; }
-      flash("✔ Usuário criado!");
+      flash("Usuário criado com sucesso.");
     }
     setForm({ name: "", email: "", password: "", role: "vendedor", whatsapp_number: "" });
     setShowForm(false);
@@ -64,14 +64,14 @@ export default function UsuariosPage() {
 
   async function toggleActive(u: any) {
     await supabase.from("admin_users").update({ active: !u.active }).eq("id", u.id);
-    flash(u.active ? "Usuário desativado" : "✔ Usuário ativado!");
+    flash(u.active ? "Usuário desativado." : "Usuário ativado com sucesso.");
     loadUsers();
   }
 
   async function deleteUser(id: string) {
     if (!confirm("Excluir este usuário permanentemente?")) return;
     await supabase.from("admin_users").delete().eq("id", id);
-    flash("✔ Usuário excluído!");
+    flash("Usuário excluído com sucesso.");
     loadUsers();
   }
 
@@ -104,33 +104,33 @@ export default function UsuariosPage() {
                 <th className="pb-3 font-semibold text-center">Usuários</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-primary)]">
+            <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-secondary)]">
               <tr>
-                <td className="py-3 text-red-600 font-bold">Admin</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
+                <td className="py-3 font-semibold text-[var(--text-primary)]">Admin</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
               </tr>
               <tr>
-                <td className="py-3 text-amber-600 font-bold">Gestor</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">❌</td>
-                <td className="text-center py-3">❌</td>
+                <td className="py-3 font-semibold text-[var(--text-primary)]">Gestor</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">—</td>
+                <td className="text-center py-3">—</td>
               </tr>
               <tr>
-                <td className="py-3 text-blue-600 font-bold">Vendedor</td>
-                <td className="text-center py-3">❌</td>
-                <td className="text-center py-3">✅</td>
-                <td className="text-center py-3">❌</td>
-                <td className="text-center py-3">❌</td>
-                <td className="text-center py-3">❌</td>
-                <td className="text-center py-3">❌</td>
+                <td className="py-3 font-semibold text-[var(--text-primary)]">Vendedor</td>
+                <td className="text-center py-3">—</td>
+                <td className="text-center py-3">Sim</td>
+                <td className="text-center py-3">—</td>
+                <td className="text-center py-3">—</td>
+                <td className="text-center py-3">—</td>
+                <td className="text-center py-3">—</td>
               </tr>
             </tbody>
           </table>

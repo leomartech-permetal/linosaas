@@ -75,98 +75,123 @@ export default function DashboardPage() {
   const maxDia = Math.max(...porDia.map((d) => d.count), 1);
 
   return (
-    <div className="flex h-full w-full bg-[var(--theme-bg)] text-[var(--theme-fg)] overflow-hidden relative transition-colors duration-200">
+    <div className="w-full h-full text-[var(--text-primary)] bg-white overflow-hidden relative">
       {/* Conteúdo Principal */}
-      <div className={`flex-1 overflow-y-auto p-6 md:p-10 scrollbar-hide transition-all duration-300 ${selectedLead ? 'mr-[450px]' : ''}`}>
-        <header className="mb-10 flex justify-between items-start">
+      <div className={`w-full transition-all duration-300 ${selectedLead ? 'pr-[450px]' : ''}`}>
+        <header className="page-header flex justify-between items-start">
           <div>
-            <h2 className="text-4xl font-black tracking-tighter">Lino Intelligence</h2>
-            <p className="text-[var(--theme-muted)] mt-1 font-medium italic">Visão estratégica da sua operação de vendas</p>
+            <h1 className="page-title">Lino Intelligence</h1>
+            <p className="page-description">Visão estratégica da sua operação de vendas</p>
           </div>
-          <button onClick={loadData} className="bg-[var(--theme-card)] border border-[var(--theme-border)] text-[var(--theme-fg)] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--theme-hover)] transition-all cursor-pointer">
+          <button onClick={loadData} className="btn-secondary">
             Atualizar
           </button>
         </header>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-[hsl(var(--tenant-primary))] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
-              {[
-                { label: "Total de Leads", val: total, color: "var(--theme-fg)", icon: "🔥" },
-                { label: "Vendas Concluídas", val: fechados, color: "#10b981", icon: "💰" },
-                { label: "Taxa de Conversão", val: `${taxa}%`, color: "hsl(var(--tenant-primary))", icon: "📈" },
-                { label: "SDR em Aberto", val: porStatus["SDR_QUALIFICATION"] || 0, color: "#3b82f6", icon: "🤖" },
-                { label: "SLA em Risco", val: leads.filter(l => l.status === 'WAITING_SELLER').length, color: "#f43f5e", icon: "🚨" },
-              ].map((kpi, i) => (
-                <div key={i} className="bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-[hsl(var(--tenant-primary)/0.4)] transition-all">
-                  <div className="absolute top-0 right-0 p-4 opacity-20 text-2xl">{kpi.icon}</div>
-                  <p className="text-[9px] text-[var(--theme-muted)] uppercase font-black tracking-widest mb-2">{kpi.label}</p>
-                  <p className="text-3xl font-black" style={{ color: kpi.color }}>{kpi.val}</p>
-                </div>
-              ))}
+            <div className="metrics-grid">
+              <div className="metric-card">
+                <span className="metric-label">Total de Leads</span>
+                <span className="metric-value">{total}</span>
+                <span className="metric-subtext">Total histórico</span>
+              </div>
+              <div className="metric-card">
+                <span className="metric-label">Vendas Concluídas</span>
+                <span className="metric-value">{fechados}</span>
+                <span className="metric-subtext">CLOSED_WON</span>
+              </div>
+              <div className="metric-card">
+                <span className="metric-label">Taxa de Conversão</span>
+                <span className="metric-value">{taxa}%</span>
+                <span className="metric-subtext">Leads fechados</span>
+              </div>
+              <div className="metric-card">
+                <span className="metric-label">SDR em Aberto</span>
+                <span className="metric-value">{porStatus["SDR_QUALIFICATION"] || 0}</span>
+                <span className="metric-subtext">Fase inicial</span>
+              </div>
+              {/* Card de SLA Crítico com cor vermelha regulamentada */}
+              <div className={`metric-card ${leads.filter(l => l.status === 'WAITING_SELLER').length > 0 ? 'critical' : ''}`}>
+                <span className="metric-label">SLA em Risco</span>
+                <span className="metric-value">{leads.filter(l => l.status === 'WAITING_SELLER').length}</span>
+                <span className="metric-subtext">Aguardando vendedor</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-              <div className="lg:col-span-1 bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-2xl p-6">
-                <h3 className="font-black text-xs text-orange-500 uppercase tracking-widest mb-6">Gargalos Recentes</h3>
-                <div className="space-y-4">
+              {/* Gargalos Recentes */}
+              <div className="lg:col-span-1 content-block">
+                <div className="p-4 border-b border-[var(--border-light)] bg-[var(--bg-sidebar)]">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Gargalos Recentes</h3>
+                </div>
+                <div className="p-4 space-y-3">
                   {bottlenecks.map(b => (
-                    <div key={b.id} className="p-3 bg-orange-500/5 border border-orange-500/10 rounded-xl text-[10px]">
-                      <div className="flex justify-between font-bold mb-1">
+                    <div key={b.id} className="p-3 bg-[var(--bg-surface-muted)] border border-[var(--border-light)] rounded text-xs">
+                      <div className="flex justify-between font-semibold mb-1">
                         <span>{b.leads?.name || "Lead"}</span>
-                        <span className="text-red-500 uppercase">{b.severity}</span>
+                        <span className={b.severity === 'critical' ? 'text-[var(--status-critical-text)] uppercase font-bold' : 'text-[var(--text-muted)] uppercase'}>{b.severity}</span>
                       </div>
-                      <p className="text-[var(--theme-muted)]">{b.description}</p>
+                      <p className="text-[var(--text-muted)]">{b.description}</p>
                     </div>
                   ))}
+                  {bottlenecks.length === 0 && (
+                    <p className="text-xs text-[var(--text-soft)] text-center py-4">Nenhum gargalo detectado.</p>
+                  )}
                 </div>
               </div>
 
-              <div className="lg:col-span-2 bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-2xl p-8 h-64">
-                 <h3 className="font-black text-xs text-[var(--theme-muted)] uppercase tracking-widest mb-8">Fluxo Semanal</h3>
-                 <div className="flex items-end gap-3 h-32">
+              {/* Fluxo Semanal */}
+              <div className="lg:col-span-2 content-block">
+                 <div className="p-4 border-b border-[var(--border-light)] bg-[var(--bg-sidebar)]">
+                   <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Fluxo Semanal</h3>
+                 </div>
+                 <div className="p-6 flex items-end gap-3 h-48">
                     {porDia.map((d, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                        <div className="w-full bg-[hsl(var(--tenant-primary))] rounded-t-lg" style={{ height: `${(d.count / maxDia) * 100}%`, minHeight: '4px' }}></div>
-                        <span className="text-[9px] font-black text-[var(--theme-muted)]">{d.label}</span>
+                        <div className="w-full bg-[#111111] rounded-t" style={{ height: `${(d.count / maxDia) * 100}%`, minHeight: '4px' }}></div>
+                        <span className="text-[10px] font-medium text-[var(--text-muted)]">{d.label}</span>
                       </div>
                     ))}
                  </div>
               </div>
             </div>
 
-            <div className="bg-[var(--theme-card)] border border-[var(--theme-border)] rounded-3xl overflow-hidden shadow-sm">
-              <div className="p-6 bg-[var(--theme-hover)] border-b border-[var(--theme-border)] font-black text-xs uppercase tracking-widest text-[var(--theme-muted)]">Atividade Recente</div>
+            {/* Atividade Recente */}
+            <div className="content-block">
+              <div className="p-4 border-b border-[var(--border-light)] bg-[var(--bg-sidebar)]">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Atividade Recente</h3>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="text-[10px] text-[var(--theme-muted)] uppercase font-black tracking-widest border-b border-[var(--theme-border)]">
-                      <th className="p-6">Lead</th>
-                      <th className="p-6">Produto</th>
-                      <th className="p-6">Status</th>
-                      <th className="p-6">Vendedor</th>
-                      <th className="p-6 text-right">Data</th>
+                    <tr className="text-[10px] text-[var(--text-muted)] uppercase font-semibold border-b border-[var(--border-light)]">
+                      <th className="p-4">Lead</th>
+                      <th className="p-4">Produto</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4">Vendedor</th>
+                      <th className="p-4 text-right">Data</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--theme-border)]">
+                  <tbody className="divide-y divide-[var(--border-light)]">
                     {leads.slice(0, 10).map((lead) => (
-                      <tr key={lead.id} onClick={() => setSelectedLead(lead)} className="hover:bg-[var(--theme-hover)] cursor-pointer group transition-colors">
-                        <td className="p-6">
-                          <div className="font-black text-sm group-hover:text-[hsl(var(--tenant-primary))]">{lead.name || "Interesse Anônimo"}</div>
-                          <div className="text-[10px] text-[var(--theme-muted)]">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</div>
+                      <tr key={lead.id} onClick={() => setSelectedLead(lead)} className="hover:bg-[var(--bg-surface-muted)] cursor-pointer transition-colors">
+                        <td className="p-4">
+                          <div className="font-semibold text-sm text-[var(--text-primary)]">{lead.name || "Interesse Anônimo"}</div>
+                          <div className="text-[10px] text-[var(--text-soft)]">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</div>
                         </td>
-                        <td className="p-6 text-xs text-blue-600 font-bold">{lead.detected_product || lead.produto || "—"}</td>
-                        <td className="p-6">
-                          <span className="text-[9px] font-black uppercase px-2 py-1 rounded" style={{ backgroundColor: (statusColors[lead.status] || "#666") + "20", color: statusColors[lead.status] || "#666" }}>
+                        <td className="p-4 text-xs font-medium text-[var(--link-color)]">{lead.detected_product || lead.produto || "—"}</td>
+                        <td className="p-4">
+                          <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded border border-[var(--border-light)] bg-[var(--bg-surface-muted)]">
                             {STATUS_LABELS[lead.status] || lead.status}
                           </span>
                         </td>
-                        <td className="p-6 text-xs font-bold text-[var(--theme-fg)]">{lead.vendedor_nome}</td>
-                        <td className="p-6 text-right text-[10px] text-[var(--theme-muted)] font-black">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</td>
+                        <td className="p-4 text-xs font-medium">{lead.vendedor_nome}</td>
+                        <td className="p-4 text-right text-[10px] text-[var(--text-soft)] font-mono">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -178,57 +203,55 @@ export default function DashboardPage() {
       </div>
 
       {/* COMPILADOR DE DADOS (Drawer) */}
-      <div className={`fixed top-0 right-0 h-screen w-[450px] bg-[var(--theme-card)] border-l border-[var(--theme-border)] shadow-2xl transition-transform duration-300 transform z-50 flex flex-col ${selectedLead ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-screen w-[450px] bg-white border-l border-[var(--border-strong)] transition-transform duration-300 transform z-50 flex flex-col ${selectedLead ? 'translate-x-0' : 'translate-x-full'}`}>
         {selectedLead && (
           <>
-            <div className="p-6 border-b border-[var(--theme-border)] flex justify-between items-center bg-[var(--theme-hover)]">
-              <h3 className="font-bold text-lg flex items-center gap-2">📑 Compilador do Lead</h3>
-              <button onClick={() => setSelectedLead(null)} className="text-[var(--theme-muted)] hover:text-[var(--theme-fg)] cursor-pointer">✕</button>
+            <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center bg-[var(--bg-sidebar)]">
+              <h3 className="font-bold text-sm text-[var(--text-primary)]">Compilador do Lead</h3>
+              <button onClick={() => setSelectedLead(null)} className="text-[var(--text-muted)] hover:text-black cursor-pointer text-sm">✕</button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
-              <section className="bg-[var(--theme-hover)] p-4 rounded-xl border border-[var(--theme-border)]">
-                <h5 className="text-[10px] text-[var(--theme-muted)] font-black uppercase mb-4">Informações Coletadas</h5>
-                <div className="grid grid-cols-1 gap-4 text-sm">
-                  <div><span className="text-[var(--theme-muted)] text-[10px] uppercase">Nome:</span> <p className="font-bold">{selectedLead.name || "—"}</p></div>
-                  <div><span className="text-[var(--theme-muted)] text-[10px] uppercase">Empresa:</span> <p className="font-bold">{selectedLead.empresa || selectedLead.company || "—"}</p></div>
-                  <div><span className="text-[var(--theme-muted)] text-[10px] uppercase">CNPJ:</span> <p className="font-bold text-blue-500">{selectedLead.cnpj || "—"}</p></div>
-                  <div><span className="text-[var(--theme-muted)] text-[10px] uppercase">E-mail:</span> <p className="font-bold">{selectedLead.email_corporativo || selectedLead.email || "—"}</p></div>
-                  <div className="pt-4 border-t border-[var(--theme-border)]">
-                    <span className="text-[var(--theme-muted)] text-[10px] uppercase">Produto/Demanda:</span> 
-                    <p className="font-bold text-[hsl(var(--tenant-primary))]">{selectedLead.produto || selectedLead.detected_product || "—"}</p>
-                    <p className="text-xs text-[var(--theme-muted)] mt-1">{selectedLead.especificacao || "Sem detalhes adicionais."}</p>
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide text-xs">
+              <section className="bg-[var(--bg-surface-muted)] p-4 rounded border border-[var(--border-light)]">
+                <h5 className="text-[10px] text-[var(--text-soft)] font-bold uppercase mb-4 tracking-wider">Informações Coletadas</h5>
+                <div className="grid grid-cols-1 gap-4 text-xs">
+                  <div><span className="text-[var(--text-soft)] text-[10px] uppercase">Nome:</span> <p className="font-bold text-[var(--text-primary)]">{selectedLead.name || "—"}</p></div>
+                  <div><span className="text-[var(--text-soft)] text-[10px] uppercase">Empresa:</span> <p className="font-bold text-[var(--text-primary)]">{selectedLead.empresa || selectedLead.company || "—"}</p></div>
+                  <div><span className="text-[var(--text-soft)] text-[10px] uppercase">CNPJ:</span> <p className="font-bold text-[var(--link-color)]">{selectedLead.cnpj || "—"}</p></div>
+                  <div><span className="text-[var(--text-soft)] text-[10px] uppercase">E-mail:</span> <p className="font-bold text-[var(--text-primary)]">{selectedLead.email_corporativo || selectedLead.email || "—"}</p></div>
+                  <div className="pt-4 border-t border-[var(--border-light)]">
+                    <span className="text-[var(--text-soft)] text-[10px] uppercase">Produto/Demanda:</span> 
+                    <p className="font-bold text-[var(--text-primary)]">{selectedLead.produto || selectedLead.detected_product || "—"}</p>
+                    <p className="text-[var(--text-muted)] mt-1">{selectedLead.especificacao || "Sem detalhes adicionais."}</p>
                   </div>
-                  <div className="pt-4 border-t border-[var(--theme-border)] flex justify-between items-center">
-                    <span className="text-[var(--theme-muted)] text-[10px] uppercase">Skill Utilizada pela IA:</span> 
-                    <span className="px-2 py-1 bg-purple-500/10 text-purple-600 text-[10px] font-black rounded border border-purple-500/20">
+                  <div className="pt-4 border-t border-[var(--border-light)] flex justify-between items-center">
+                    <span className="text-[var(--text-soft)] text-[10px] uppercase">Skill Utilizada pela IA:</span> 
+                    <span className="px-2 py-0.5 bg-[var(--bg-surface-muted)] text-[var(--text-primary)] text-[10px] font-semibold rounded border border-[var(--border-light)]">
                       {selectedLead.last_skill_used || "SDR General"}
                     </span>
                   </div>
                 </div>
               </section>
 
-              <section>
-                <h5 className="text-[10px] text-[var(--theme-muted)] font-black uppercase mb-4">Status do Atendimento</h5>
-                <div className="space-y-3">
-                  <div className="flex justify-between p-3 bg-[var(--theme-hover)] rounded-lg border border-[var(--theme-border)]">
-                    <span className="text-[10px] text-[var(--theme-muted)] uppercase">Vendedor:</span>
-                    <span className="text-xs font-bold text-[var(--theme-fg)]">{selectedLead.vendedor_nome}</span>
-                  </div>
-                  <div className="flex justify-between p-3 bg-[var(--theme-hover)] rounded-lg border border-[var(--theme-border)]">
-                    <span className="text-[10px] text-[var(--theme-muted)] uppercase">Notificado via WhatsApp?</span>
-                    <span className={`text-[10px] font-black uppercase ${selectedLead.sent_to_seller_at ? 'text-green-500' : 'text-red-500'}`}>
-                      {selectedLead.sent_to_seller_at ? '✓ SIM' : '✗ NÃO'}
-                    </span>
-                  </div>
+              <section className="space-y-3">
+                <h5 className="text-[10px] text-[var(--text-soft)] font-bold uppercase tracking-wider">Status do Atendimento</h5>
+                <div className="flex justify-between p-3 bg-[var(--bg-surface-muted)] rounded border border-[var(--border-light)]">
+                  <span className="text-[10px] text-[var(--text-soft)] uppercase">Vendedor:</span>
+                  <span className="text-xs font-bold text-[var(--text-primary)]">{selectedLead.vendedor_nome}</span>
+                </div>
+                <div className="flex justify-between p-3 bg-[var(--bg-surface-muted)] rounded border border-[var(--border-light)]">
+                  <span className="text-[10px] text-[var(--text-soft)] uppercase">Notificado via WhatsApp?</span>
+                  <span className={`text-[10px] font-bold ${selectedLead.sent_to_seller_at ? 'text-green-600' : 'text-red-600'}`}>
+                    {selectedLead.sent_to_seller_at ? 'SIM' : 'NÃO'}
+                  </span>
                 </div>
               </section>
 
-              <section>
-                <h5 className="text-[10px] text-[var(--theme-muted)] font-black uppercase mb-4">Histórico Real</h5>
+              <section className="space-y-3">
+                <h5 className="text-[10px] text-[var(--text-soft)] font-bold uppercase tracking-wider">Histórico Real</h5>
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                   {history.map((msg, i) => (
-                    <div key={i} className={`p-3 rounded-lg text-xs ${msg.sender_type === 'lead' ? 'bg-[var(--theme-hover)] text-[var(--theme-fg)]' : 'bg-blue-500/10 text-blue-600 border border-blue-500/20'}`}>
+                    <div key={i} className={`p-3 rounded text-xs border ${msg.sender_type === 'lead' ? 'bg-white text-[var(--text-secondary)] border-[var(--border-light)]' : 'bg-[var(--bg-surface-muted)] text-[var(--text-primary)] border-[var(--border-light)]'}`}>
                       {msg.message_content}
                     </div>
                   ))}
@@ -236,8 +259,8 @@ export default function DashboardPage() {
               </section>
             </div>
             
-            <div className="p-6 bg-[var(--theme-hover)] border-t border-[var(--theme-border)]">
-              <button onClick={() => setSelectedLead(null)} className="w-full bg-[var(--theme-fg)] text-[var(--theme-bg)] font-black py-4 rounded-xl text-[10px] uppercase tracking-widest cursor-pointer hover:opacity-90">Fechar Compilador</button>
+            <div className="p-6 bg-[var(--bg-sidebar)] border-t border-[var(--border-light)]">
+              <button onClick={() => setSelectedLead(null)} className="btn-primary w-full py-4 text-xs font-bold cursor-pointer">Fechar Compilador</button>
             </div>
           </>
         )}
