@@ -181,13 +181,13 @@ export default function SaaSPage() {
   function getUserName(id: string) { return users.find(u => u.id === id)?.name || "—"; }
 
   return (
-    <div className="p-6 md:p-10 w-full h-full text-[var(--text-primary)] bg-[var(--bg-app)] overflow-y-auto">
-      <header className="sticky top-[-40px] z-20 bg-[var(--bg-app)] pt-10 mb-8 border-b border-[var(--border-subtle)] pb-6 flex flex-col md:flex-row justify-between items-start gap-4">
+    <div className="main w-full h-full text-[var(--text-primary)] bg-white overflow-y-auto">
+      <header className="sticky top-0 z-20 bg-white border-b border-[var(--border)] pb-6 mb-8 flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-[var(--text-primary)]">Configurações SaaS</h2>
-          <p className="text-[var(--text-secondary)] mt-2">Personalize a marca, gerencie conexões e segurança.</p>
+          <h1 className="text-[30px] font-bold tracking-tight text-[var(--text-primary)]">Configurações SaaS</h1>
+          <p className="description mt-2">Personalize a marca, gerencie conexões e segurança do sistema.</p>
         </div>
-        <div className="flex flex-row md:flex-col lg:flex-row gap-3 w-full md:w-auto">
+        <div className="flex flex-row gap-3 w-full md:w-auto">
           <button 
             onClick={async () => {
               const newState = !botActive;
@@ -195,7 +195,11 @@ export default function SaaSPage() {
               await supabase.from("tenant_config").update({ bot_active: newState }).neq("id", "0");
               flash(newState ? "🤖 Lino ATIVADO!" : "💤 Lino DESATIVADO!");
             }}
-            className={`flex-1 md:flex-none px-4 py-2.5 font-semibold rounded-md shadow-sm transition-colors text-sm ${botActive ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-neutral-200 hover:bg-neutral-300 text-neutral-700'}`}
+            className={`px-4 py-2 border rounded-md text-xs font-semibold tracking-tight transition-all cursor-pointer ${
+              botActive 
+                ? 'bg-[#111111] text-white border-[#111111] hover:bg-black' 
+                : 'bg-white text-[#666666] border-[var(--border-strong)] hover:bg-[var(--surface-muted)]'
+            }`}
           >
             {botActive ? '🤖 Lino está ON' : '💤 Lino está OFF'}
           </button>
@@ -211,60 +215,66 @@ export default function SaaSPage() {
                 else alert('Erro ao apagar histórico.');
               }
             }}
-            className="flex-1 md:flex-none px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold rounded-md shadow-sm transition-colors text-sm"
+            className="px-4 py-2 bg-white text-red-600 border border-red-200 hover:bg-red-50 text-xs font-semibold rounded-md transition-all cursor-pointer"
           >
             🗑️ Zerar Histórico de Testes
           </button>
         </div>
       </header>
 
-      {loading ? <p className="text-[var(--text-secondary)]">Carregando...</p> : (
-        <div className="space-y-8">
+      {msg && (
+        <div className="fixed bottom-4 right-4 z-50 bg-[#111111] text-white text-xs px-4 py-3 rounded-md border border-[var(--border-strong)] shadow-md">
+          {msg}
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-7xl">
+      {loading ? <p className="text-[var(--text-secondary)]">Carregando...</p> : (
+        <div className="space-y-8 max-w-[1128px]">
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* IDENTIDADE VISUAL */}
-            <div className="card-base shadow-sm">
-              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5 flex items-center">
-                <span className="w-1.5 h-5 bg-black rounded-full mr-2.5"></span>Identidade Visual
+            <div className="card">
+              <h3 className="card-title text-base font-bold mb-4 flex items-center gap-2">
+                Identidade Visual
               </h3>
               <form onSubmit={saveDesign} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome da Empresa</label>
-                  <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="input-search-clean" />
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Nome da Empresa</label>
+                  <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="search w-full h-9" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Subtítulo</label>
-                  <input type="text" value={companySubtitle} onChange={(e) => setCompanySubtitle(e.target.value)} className="input-search-clean" />
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Subtítulo</label>
+                  <input type="text" value={companySubtitle} onChange={(e) => setCompanySubtitle(e.target.value)} className="search w-full h-9" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">URL da Logomarca (PNG/SVG)</label>
-                  <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://seusite.com/logo.png" className="input-search-clean" />
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">URL da Logomarca (PNG/SVG)</label>
+                  <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://seusite.com/logo.png" className="search w-full h-9" />
                   {logoUrl && (
-                    <div className="mt-3 p-2 bg-neutral-50 rounded-lg border border-[var(--border-subtle)] inline-block">
-                      <img src={logoUrl} alt="Logo" className="h-10 object-contain" />
+                    <div className="mt-3 p-2 bg-[#fafafa] rounded border border-[var(--border)] inline-block">
+                      <img src={logoUrl} alt="Logo" className="h-8 object-contain" />
                     </div>
                   )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Cor Primária (Tema)</label>
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Cor Primária (Tema)</label>
                     <div className="flex gap-2">
-                      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-10 w-10 rounded-md cursor-pointer border border-[var(--border-subtle)] bg-white" />
-                      <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="input-search-clean" />
+                      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-9 rounded cursor-pointer border border-[var(--border)] bg-white" />
+                      <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="search flex-1 h-9" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Cor Secundária</label>
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Cor Secundária</label>
                     <div className="flex gap-2">
-                      <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-10 w-10 rounded-md cursor-pointer border border-[var(--border-subtle)] bg-white" />
-                      <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="input-search-clean" />
+                      <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-9 rounded cursor-pointer border border-[var(--border)] bg-white" />
+                      <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="search flex-1 h-9" />
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Fonte Títulos</label>
-                    <select value={fontHeading} onChange={(e) => setFontHeading(e.target.value)} className="input-search-clean bg-white">
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Fonte Títulos</label>
+                    <select value={fontHeading} onChange={(e) => setFontHeading(e.target.value)} className="search w-full h-9 bg-white cursor-pointer">
                       <option value="Roboto Condensed">Roboto Condensed</option>
                       <option value="Montserrat">Montserrat</option>
                       <option value="Inter">Inter</option>
@@ -273,8 +283,8 @@ export default function SaaSPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Fonte Corpo</label>
-                    <select value={fontBody} onChange={(e) => setFontBody(e.target.value)} className="input-search-clean bg-white">
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Fonte Corpo</label>
+                    <select value={fontBody} onChange={(e) => setFontBody(e.target.value)} className="search w-full h-9 bg-white cursor-pointer">
                       <option value="Assistant">Assistant</option>
                       <option value="Roboto">Roboto</option>
                       <option value="Open Sans">Open Sans</option>
@@ -285,79 +295,77 @@ export default function SaaSPage() {
                 </div>
                 
                 {/* Preview de Marca */}
-                <div className="border border-[var(--border-subtle)] rounded-lg overflow-hidden bg-[var(--bg-surface)] p-4 mt-2">
-                  <p className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] mb-2 tracking-wider">Visualização da Marca:</p>
-                  <div className="h-16 rounded-md flex items-center justify-center text-sm font-bold shadow-sm" style={{
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid var(--border-subtle)',
+                <div className="border border-[var(--border)] rounded bg-white p-4 mt-2">
+                  <p className="text-[10px] uppercase font-bold text-[var(--text-soft)] mb-2 tracking-wider">Visualização da Marca:</p>
+                  <div className="h-14 rounded flex items-center justify-center text-sm font-bold border border-[var(--border)]" style={{
                     color: primaryColor,
                   }}>
-                    {logoUrl ? <img src={logoUrl} alt="" className="h-10 object-contain" /> : companyName}
+                    {logoUrl ? <img src={logoUrl} alt="" className="h-8 object-contain" /> : companyName}
                   </div>
                 </div>
-                <button type="submit" className="btn-primary w-full">Aplicar Identidade</button>
+                <button type="submit" className="button-primary w-full">Aplicar Identidade</button>
               </form>
             </div>
 
             <div className="space-y-6">
               {/* CHAVES API */}
-              <div className="card-base shadow-sm">
-                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5 flex items-center">
-                  <span className="w-1.5 h-5 bg-[#0070F3] rounded-full mr-2.5"></span>Chaves de API (Globais)
+              <div className="card">
+                <h3 className="card-title text-base font-bold mb-4 flex items-center gap-2">
+                  Chaves de API (Globais)
                 </h3>
                 <form onSubmit={saveAPI} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Evolution API — URL Base</label>
-                    <input type="url" value={evolutionUrl} onChange={(e) => setEvolutionUrl(e.target.value)} placeholder="https://evolution.sua-vps.com" className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Evolution API — URL Base</label>
+                    <input type="url" value={evolutionUrl} onChange={(e) => setEvolutionUrl(e.target.value)} placeholder="https://evolution.sua-vps.com" className="search w-full h-9" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Evolution API — Token Global</label>
-                    <input type="password" value={evolutionKey} onChange={(e) => setEvolutionKey(e.target.value)} placeholder="Chave da Evolution" className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Evolution API — Token Global</label>
+                    <input type="password" value={evolutionKey} onChange={(e) => setEvolutionKey(e.target.value)} placeholder="Chave da Evolution" className="search w-full h-9" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Evolution API — Nome da Instância</label>
-                    <input type="text" value={evolutionInstanceName} onChange={(e) => setEvolutionInstanceName(e.target.value)} placeholder="Ex: minha_instancia" className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Evolution API — Nome da Instância</label>
+                    <input type="text" value={evolutionInstanceName} onChange={(e) => setEvolutionInstanceName(e.target.value)} placeholder="Ex: minha_instancia" className="search w-full h-9" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">OpenAI API Key</label>
-                    <input type="password" value={openaiKey} onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">OpenAI API Key</label>
+                    <input type="password" value={openaiKey} onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="search w-full h-9" />
                   </div>
-                  <button type="submit" className="btn-primary w-full">Salvar Credenciais</button>
+                  <button type="submit" className="button-primary w-full">Salvar Credenciais</button>
                 </form>
               </div>
 
               {/* SENHA */}
-              <div className="card-base shadow-sm">
-                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5 flex items-center">
-                  <span className="w-1.5 h-5 bg-[#E5484D] rounded-full mr-2.5"></span>Senha de Acesso
+              <div className="card">
+                <h3 className="card-title text-base font-bold mb-4 flex items-center gap-2">
+                  Senha de Acesso
                 </h3>
                 <form onSubmit={savePassword} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">E-mail do Usuário</label>
-                    <input type="email" value={passwordEmail} onChange={(e) => setPasswordEmail(e.target.value)} placeholder="admin@lino.com" className="input-search-clean" required />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">E-mail do Usuário</label>
+                    <input type="email" value={passwordEmail} onChange={(e) => setPasswordEmail(e.target.value)} placeholder="admin@lino.com" className="search w-full h-9" required />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nova Senha</label>
-                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha" className="input-search-clean" required />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Nova Senha</label>
+                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Digite a nova senha" className="search w-full h-9" required />
                   </div>
-                  <button type="submit" className="w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 py-2.5 rounded-md font-semibold text-sm transition-colors shadow-sm">Atualizar Senha</button>
+                  <button type="submit" className="w-full bg-white text-[#111111] hover:bg-[var(--surface-muted)] border border-[var(--border-strong)] py-2.5 rounded text-xs font-semibold transition-colors cursor-pointer">Atualizar Senha</button>
                 </form>
               </div>
             </div>
           </div>
 
           {/* INSTÂNCIAS EVOLUTION */}
-          <div className="card-base shadow-sm max-w-7xl">
+          <div className="card">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)] flex items-center">
-                  <span className="w-1.5 h-5 bg-emerald-500 rounded-full mr-2.5"></span>Instâncias WhatsApp ({instances.length})
+                <h3 className="card-title text-base font-bold">
+                  Instâncias WhatsApp ({instances.length})
                 </h3>
-                <p className="text-xs text-[var(--text-secondary)] mt-1.5">Cada celular de vendedor é uma instância da Evolution API que recebe mensagens no sistema.</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Cada celular de vendedor é uma instância da Evolution API que recebe mensagens no sistema.</p>
               </div>
               <button 
                 onClick={() => setShowInstForm(!showInstForm)} 
-                className="btn-primary whitespace-nowrap"
+                className="button-primary whitespace-nowrap"
               >
                 + Nova Instância
               </button>
@@ -365,39 +373,39 @@ export default function SaaSPage() {
 
             {/* Form nova instância */}
             {showInstForm && (
-              <div className="bg-[var(--bg-app)] p-6 rounded-lg border border-[var(--border-subtle)] mb-6 animate-slide-down">
-                <h4 className="font-bold text-sm text-[var(--text-primary)] mb-4">{editingInstance ? "Editar Instância" : "Cadastrar Nova Instância"}</h4>
+              <div className="bg-[#fafafa] p-6 rounded border border-[var(--border)] mb-6">
+                <h4 className="font-bold text-xs text-[var(--text-primary)] mb-4">{editingInstance ? "Editar Instância" : "Cadastrar Nova Instância"}</h4>
                 <form onSubmit={addInstance} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome da Instância *</label>
-                    <input type="text" value={instForm.name} onChange={(e) => setInstForm({ ...instForm, name: e.target.value })} placeholder="Ex: Celular Vendas SP" className="input-search-clean" required />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Nome da Instância *</label>
+                    <input type="text" value={instForm.name} onChange={(e) => setInstForm({ ...instForm, name: e.target.value })} placeholder="Ex: Celular Vendas SP" className="search w-full h-9" required />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Número do WhatsApp</label>
-                    <input type="text" value={instForm.phone_number} onChange={(e) => setInstForm({ ...instForm, phone_number: e.target.value })} placeholder="5511999999999" className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Número do WhatsApp</label>
+                    <input type="text" value={instForm.phone_number} onChange={(e) => setInstForm({ ...instForm, phone_number: e.target.value })} placeholder="5511999999999" className="search w-full h-9" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome da Instância na Evolution</label>
-                    <input type="text" value={instForm.evolution_instance_name} onChange={(e) => setInstForm({ ...instForm, evolution_instance_name: e.target.value })} placeholder="Ex: permetal_sp" className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Nome da Instância na Evolution</label>
+                    <input type="text" value={instForm.evolution_instance_name} onChange={(e) => setInstForm({ ...instForm, evolution_instance_name: e.target.value })} placeholder="Ex: permetal_sp" className="search w-full h-9" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Vendedor Responsável</label>
-                    <select value={instForm.assigned_user_id} onChange={(e) => setInstForm({ ...instForm, assigned_user_id: e.target.value })} className="input-search-clean bg-white">
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Vendedor Responsável</label>
+                    <select value={instForm.assigned_user_id} onChange={(e) => setInstForm({ ...instForm, assigned_user_id: e.target.value })} className="search w-full h-9 bg-white cursor-pointer">
                       <option value="">Nenhum (distribuição automática)</option>
                       {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">URL da Evolution (se diferente da global)</label>
-                    <input type="url" value={instForm.evolution_url} onChange={(e) => setInstForm({ ...instForm, evolution_url: e.target.value })} placeholder="https://..." className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">URL da Evolution (se diferente da global)</label>
+                    <input type="url" value={instForm.evolution_url} onChange={(e) => setInstForm({ ...instForm, evolution_url: e.target.value })} placeholder="https://..." className="search w-full h-9" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Token da Evolution (se diferente)</label>
-                    <input type="password" value={instForm.evolution_key} onChange={(e) => setInstForm({ ...instForm, evolution_key: e.target.value })} placeholder="Token específico" className="input-search-clean" />
+                    <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Token da Evolution (se diferente)</label>
+                    <input type="password" value={instForm.evolution_key} onChange={(e) => setInstForm({ ...instForm, evolution_key: e.target.value })} placeholder="Token específico" className="search w-full h-9" />
                   </div>
                   <div className="md:col-span-2 flex gap-3 pt-2">
-                    <button type="submit" className="btn-primary flex-1">{editingInstance ? "Salvar Alterações" : "Criar Instância"}</button>
-                    <button type="button" onClick={() => { setShowInstForm(false); setEditingInstance(null); setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" }); }} className="btn-secondary flex-1">Cancelar</button>
+                    <button type="submit" className="button-primary flex-1">{editingInstance ? "Salvar Alterações" : "Criar Instância"}</button>
+                    <button type="button" onClick={() => { setShowInstForm(false); setEditingInstance(null); setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" }); }} className="button-secondary flex-1 border border-[var(--border-strong)]">Cancelar</button>
                   </div>
                 </form>
               </div>
@@ -406,33 +414,33 @@ export default function SaaSPage() {
             {/* Lista de instâncias */}
             <div className="space-y-3">
               {instances.map(inst => (
-                <div key={inst.id} className={`card-base p-4 flex justify-between items-center group shadow-sm hover:shadow-md transition-all ${!inst.active ? "opacity-60" : ""}`}>
+                <div key={inst.id} className={`border border-[var(--border)] rounded p-4 flex justify-between items-center group bg-white ${!inst.active ? "opacity-60" : ""}`}>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${inst.active ? "bg-emerald-500 shadow-[0_0_6px_#10B981]" : "bg-red-500"}`}></span>
-                      <h4 className="font-bold text-sm text-[var(--text-primary)]">{inst.name}</h4>
+                      <span className={`w-2 h-2 rounded-full ${inst.active ? "bg-emerald-500" : "bg-red-500"}`}></span>
+                      <h4 className="font-bold text-xs text-[var(--text-primary)]">{inst.name}</h4>
                       {!inst.active && <span className="text-[10px] text-red-500 font-medium">(offline)</span>}
                     </div>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1.5">
+                    <p className="text-xs text-[var(--text-muted)] mt-1.5">
                       📱 {inst.phone_number || "—"} • Evolution: {inst.evolution_instance_name || "—"} • Vendedor: {getUserName(inst.assigned_user_id)}
                     </p>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => startEditInstance(inst)} 
-                      className="text-[10px] bg-white text-[var(--text-primary)] border border-[var(--border-default)] px-2.5 py-1 rounded-md font-semibold hover:bg-[var(--bg-hover)] transition-colors"
+                      className="text-[10px] bg-white text-[var(--text-primary)] border border-[var(--border-strong)] px-2.5 py-1 rounded font-semibold hover:bg-[var(--surface-muted)] transition-colors cursor-pointer"
                     >
                       Editar
                     </button>
                     <button 
                       onClick={() => toggleInstance(inst)} 
-                      className={`text-[10px] px-2.5 py-1 rounded-md font-semibold border ${inst.active ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"} transition-colors`}
+                      className={`text-[10px] px-2.5 py-1 rounded font-semibold border ${inst.active ? "bg-white text-amber-700 border-amber-200 hover:bg-amber-50" : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"} transition-colors cursor-pointer`}
                     >
                       {inst.active ? "Desativar" : "Ativar"}
                     </button>
                     <button 
                       onClick={() => deleteInstance(inst.id)} 
-                      className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 rounded-md font-semibold hover:bg-red-100 transition-colors"
+                      className="text-[10px] bg-white text-red-600 border border-red-200 px-2.5 py-1 rounded font-semibold hover:bg-red-50 transition-colors cursor-pointer"
                     >
                       Excluir
                     </button>
@@ -440,8 +448,8 @@ export default function SaaSPage() {
                 </div>
               ))}
               {instances.length === 0 && !showInstForm && (
-                <div className="border border-dashed border-[var(--border-subtle)] rounded-lg p-8 text-center text-[var(--text-secondary)] text-sm">
-                  Nenhuma instância cadastrada. Clique em &quot;+ Nova Instância&quot; acima.
+                <div className="border border-dashed border-[var(--border)] rounded p-8 text-center text-[var(--text-secondary)] text-xs">
+                  Nenhuma instância cadastrada. Clique em "+ Nova Instância" acima.
                 </div>
               )}
             </div>

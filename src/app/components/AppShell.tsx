@@ -122,41 +122,53 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           font-family: var(--font-body), sans-serif;
         }
       `}</style>
-      {/* Sidebar Premium */}
-      <aside className="sidebar-container-clean flex flex-col z-50">
-        <div className="p-6">
-          <a href="/dashboard" className="flex items-center gap-3 mb-2 hover:opacity-80 transition-opacity">
+      {/* Sidebar SaaS Minimalista */}
+      <aside className="sidebar flex flex-col z-50">
+        <div className="p-4 flex flex-col gap-4">
+          <a href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             {config.logo_url ? (
-              <img src={config.logo_url} alt="Logo" className="h-8 object-contain" />
+              <img src={config.logo_url} alt="Logo" className="h-7 object-contain" />
             ) : (
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black" style={{ backgroundColor: config.primary_color }}>
+              <div className="w-6 h-6 rounded flex items-center justify-center text-white font-black text-xs" style={{ backgroundColor: "#111111" }}>
                 P
               </div>
             )}
             {!config.logo_url && (
-              <span className="font-black tracking-tighter text-xl text-[var(--text-primary)]">{config.company_name}</span>
+              <span className="font-bold tracking-tight text-base text-[var(--text-primary)]">{config.company_name}</span>
             )}
           </a>
-          <p className="text-[9px] uppercase font-black tracking-widest leading-none text-[var(--text-tertiary)]">{config.company_subtitle}</p>
+          
+          {/* Campo de Busca Minimalista */}
+          <div className="relative flex items-center">
+            <input 
+              type="text" 
+              placeholder="Buscar..." 
+              className="search w-full pr-8 text-xs h-8"
+            />
+            <span className="absolute right-2 text-[10px] font-mono text-[var(--text-soft)] bg-[var(--surface-muted)] border border-[var(--border)] px-1.5 py-0.5 rounded pointer-events-none">
+              F
+            </span>
+          </div>
         </div>
 
-        <nav className="flex-1 px-4 py-2 space-y-6 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-2 py-2 overflow-y-auto scrollbar-hide">
           {menuGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-1">
-              <h4 className="px-3 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-2">{group.title}</h4>
+            <div key={gIdx} className="space-y-1 mb-4">
+              {gIdx > 0 && <div className="sidebar-divider" />}
+              <h4 className="px-3 text-[10px] font-bold text-[var(--text-soft)] uppercase tracking-wider mb-2">{group.title}</h4>
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.href === "/" && pathname === "/");
                 return (
                   <a
                     key={item.href}
                     href={item.href}
-                    className={`sidebar-menu-item-clean ${isActive ? "active" : ""}`}
+                    className={`nav-item ${isActive ? "active" : ""}`}
                   >
-                    <span className={`${isActive ? "text-[var(--brand-accent)]" : "text-[var(--text-tertiary)]"}`}>
+                    <span className="icon flex items-center justify-center w-4 h-4 text-current">
                       {item.icon(config.primary_color)}
                     </span>
-                    <span className="font-medium">{item.label}</span>
-                    {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand-accent)] shadow-[0_0_6px_var(--brand-accent)]"></div>}
+                    <span className="font-normal text-xs">{item.label}</span>
+                    {isActive && <div className="ml-auto w-1 h-1 rounded-full bg-[var(--text-primary)]"></div>}
                   </a>
                 );
               })}
@@ -164,22 +176,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)]">
-          <div className="p-3 rounded-md flex items-center gap-3 mb-4 bg-[var(--bg-hover)]">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-[var(--bg-active)] text-[var(--text-primary)]">AD</div>
+        <div className="p-3 border-t border-[var(--border)] bg-[var(--sidebar-bg)]">
+          <div className="p-2 rounded-md flex items-center gap-3 mb-3 bg-[var(--surface-muted)] border border-[var(--border)]">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#eaeaea] text-[#111111]">AD</div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-[var(--text-primary)]">Administrador</p>
-              <p className="text-[10px] text-[var(--text-secondary)] truncate">Permetal SaaS</p>
+              <p className="text-xs font-semibold truncate text-[var(--text-primary)]">Administrador</p>
+              <p className="text-[10px] text-[var(--text-muted)] truncate">Permetal SaaS</p>
             </div>
           </div>
-          <a href="/api/logout" className="flex items-center justify-center gap-2 w-full py-2 text-[10px] font-black uppercase transition-colors border border-[var(--border-default)] rounded-md text-[var(--text-secondary)] hover:text-[var(--status-error)] hover:border-[var(--status-error)]/30 bg-[var(--bg-surface)]">
+          <a 
+            href="/api/logout" 
+            className="flex items-center justify-center gap-2 w-full py-2 text-xs font-medium border border-[var(--border-strong)] rounded-md text-[var(--text-secondary)] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all bg-white"
+          >
             Encerrar Sessão
           </a>
         </div>
       </aside>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 relative h-full overflow-hidden flex flex-col bg-[#FAFAFA]">
+      <main className="flex-1 relative h-full overflow-hidden flex flex-col bg-white">
         <div className="flex-1 overflow-y-auto relative z-10">
           {children}
         </div>
