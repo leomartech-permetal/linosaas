@@ -341,9 +341,13 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
   "valores_campos_pendentes": {
 ${dynamicJsonFields}
   },
-  "estado_lead": {
-    "dados_minimos_completos": <true SOMENTE se as variáveis obrigatórias pendentes estiverem todas preenchidas. Caso contrário: false>,
-    "motivo_faltante": "<o que ainda falta, ex: faltando_tipo_furo, faltando_quantidade>"
+  "status_qualificacao": {
+    "status_qualificacao": "<incompleto | minimo_para_vendedor | completo>",
+    "campos_faltantes": ["<campos obrigatórios ou opcionais pendentes, ex: material, espessura, quantidade>"],
+    "precisa_vendedor": <true se já coletou o mínimo necessário (produto + quantidade + material/especificações básicas) ou se o cliente não quer responder mais e deve ir para atendimento humano. Caso contrário: false>,
+    "precisa_engenharia": "<sim | nao - sim se envolver carga, piso, passarela, segurança ou medida/recalque especial>",
+    "motivo_engenharia": "<carga | piso | passarela | seguranca | medida_especial | aplicacao_critica | nao_aplica>",
+    "resumo_para_vendedor": "<Resumo estruturado no padrão Permetal. Exemplo:\nCliente: João - Empresa ABC\nProduto: Chapa perfurada furo redondo\nQuantidade: 20 chapas\nEspecificação: carbono, esp. 0,45 mm, furo redondo Ø3 mm, EC 4 mm, disposição AL, chapa 1000 x 2000 mm.\nAplicação: ventilação industrial\nAnexos: cliente enviou foto/projeto ou não possui\nStatus: mínimo para vendedor | completo\nPendências: confirmar fabricação, preço, prazo e disponibilidade.>"
   },
   "rag": {
     "consultado": <true se usou RAG, false caso contrário>,

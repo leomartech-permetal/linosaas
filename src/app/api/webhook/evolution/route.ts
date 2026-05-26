@@ -263,6 +263,16 @@ export async function POST(request: Request) {
             qState.tentativas[campoSolicitado] = (qState.tentativas[campoSolicitado] || 0) + 1;
           }
 
+          // Salvar metadados recomendados de status_qualificacao
+          if (aiResult.status_qualificacao) {
+            qState.status_qualificacao = aiResult.status_qualificacao.status_qualificacao;
+            qState.campos_faltantes = aiResult.status_qualificacao.campos_faltantes;
+            qState.precisa_vendedor = aiResult.status_qualificacao.precisa_vendedor;
+            qState.precisa_engenharia = aiResult.status_qualificacao.precisa_engenharia;
+            qState.motivo_engenharia = aiResult.status_qualificacao.motivo_engenharia;
+            qState.resumo_para_vendedor = aiResult.status_qualificacao.resumo_para_vendedor;
+          }
+
           // 3. Atualizar o banco de dados
           const leadUpdate: any = { 
             updated_at: new Date().toISOString(),
@@ -284,8 +294,12 @@ export async function POST(request: Request) {
           if (qState.valores.email) leadUpdate.email_corporativo = qState.valores.email;
           if (qState.valores.quantidade) leadUpdate.quantidade = qState.valores.quantidade;
 
-          const especParts = [qState.valores.dimensoes, qState.valores.acabamento, qState.valores.material].filter(Boolean);
-          if (especParts.length > 0) leadUpdate.especificacao = especParts.join(' | ');
+          if (qState.resumo_para_vendedor) {
+            leadUpdate.especificacao = qState.resumo_para_vendedor;
+          } else {
+            const especParts = [qState.valores.dimensoes, qState.valores.acabamento, qState.valores.material].filter(Boolean);
+            if (especParts.length > 0) leadUpdate.especificacao = especParts.join(' | ');
+          }
 
           const intent = (aiResult.intent || '').toUpperCase();
           const isNonCommercialIntent = ['VAGAS', 'FORNECEDOR', 'LOGISTICA', 'FINANCEIRO', 'COMEX', 'MARKETING'].includes(intent);
@@ -350,11 +364,12 @@ export async function POST(request: Request) {
 
             const acaoEhRoteamento = acao_executada.includes('roteamento') 
                                   || acao_executada.includes('encaminhar') 
-                                  || acao_executada.includes('transfer');
+                                  || acao_executada.includes('transfer')
+                                  || qState.precisa_vendedor === true;
 
             const deveRotear = temTodasObrigatorias && acaoEhRoteamento;
 
-            console.log(`[Webhook] Roteamento check — produto: ${prodNome}, ddd: ${dddValido}, obrigatórias satisfeitas: ${temTodasObrigatorias}, acao: ${acao_executada}, deveRotear: ${deveRotear}`);
+            console.log(`[Webhook] Roteamento check — produto: ${prodNome}, ddd: ${dddValido}, obrigatórias satisfeitas: ${temTodasObrigatorias}, acao: ${acao_executada}, precisa_vendedor: ${qState.precisa_vendedor}, deveRotear: ${deveRotear}`);
 
             if (deveRotear) {
               console.log(`[Webhook] ✅ Roteando lead ${lead.id} deterministicamente.`);
