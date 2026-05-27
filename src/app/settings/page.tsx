@@ -290,21 +290,21 @@ export default function SettingsPage() {
     loadAll();
   }
 
-  const inputCls = "input-search-clean w-full h-9 px-3 text-sm";
+  const inputCls = "input-clean";
   const btnCls = "btn-primary w-full";
 
   return (
-    <div className="p-6 md:p-8 w-full h-full text-[var(--text-primary)] bg-white overflow-y-auto transition-colors duration-200">
-      <header className="mb-6 border-b border-[var(--border-light)] pb-4">
+    <div className="p-8 md:p-10 w-full h-full text-[var(--text-primary)] bg-white overflow-y-auto transition-colors duration-200">
+      <header className="mb-8 border-b border-[var(--border-light)] pb-6">
         <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Regras Comerciais</h2>
-        <p className="text-[var(--text-muted)] mt-1 text-xs font-medium">Configure sua operação comercial e vincule seus usuários.</p>
+        <p className="text-[var(--text-muted)] mt-1.5 text-xs font-medium">Configure sua operação comercial e vincule seus usuários.</p>
       </header>
 
       {/* TABS (Sticky) */}
-      <div className="sticky top-0 z-20 bg-white pt-2 pb-6 border-b border-[var(--border-light)] mb-6 transition-colors">
-        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="sticky top-0 z-20 bg-white pt-2 pb-8 border-b border-[var(--border-light)] mb-8 transition-colors">
+        <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-md text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${tab === t.key ? "bg-[var(--btn-primary-bg)] text-white shadow-sm" : "bg-white border border-[var(--border-light)] text-[var(--text-muted)] hover:bg-[var(--bg-surface-muted)] hover:text-[var(--text-primary)]"}`}>
+            <button key={t.key} onClick={() => setTab(t.key)} className={`px-5 py-2.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${tab === t.key ? "bg-[var(--btn-primary-bg)] text-white shadow-sm" : "bg-white border border-[var(--border-light)] text-[var(--text-muted)] hover:bg-[var(--bg-surface-muted)] hover:text-[var(--text-primary)]"}`}>
               {t.label}
             </button>
           ))}
@@ -316,30 +316,35 @@ export default function SettingsPage() {
           
           {/* REGIÕES */}
           {tab === "regions" && (
-            <div className="space-y-4">
-              <div className="bg-white pb-4 transition-colors">
-                <form onSubmit={addRegion} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+            <div className="space-y-6">
+              <div className="bg-white pb-2 transition-colors">
+                <form onSubmit={addRegion} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
                   <h3 className="font-bold text-sm text-[var(--text-primary)]">Nova Região</h3>
                   <input type="text" value={regionForm.name} onChange={e => setRegionForm({...regionForm, name: e.target.value})} placeholder="Nome (ex: SP01, SUL, NORDESTE)" className={inputCls} required />
                   <input type="text" value={regionForm.ddd_codes} onChange={e => setRegionForm({...regionForm, ddd_codes: e.target.value})} placeholder="DDDs separados por vírgula (ex: 11,12,13,15)" className={inputCls} required />
-                  <button type="submit" className="btn-primary w-full">+ Criar Região</button>
+                  <button type="submit" className="btn-primary w-full h-[38px]">+ Criar Região</button>
                   {msg && tab === 'regions' && <p className="text-[10px] text-green-600 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {regions.map(r => (
-                  <div key={r.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
+                  <div key={r.id} className="bg-white p-4 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
                     <div>
                       <h4 className="font-bold text-sm text-[var(--text-primary)]">{r.name}</h4>
-                      <div className="flex flex-wrap gap-1 mt-1.5">
+                      <div className="flex flex-wrap gap-1.5 mt-2">
                         {(r.ddd_codes || []).map((d: string) => (
-                          <span key={d} className="text-[10px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">
+                          <span key={d} className="text-[10px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-light)]">
                             {d}
                           </span>
                         ))}
                       </div>
                     </div>
-                    <button onClick={() => deleteRegion(r.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 cursor-pointer transition-colors">Excluir</button>
+                    <button 
+                      onClick={() => deleteRegion(r.id)} 
+                      className="text-[11px] font-semibold bg-red-50 text-[var(--status-critical-text)] border border-red-200 hover:bg-[var(--status-critical-bg)] hover:border-[var(--status-critical-border)] px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 cursor-pointer transition-all shrink-0"
+                    >
+                      Excluir
+                    </button>
                   </div>
                 ))}
               </div>
@@ -348,11 +353,11 @@ export default function SettingsPage() {
 
           {/* PRODUTOS */}
           {tab === "products" && (
-            <div className="space-y-4">
-              <div className="bg-white pb-4 transition-colors">
-                <form onSubmit={addProduct} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+            <div className="space-y-6">
+              <div className="bg-white pb-2 transition-colors">
+                <form onSubmit={addProduct} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
                   <h3 className="font-bold text-sm text-[var(--text-primary)]">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input type="text" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Nome do produto" className={inputCls} required />
                     <input type="text" value={productForm.synonyms} onChange={e => setProductForm({...productForm, synonyms: e.target.value})} placeholder="Sinônimos separados por vírgula" className={inputCls} />
                   </div>
@@ -362,7 +367,7 @@ export default function SettingsPage() {
                   </select>
                   
                   <div className="flex flex-col md:flex-row gap-4 items-center">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input 
                         type="checkbox" 
                         checked={productForm.is_express_eligible} 
@@ -383,28 +388,36 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex gap-3">
-                    <button type="submit" className="btn-primary flex-1">{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
-                    {editingProduct && <button type="button" onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", is_express_eligible: false, express_max_qty: "" }); }} className="btn-secondary flex-1">Cancelar</button>}
+                    <button type="submit" className="btn-primary flex-1 h-[38px]">{editingProduct ? "Atualizar Produto" : "+ Criar Produto"}</button>
+                    {editingProduct && (
+                      <button 
+                        type="button" 
+                        onClick={() => { setEditingProduct(null); setProductForm({ name: "", synonyms: "", brand_id: "", is_express_eligible: false, express_max_qty: "" }); }} 
+                        className="btn-secondary flex-1 h-[38px]"
+                      >
+                        Cancelar
+                      </button>
+                    )}
                   </div>
                   {msg && tab === 'products' && <p className="text-[10px] text-green-600 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {products.map(p => (
-                  <div key={p.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
+                  <div key={p.id} className="bg-white p-4 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-bold text-sm text-[var(--text-primary)]">{p.name}</h4>
-                        {p.brands?.name && <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{p.brands.name}</span>}
+                        {p.brands?.name && <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-light)]">{p.brands.name}</span>}
                         {p.is_express_eligible && (
-                          <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-1.5 py-0.5 rounded border border-[var(--border-light)] font-bold">
+                          <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-2 py-0.5 rounded border border-[var(--border-light)] font-bold">
                             Express ({p.express_max_qty || "Qtd ilimitada"})
                           </span>
                         )}
                       </div>
-                      {(p.synonyms || []).length > 0 && <p className="text-[10px] text-[var(--text-muted)] mt-1">Sinônimos: {p.synonyms.join(", ")}</p>}
+                      {(p.synonyms || []).length > 0 && <p className="text-[10px] text-[var(--text-muted)] mt-1.5">Sinônimos: {p.synonyms.join(", ")}</p>}
                     </div>
-                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 ml-2">
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 ml-2 shrink-0">
                       <button 
                         onClick={() => {
                            setEditingProduct(p);
@@ -416,11 +429,16 @@ export default function SettingsPage() {
                              express_max_qty: p.express_max_qty || ""
                            });
                         }} 
-                        className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors"
+                        className="text-[11px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-primary)] border border-[var(--border-light)] hover:border-[var(--border-strong)] hover:bg-neutral-100 px-3 py-1.5 rounded cursor-pointer transition-all"
                       >
                         Editar
                       </button>
-                      <button onClick={() => deleteProduct(p.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded cursor-pointer transition-colors">Excluir</button>
+                      <button 
+                        onClick={() => deleteProduct(p.id)} 
+                        className="text-[11px] font-semibold bg-red-50 text-[var(--status-critical-text)] border border-red-200 hover:bg-[var(--status-critical-bg)] hover:border-[var(--status-critical-border)] px-3 py-1.5 rounded cursor-pointer transition-all"
+                      >
+                        Excluir
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -430,9 +448,9 @@ export default function SettingsPage() {
 
           {/* SEGMENTOS */}
           {tab === "segments" && (
-            <div className="space-y-4">
-              <div className="bg-white pb-4 transition-colors">
-                <form onSubmit={addSegment} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+            <div className="space-y-6">
+              <div className="bg-white pb-2 transition-colors">
+                <form onSubmit={addSegment} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
                   <h3 className="font-bold text-sm text-[var(--text-primary)]">Novo Segmento</h3>
                   <input type="text" value={segmentForm.name} onChange={e => setSegmentForm({...segmentForm, name: e.target.value})} placeholder="Nome (ex: Indústria, Construção)" className={inputCls} required />
                   <input type="text" value={segmentForm.keywords} onChange={e => setSegmentForm({...segmentForm, keywords: e.target.value})} placeholder="Keywords separadas por vírgula" className={inputCls} />
@@ -440,21 +458,26 @@ export default function SettingsPage() {
                     <option value="normal">Coleta Normal (todos os campos)</option>
                     <option value="short">Coleta Curta (nome, email, produto)</option>
                   </select>
-                  <button type="submit" className="btn-primary w-full">+ Criar Segmento</button>
+                  <button type="submit" className="btn-primary w-full h-[38px]">+ Criar Segmento</button>
                   {msg && tab === 'segments' && <p className="text-[10px] text-green-600 font-bold animate-pulse">{msg}</p>}
                 </form>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {segments.map(s => (
-                  <div key={s.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
+                  <div key={s.id} className="bg-white p-4 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-bold text-sm text-[var(--text-primary)]">{s.name}</h4>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded border border-[var(--border-light)] ${s.collection_type === 'short' ? 'bg-[var(--bg-surface-muted)] text-[var(--text-primary)] font-bold' : 'bg-white text-[var(--text-muted)]'}`}>{s.collection_type === 'short' ? 'Coleta Curta' : 'Coleta Normal'}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded border border-[var(--border-light)] ${s.collection_type === 'short' ? 'bg-[var(--bg-surface-muted)] text-[var(--text-primary)] font-bold' : 'bg-white text-[var(--text-muted)]'}`}>{s.collection_type === 'short' ? 'Coleta Curta' : 'Coleta Normal'}</span>
                       </div>
-                      {(s.keywords || []).length > 0 && <p className="text-[10px] text-[var(--text-muted)] mt-1">Keywords: {s.keywords.join(", ")}</p>}
+                      {(s.keywords || []).length > 0 && <p className="text-[10px] text-[var(--text-muted)] mt-1.5">Keywords: {s.keywords.join(", ")}</p>}
                     </div>
-                    <button onClick={() => deleteSegment(s.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded opacity-0 group-hover:opacity-100 cursor-pointer transition-colors">Excluir</button>
+                    <button 
+                      onClick={() => deleteSegment(s.id)} 
+                      className="text-[11px] font-semibold bg-red-50 text-[var(--status-critical-text)] border border-red-200 hover:bg-[var(--status-critical-bg)] hover:border-[var(--status-critical-border)] px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 cursor-pointer transition-all shrink-0"
+                    >
+                      Excluir
+                    </button>
                   </div>
                 ))}
               </div>
@@ -463,11 +486,11 @@ export default function SettingsPage() {
 
           {/* EQUIPES */}
           {tab === "teams" && (
-            <div className="space-y-4">
-              <div className="bg-white pb-4 transition-colors">
-                <form onSubmit={addTeam} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+            <div className="space-y-6">
+              <div className="bg-white pb-2 transition-colors">
+                <form onSubmit={addTeam} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
                   <h3 className="font-bold text-sm text-[var(--text-primary)]">{editingTeam ? "Editar Equipe" : "Nova Equipe"}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input 
                       type="text" 
                       value={editingTeam ? editTeamName : teamForm.name} 
@@ -487,28 +510,38 @@ export default function SettingsPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="btn-primary flex-1">{editingTeam ? "Salvar Alterações" : "+ Criar Equipe"}</button>
-                    {editingTeam && <button type="button" onClick={() => setEditingTeam(null)} className="btn-secondary flex-1">Cancelar</button>}
+                  <div className="flex gap-3">
+                    <button type="submit" className="btn-primary flex-1 h-[38px]">{editingTeam ? "Salvar Alterações" : "+ Criar Equipe"}</button>
+                    {editingTeam && <button type="button" onClick={() => setEditingTeam(null)} className="btn-secondary flex-1 h-[38px]">Cancelar</button>}
                   </div>
                 </form>
                 {msg && tab === 'teams' && <p className="text-[10px] text-green-600 font-bold animate-pulse mt-2">{msg}</p>}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {teams.map(t => {
                   const manager = users.find(u => u.id === t.manager_id);
                   return (
-                    <div key={t.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
+                    <div key={t.id} className="bg-white p-4 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
                       <div>
                         <span className="font-bold text-sm text-[var(--text-primary)]">{t.name}</span>
-                        <div className="flex flex-col gap-1 mt-1">
+                        <div className="flex flex-col gap-1.5 mt-2">
                           <p className="text-[10px] text-[var(--text-muted)]">Gestor: <span className="text-[var(--text-primary)] font-medium">{manager?.name || "Não atribuído"}</span></p>
-                          {manager?.whatsapp_number && <p className="text-[10px] text-[var(--text-muted)]">WhatsApp: {manager.whatsapp_number}</p>}
+                          {manager?.whatsapp_number && <p className="text-[10px] text-[var(--text-muted)] font-mono">WhatsApp: {manager.whatsapp_number}</p>}
                         </div>
                       </div>
-                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100">
-                        <button onClick={() => { setEditingTeam(t); setEditTeamName(t.name); }} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors">Editar</button>
-                        <button onClick={() => deleteTeam(t.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded cursor-pointer transition-colors">Excluir</button>
+                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 shrink-0">
+                        <button 
+                          onClick={() => { setEditingTeam(t); setEditTeamName(t.name); }} 
+                          className="text-[11px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-primary)] border border-[var(--border-light)] hover:border-[var(--border-strong)] hover:bg-neutral-100 px-3 py-1.5 rounded cursor-pointer transition-all"
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => deleteTeam(t.id)} 
+                          className="text-[11px] font-semibold bg-red-50 text-[var(--status-critical-text)] border border-red-200 hover:bg-[var(--status-critical-bg)] hover:border-[var(--status-critical-border)] px-3 py-1.5 rounded cursor-pointer transition-all"
+                        >
+                          Excluir
+                        </button>
                       </div>
                     </div>
                   );
@@ -519,47 +552,50 @@ export default function SettingsPage() {
 
           {/* VENDEDORES */}
           {tab === "sellers" && (
-            <div className="space-y-4">
-              <div className="bg-white pb-4 transition-colors">
+            <div className="space-y-6">
+              <div className="bg-white pb-2 transition-colors">
                 {editingUser ? (
-                  <form onSubmit={addUser} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-3">
+                  <form onSubmit={addUser} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="font-bold text-sm text-[var(--text-primary)]">Vincular Vendedor: {editingUser.name}</h3>
                       <a href="/usuarios" className="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] underline">Editar dados cadastrais</a>
                     </div>
                     <div>
-                      <label className="block text-[10px] text-[var(--text-muted)] mb-1">Equipe</label>
+                      <label className="block text-[10px] text-[var(--text-muted)] mb-1.5">Equipe</label>
                       <select value={userForm.team_id} onChange={e => setUserForm({...userForm, team_id: e.target.value})} className={inputCls}>
                         <option value="">Sem equipe (Inativo no roteamento)</option>
                         {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                     </div>
                     <div className="flex gap-3 pt-2">
-                      <button type="submit" className="btn-primary flex-1">Salvar Atribuição</button>
-                      <button type="button" onClick={() => { setEditingUser(null); setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); }} className="btn-secondary flex-1">Cancelar</button>
+                      <button type="submit" className="btn-primary flex-1 h-[38px]">Salvar Atribuição</button>
+                      <button type="button" onClick={() => { setEditingUser(null); setUserForm({ name: "", whatsapp_number: "", team_id: "", role: "seller" }); }} className="btn-secondary flex-1 h-[38px]">Cancelar</button>
                     </div>
                   </form>
                 ) : (
-                  <div className="bg-[var(--bg-surface-muted)] border border-[var(--border-light)] p-3 rounded-lg text-xs text-[var(--text-secondary)]">
+                  <div className="bg-[var(--bg-surface-muted)] border border-[var(--border-light)] p-4 rounded-lg text-xs text-[var(--text-secondary)] leading-relaxed">
                     Como funciona: Todas as informações de nome, e-mail e whatsapp são gerenciadas em Usuários. Aqui você apenas atribui cada vendedor à sua equipe.
                   </div>
                 )}
-                {msg && tab === 'sellers' && <p className="text-[10px] text-green-400 font-bold animate-pulse mt-2">{msg}</p>}
+                {msg && tab === 'sellers' && <p className="text-[10px] text-green-600 font-bold animate-pulse mt-2">{msg}</p>}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {users.filter(u => u.role === 'vendedor' || u.role === 'seller').map(u => (
-                  <div key={u.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
+                  <div key={u.id} className="bg-white p-4 rounded-lg border border-[var(--border-light)] flex justify-between items-center group">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-sm text-[var(--text-primary)]">{u.name}</p>
-                        <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-1.5 py-0.5 rounded border border-[var(--border-light)] font-bold uppercase">Vendedor</span>
+                        <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-2 py-0.5 rounded border border-[var(--border-light)] font-bold uppercase">Vendedor</span>
                       </div>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-1.5 font-mono">
+                      <p className="text-[10px] text-[var(--text-muted)] mt-2 font-mono">
                         {u.whatsapp_number ? `WhatsApp: ${u.whatsapp_number}` : "Sem WhatsApp"} • Equipe: {getName(teams, u.team_id)}
                       </p>
                     </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => { setEditingUser(u); setUserForm({ name: u.name, whatsapp_number: u.whatsapp_number || "", team_id: u.team_id || "", role: u.role }); }} className="text-[10px] btn-secondary px-3 py-1.5 h-auto">
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 shrink-0">
+                      <button 
+                        onClick={() => { setEditingUser(u); setUserForm({ name: u.name, whatsapp_number: u.whatsapp_number || "", team_id: u.team_id || "", role: u.role }); }} 
+                        className="text-[11px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-primary)] border border-[var(--border-light)] hover:border-[var(--border-strong)] hover:bg-neutral-100 px-3 py-1.5 rounded cursor-pointer transition-all"
+                      >
                         Mudar Equipe
                       </button>
                     </div>
@@ -574,22 +610,22 @@ export default function SettingsPage() {
 
           {/* REGRAS */}
           {tab === "rules" && (
-            <div className="space-y-4">
-              <div className="bg-white pb-4 transition-colors">
-                <form onSubmit={addRule} className="bg-white p-4 rounded-lg border border-[var(--border-light)] space-y-4">
+            <div className="space-y-6">
+              <div className="bg-white pb-2 transition-colors">
+                <form onSubmit={addRule} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-5">
                   <h3 className="font-bold text-sm text-[var(--text-primary)]">{editingRule ? "Editar Regra" : "Nova Regra de Roteamento"}</h3>
 
                   {/* Equipe + Segmento */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">Equipe</label>
+                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5">Equipe</label>
                       <select value={ruleForm.team_id} onChange={e => setRuleForm({...ruleForm, team_id: e.target.value})} className={inputCls}>
                         <option value="">Qualquer equipe</option>
                         {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">Segmento</label>
+                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5">Segmento</label>
                       <select value={ruleForm.segment_id} onChange={e => setRuleForm({...ruleForm, segment_id: e.target.value})} className={inputCls}>
                         <option value="">Qualquer segmento</option>
                         {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -599,11 +635,11 @@ export default function SettingsPage() {
 
                   {/* Multi-select: REGIÕES */}
                   <div>
-                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2">
+                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2.5">
                       Regiões <span className="text-[var(--text-muted)] normal-case font-normal">(selecione uma ou mais)</span>
                     </label>
                     {regions.length === 0 && <p className="text-[10px] text-[var(--text-muted)]">Nenhuma região cadastrada</p>}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2.5">
                       {regions.map(r => {
                         const sel = ruleRegionIds.includes(r.id);
                         return (
@@ -611,13 +647,13 @@ export default function SettingsPage() {
                             key={r.id}
                             type="button"
                             onClick={() => setRuleRegionIds(toggleChip(ruleRegionIds, r.id))}
-                            className={`px-3 py-1.5 rounded text-xs font-semibold border transition-all cursor-pointer ${
+                            className={`px-4 py-2 rounded-md text-xs font-semibold border transition-all cursor-pointer ${
                               sel
-                                ? 'bg-[#111111] border-[#111111] text-white'
-                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+                                ? 'bg-[#111111] border-[#111111] text-white shadow-sm'
+                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface-muted)] hover:text-[var(--text-primary)]'
                             }`}
                           >
-                            {sel ? 'Selecionado: ' : ''}{r.name}
+                            {sel ? '✓ ' : ''}{r.name}
                             {(r.ddd_codes || []).length > 0 && <span className="ml-1 opacity-60 font-normal">({r.ddd_codes.slice(0,2).join(',')}…)</span>}
                           </button>
                         );
@@ -627,11 +663,11 @@ export default function SettingsPage() {
 
                   {/* Multi-select: PRODUTOS */}
                   <div>
-                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2">
+                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2.5">
                       Produtos <span className="text-[var(--text-muted)] normal-case font-normal">(selecione um ou mais)</span>
                     </label>
                     {products.length === 0 && <p className="text-[10px] text-[var(--text-muted)]">Nenhum produto cadastrado</p>}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2.5">
                       {products.map(p => {
                         const sel = ruleProductIds.includes(p.id);
                         return (
@@ -639,13 +675,13 @@ export default function SettingsPage() {
                             key={p.id}
                             type="button"
                             onClick={() => setRuleProductIds(toggleChip(ruleProductIds, p.id))}
-                            className={`px-3 py-1.5 rounded text-xs font-semibold border transition-all cursor-pointer ${
+                            className={`px-4 py-2 rounded-md text-xs font-semibold border transition-all cursor-pointer ${
                               sel
-                                ? 'bg-[#111111] border-[#111111] text-white'
-                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+                                ? 'bg-[#111111] border-[#111111] text-white shadow-sm'
+                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface-muted)] hover:text-[var(--text-primary)]'
                             }`}
                           >
-                            {sel ? 'Selecionado: ' : ''}{p.name}
+                            {sel ? '✓ ' : ''}{p.name}
                           </button>
                         );
                       })}
@@ -654,12 +690,12 @@ export default function SettingsPage() {
 
                   {/* Multi-select: VENDEDORES */}
                   <div>
-                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">
+                    <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5">
                       Roleta de Vendedores <span className="text-[var(--text-muted)] normal-case font-normal">(leads alternados automaticamente)</span>
                     </label>
-                    <p className="text-[10px] text-[var(--text-muted)] mb-2">Se mais de um vendedor atende a mesma região/produto/segmento, selecione todos — o sistema fará rodízio automático.</p>
+                    <p className="text-[10px] text-[var(--text-muted)] mb-2.5">Se mais de um vendedor atende a mesma região/produto/segmento, selecione todos — o sistema fará rodízio automático.</p>
                     {users.length === 0 && <p className="text-[10px] text-[var(--text-muted)]">Nenhum vendedor cadastrado</p>}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2.5">
                       {users.map(u => {
                         const sel = ruleSellerIds.includes(u.id);
                         return (
@@ -667,28 +703,28 @@ export default function SettingsPage() {
                             key={u.id}
                             type="button"
                             onClick={() => setRuleSellerIds(toggleChip(ruleSellerIds, u.id))}
-                            className={`px-3 py-1.5 rounded text-xs font-semibold border transition-all cursor-pointer ${
+                            className={`px-4 py-2 rounded-md text-xs font-semibold border transition-all cursor-pointer ${
                               sel
-                                ? 'bg-[#111111] border-[#111111] text-white'
-                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+                                ? 'bg-[#111111] border-[#111111] text-white shadow-sm'
+                                : 'bg-white border-[var(--border-light)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface-muted)] hover:text-[var(--text-primary)]'
                             }`}
                           >
-                            {sel ? `Selecionado: ${u.name}` : u.name}
+                            {sel ? `✓ ${u.name}` : u.name}
                           </button>
                         );
                       })}
                     </div>
                     {ruleSellerIds.length > 1 && (
-                      <p className="text-[10px] text-[var(--text-primary)] mt-2 font-bold font-mono">
+                      <p className="text-[10px] text-[var(--text-primary)] mt-3 font-bold font-mono bg-[var(--bg-surface-muted)] border border-[var(--border-light)] px-3 py-1.5 rounded w-fit">
                         Rodízio ativo ({ruleSellerIds.length} vendedores) — o sistema alternará automaticamente
                       </p>
                     )}
                   </div>
 
                   {/* Prioridade e Express */}
-                  <div className="grid grid-cols-2 gap-3 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div>
-                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1">
+                      <label className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5">
                         Prioridade
                         <span className="ml-2 text-[var(--text-muted)] normal-case font-normal">
                           — menor número = maior prioridade
@@ -703,7 +739,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="pb-2">
-                      <label className="flex items-center gap-2 cursor-pointer group">
+                      <label className="flex items-center gap-2 cursor-pointer group select-none">
                         <input 
                           type="checkbox" 
                           checked={ruleForm.is_express} 
@@ -715,8 +751,8 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <button type="submit" className="btn-primary flex-1">{editingRule ? "Atualizar Regra" : "Criar Regra"}</button>
+                  <div className="flex gap-3 pt-2">
+                    <button type="submit" className="btn-primary flex-1 h-[38px]">{editingRule ? "Atualizar Regra" : "Criar Regra"}</button>
                     {editingRule && (
                       <button 
                         type="button" 
@@ -725,7 +761,7 @@ export default function SettingsPage() {
                           setRuleForm({ team_id: "", segment_id: "", priority: 1, is_express: false });
                           setRuleRegionIds([]); setRuleProductIds([]); setRuleSellerIds([]);
                         }} 
-                        className="btn-secondary flex-1"
+                        className="btn-secondary flex-1 h-[38px]"
                       >
                         Cancelar
                       </button>
@@ -736,13 +772,13 @@ export default function SettingsPage() {
               </div>
 
               {/* Barra de Filtros */}
-              <div className="bg-white p-4 rounded-lg border border-[var(--border-light)] mb-6 flex flex-wrap gap-4 items-end">
+              <div className="bg-white p-5 rounded-lg border border-[var(--border-light)] mb-6 flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[150px]">
-                  <label className="block text-[10px] text-[var(--text-muted)] mb-1 uppercase font-bold">Segmento</label>
+                  <label className="block text-[10px] text-[var(--text-muted)] mb-1.5 uppercase font-bold">Segmento</label>
                   <select 
                     value={filterSegmentId} 
                     onChange={(e) => setFilterSegmentId(e.target.value)}
-                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)]"
+                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] h-9"
                   >
                     <option value="">Todos</option>
                     {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -750,11 +786,11 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex-1 min-w-[150px]">
-                  <label className="block text-[10px] text-[var(--text-muted)] mb-1 uppercase font-bold">Equipe</label>
+                  <label className="block text-[10px] text-[var(--text-muted)] mb-1.5 uppercase font-bold">Equipe</label>
                   <select 
                     value={filterTeamId} 
                     onChange={(e) => setFilterTeamId(e.target.value)}
-                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)]"
+                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] h-9"
                   >
                     <option value="">Todas</option>
                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -762,11 +798,11 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex-1 min-w-[150px]">
-                  <label className="block text-[10px] text-[var(--text-muted)] mb-1 uppercase font-bold">Região</label>
+                  <label className="block text-[10px] text-[var(--text-muted)] mb-1.5 uppercase font-bold">Região</label>
                   <select 
                     value={filterRegionId} 
                     onChange={(e) => setFilterRegionId(e.target.value)}
-                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)]"
+                    className="w-full bg-white border border-[var(--border-light)] rounded-md p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] h-9"
                   >
                     <option value="">Todas</option>
                     {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -775,14 +811,14 @@ export default function SettingsPage() {
 
                 <button 
                   onClick={() => { setFilterSegmentId(""); setFilterTeamId(""); setFilterRegionId(""); }}
-                  className="btn-secondary h-[34px] cursor-pointer"
+                  className="btn-secondary h-[36px] px-4 cursor-pointer"
                 >
                   Limpar
                 </button>
               </div>
 
               {/* LISTAGEM DE REGRAS */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {rules
                   .filter(r => !filterSegmentId || r.segment_id === filterSegmentId)
                   .filter(r => !filterTeamId || r.team_id === filterTeamId)
@@ -796,38 +832,38 @@ export default function SettingsPage() {
                   const sellerDisplay = sellerNames.length > 0 ? sellerNames : [getName(users, r.assigned_user_id)];
 
                   return (
-                    <div key={r.id} className="bg-white p-3 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
+                    <div key={r.id} className="bg-white p-4 rounded-lg border border-[var(--border-light)] flex justify-between items-start group">
                       <div className="flex-1 min-w-0">
                         {/* Vendedores */}
-                        <div className="flex flex-wrap gap-1 mb-1.5">
+                        <div className="flex flex-wrap gap-1.5 mb-2">
                           {sellerDisplay.filter(Boolean).map((name: string) => (
-                            <span key={name} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-1.5 py-0.5 rounded border border-[var(--border-light)] font-bold">{name}</span>
+                            <span key={name} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-2 py-0.5 rounded border border-[var(--border-light)] font-bold">{name}</span>
                           ))}
                           {sellerDisplay.filter(Boolean).length > 1 && (
-                            <span className="text-[10px] text-[var(--text-muted)] px-1 font-mono font-bold">rodízio</span>
+                            <span className="text-[10px] text-[var(--text-muted)] px-1 font-mono font-bold flex items-center">rodízio</span>
                           )}
                           {r.is_express && (
                             <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-primary)] px-2 py-0.5 rounded border border-[var(--border-light)] font-black">EXPRESS</span>
                           )}
                         </div>
                         {/* Região e Produto */}
-                        <div className="flex flex-wrap gap-1.5 mb-1.5">
+                        <div className="flex flex-wrap gap-1.5 mb-2">
                           {regionDisplay !== 'Todas' && regionDisplay.split(', ').map((n: string) => (
-                            <span key={n} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{n}</span>
+                            <span key={n} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-light)]">{n}</span>
                           ))}
                           {productDisplay !== '—' && productDisplay.split(', ').map((n: string) => (
-                            <span key={n} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{n}</span>
+                            <span key={n} className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-light)]">{n}</span>
                           ))}
                           {getName(segments, r.segment_id) !== '—' && (
-                            <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-light)]">{getName(segments, r.segment_id)}</span>
+                            <span className="text-[10px] bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-light)]">{getName(segments, r.segment_id)}</span>
                           )}
                         </div>
                         <p className="text-[10px] text-[var(--text-muted)] font-medium">Prioridade {r.priority} • {getName(teams, r.team_id) !== '—' ? `Equipe: ${getName(teams, r.team_id)}` : 'Qualquer equipe'}</p>
                       </div>
-                      <div className="flex gap-1.5 ml-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1.5 ml-2 shrink-0 opacity-0 group-hover:opacity-100 transition-all">
                         <button 
                           onClick={() => duplicateRule(r)} 
-                          className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors"
+                          className="text-[11px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-primary)] border border-[var(--border-light)] hover:border-[var(--border-strong)] hover:bg-neutral-100 px-3 py-1.5 rounded cursor-pointer transition-all"
                           title="Duplicar esta regra"
                         >
                           Duplicar
@@ -846,11 +882,16 @@ export default function SettingsPage() {
                             setRuleSellerIds(r.seller_ids || []);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }} 
-                          className="text-[10px] border border-[var(--border-light)] hover:border-[var(--border-strong)] bg-white text-[var(--text-primary)] px-2.5 py-1 rounded cursor-pointer transition-colors"
+                          className="text-[11px] font-semibold bg-[var(--bg-surface-muted)] text-[var(--text-primary)] border border-[var(--border-light)] hover:border-[var(--border-strong)] hover:bg-neutral-100 px-3 py-1.5 rounded cursor-pointer transition-all"
                         >
                           Editar
                         </button>
-                        <button onClick={() => deleteRule(r.id)} className="text-[10px] border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] px-2.5 py-1 rounded cursor-pointer transition-colors">Excluir</button>
+                        <button 
+                          onClick={() => deleteRule(r.id)} 
+                          className="text-[11px] font-semibold bg-red-50 text-[var(--status-critical-text)] border border-red-200 hover:bg-[var(--status-critical-bg)] hover:border-[var(--status-critical-border)] px-3 py-1.5 rounded cursor-pointer transition-all"
+                        >
+                          Excluir
+                        </button>
                       </div>
                     </div>
                   );

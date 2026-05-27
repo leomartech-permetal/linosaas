@@ -361,3 +361,128 @@ p, span, div, li, th, td, label, select, input, textarea {
   background: var(--border-light);
   margin: 10px 0;
 }
+
+/* ==========================================================================
+   EXTENSÃO DE DESIGN - ACABAMENTO, RESPIRO E CANVAS INFINITO
+   ========================================================================== */
+
+.metric-card, .card-base {
+  padding: 24px !important;
+  gap: 8px !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-clean {
+  width: 100%;
+  height: 38px;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.input-clean:focus {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--text-primary);
+}
+
+/* Respiro Técnico para Células de Tabelas */
+.content-block table th {
+  padding: 14px 18px !important;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.content-block table td {
+  padding: 16px 18px !important;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* Elementos clicáveis de ação em listas sempre legíveis e interativos */
+.group .opacity-0 {
+  opacity: 0.7 !important; /* Mantém visível em opacidade 70% para sinalizar clicabilidade */
+  transition: opacity 0.15s ease;
+}
+
+.group:hover .opacity-0 {
+  opacity: 1 !important;
+}
+
+/* Canvas Infinito no Pipeline */
+.canvas-viewport {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 180px);
+  overflow: hidden;
+  background-color: #fafafa;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  user-select: none;
+}
+
+.canvas-container {
+  display: inline-flex;
+  gap: 32px;
+  padding: 100px;
+  transform-origin: 0 0;
+  cursor: grab;
+}
+
+.canvas-container:active {
+  cursor: grabbing;
+}
+
+.canvas-grid {
+  background-size: 20px 20px;
+  background-image: radial-gradient(circle, var(--border-strong) 1px, transparent 1px);
+}
+
+.canvas-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 6px;
+  background: white;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+.canvas-btn {
+  height: 28px;
+  padding: 0 10px;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.canvas-btn:hover {
+  background: var(--bg-surface-muted);
+  border-color: var(--border-strong);
+}
+
+.canvas-btn:active {
+  transform: scale(0.95);
+}
+

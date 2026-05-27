@@ -170,28 +170,28 @@ export default function DashboardPage() {
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="text-[10px] text-[var(--text-muted)] uppercase font-semibold border-b border-[var(--border-light)]">
-                      <th className="p-4">Lead</th>
-                      <th className="p-4">Produto</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Vendedor</th>
-                      <th className="p-4 text-right">Data</th>
+                      <th>Lead</th>
+                      <th>Produto</th>
+                      <th>Status</th>
+                      <th>Vendedor</th>
+                      <th className="text-right">Data</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-light)]">
                     {leads.slice(0, 10).map((lead) => (
                       <tr key={lead.id} onClick={() => setSelectedLead(lead)} className="hover:bg-[var(--bg-surface-muted)] cursor-pointer transition-colors">
-                        <td className="p-4">
+                        <td>
                           <div className="font-semibold text-sm text-[var(--text-primary)]">{lead.name || "Interesse Anônimo"}</div>
-                          <div className="text-[10px] text-[var(--text-soft)]">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</div>
+                          <div className="text-[10px] text-[var(--text-soft)] font-mono">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</div>
                         </td>
-                        <td className="p-4 text-xs font-medium text-[var(--link-color)]">{lead.detected_product || lead.produto || "—"}</td>
-                        <td className="p-4">
+                        <td className="text-xs font-medium text-[var(--link-color)]">{lead.detected_product || lead.produto || "—"}</td>
+                        <td>
                           <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded border border-[var(--border-light)] bg-[var(--bg-surface-muted)]">
                             {STATUS_LABELS[lead.status] || lead.status}
                           </span>
                         </td>
-                        <td className="p-4 text-xs font-medium">{lead.vendedor_nome}</td>
-                        <td className="p-4 text-right text-[10px] text-[var(--text-soft)] font-mono">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</td>
+                        <td className="text-xs font-medium">{lead.vendedor_nome}</td>
+                        <td className="text-right text-[10px] text-[var(--text-soft)] font-mono">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</td>
                       </tr>
                     ))}
                   </tbody>

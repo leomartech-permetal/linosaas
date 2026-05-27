@@ -245,11 +245,11 @@ export default function SupportDashboard() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="text-[var(--text-muted)] text-[10px] uppercase tracking-wider border-b border-[var(--border-light)]">
-                    <th className="p-4 font-semibold">Lead</th>
-                    <th className="p-4 font-semibold">Status</th>
-                    <th className="p-4 font-semibold">Vendedor</th>
-                    <th className="p-4 font-semibold">Tempo de Espera</th>
-                    <th className="p-4 font-semibold text-right">Ações</th>
+                    <th>Lead</th>
+                    <th>Status</th>
+                    <th>Vendedor</th>
+                    <th>Tempo de Espera</th>
+                    <th className="text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-light)]">
@@ -258,22 +258,22 @@ export default function SupportDashboard() {
                     const isCritical = waitMin > 40;
                     return (
                       <tr key={i} className="hover:bg-[var(--bg-surface-muted)] transition-colors">
-                        <td className="p-4">
+                        <td>
                           <div className="font-semibold text-sm text-[var(--text-primary)]">{l.name}</div>
-                          <div className="text-[10px] text-[var(--text-soft)]">{l.whatsapp_number}</div>
+                          <div className="text-[10px] text-[var(--text-soft)] font-mono">{l.whatsapp_number}</div>
                         </td>
-                        <td className="p-4">
+                        <td>
                           <span className={`text-[10px] px-2 py-0.5 rounded font-semibold uppercase ${isCritical ? 'bg-[var(--status-critical-bg)] text-[var(--status-critical-text)] border border-[var(--status-critical-border)]' : 'bg-[var(--bg-surface-muted)] text-[var(--text-secondary)] border border-[var(--border-light)]'}`}>
                             {l.status}
                           </span>
                         </td>
-                        <td className="p-4 text-[var(--text-secondary)]">{l.admin_users?.name || 'Não atribuído'}</td>
-                        <td className="p-4">
+                        <td className="text-[var(--text-secondary)]">{l.admin_users?.name || 'Não atribuído'}</td>
+                        <td>
                           <div className="flex items-center gap-2">
                             <span className={isCritical ? 'text-[var(--status-critical-text)] font-semibold font-mono' : 'text-[var(--text-secondary)] font-mono'}>{waitMin} min</span>
                           </div>
                         </td>
-                        <td className="p-4 text-right space-x-2">
+                        <td className="text-right space-x-2">
                            <button 
                              onClick={() => handleNotify(l.id)} 
                              disabled={actionLoading === `notify-${l.id}` || actionLoading === `escalate-${l.id}`}
