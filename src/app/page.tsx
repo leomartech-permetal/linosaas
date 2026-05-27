@@ -147,23 +147,24 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="p-6 md:p-8 w-full h-full bg-white text-[var(--text-primary)] flex flex-col overflow-hidden transition-colors duration-200">
-      <header className="flex justify-between items-center mb-8 pb-4 border-b border-[var(--border-light)]">
+    <div className="w-full h-screen bg-white text-[var(--text-primary)] flex flex-col overflow-hidden relative transition-colors duration-200 select-none">
+      {/* Header Fixo e Translúcido */}
+      <header className="absolute top-0 left-0 right-0 z-30 flex justify-between items-center px-8 py-4 bg-white/80 backdrop-blur-md border-b border-[var(--border-light)] select-none">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Fluxo Comercial</h2>
-          <p className="text-[var(--text-muted)] mt-1 text-xs font-medium">Gestão tática do pipeline de vendas em tempo real</p>
+          <h2 className="text-lg font-bold tracking-tight">Fluxo Comercial</h2>
+          <p className="text-[var(--text-muted)] mt-0.5 text-xs font-medium">Gestão tática do pipeline de vendas em tempo real</p>
         </div>
         <button 
           onClick={() => setShowNewModal(true)} 
-          className="btn-primary"
+          className="btn-primary h-9 px-4 text-xs font-bold"
         >
           + Inserir Lead Manual
         </button>
       </header>
 
-      {/* Viewport do Canvas */}
+      {/* Viewport do Canvas (Sem Caixa delimitadora) */}
       <div 
-        className="canvas-viewport canvas-grid"
+        className="w-full h-full canvas-grid relative overflow-hidden select-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -183,7 +184,7 @@ export default function PipelinePage() {
             return (
               <div
                 key={col.key}
-                className="w-80 min-w-[320px] flex-shrink-0 flex flex-col h-[calc(100vh-380px)]"
+                className="w-80 min-w-[320px] flex-shrink-0 flex flex-col h-[calc(100vh-220px)]"
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(col.key)}
               >

@@ -188,7 +188,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Área de Conteúdo Principal */}
-      <main className="main-content">
+      <main className={pathname === "/" ? "flex-1 h-screen overflow-hidden relative bg-white" : "main-content"}>
         {children}
       </main>
     </div>
