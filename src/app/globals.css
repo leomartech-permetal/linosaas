@@ -486,3 +486,66 @@ p, span, div, li, th, td, label, select, input, textarea {
   transform: scale(0.95);
 }
 
+/* Abas Modernas Segmentadas (Estilo Vercel/Linear) */
+.tabs-container-clean {
+  display: inline-flex;
+  background-color: var(--bg-surface-muted);
+  border: 1px solid var(--border-light);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  gap: 2px;
+}
+
+.tab-item-clean {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tab-item-clean:hover {
+  color: var(--text-primary);
+}
+
+.tab-item-clean.active {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+/* Listas Unificadas em Bloco Único (Evita Cards Encavalados com Bordas Repetidas) */
+.list-container-clean {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-container-clean > * {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.list-container-clean > *:last-child {
+  border-bottom: none;
+}
+
+.list-item-clean {
+  padding: 16px 20px;
+  transition: background-color 0.15s ease;
+  background-color: var(--bg-surface);
+}
+
+.list-item-clean:hover {
+  background-color: var(--bg-surface-muted);
+}
+
+
