@@ -3,34 +3,38 @@ import { generateSupportResponse } from './openai';
 import {
   notifySellerAboutLead,
   notifySupervisor,
-  checkSellerStartedConversation,
   notifySellerAboutUpdate
 } from './evolution-api';
 
 /**
- * LINO SUPORTE — Motor de Monitoramento de Atendimento
- *
- * Regras:
- * - 1ª notificação: imediata (ao atribuir lead)
- * - 2ª notificação: 40 min sem resposta
- * - 3ª notificação: 80 min sem resposta
- * - Escalar supervisor: 120 min (2h) sem resposta
- *
- * A cada ciclo (rodado pelo cron a cada 5 min), verifica todos os leads
- * em status WAITING_SELLER e aplica as regras de follow-up.
+ * LINO SUPORTE E PÓS-VENDA (Modelo Passivo)
+ * 
+ * Regras do modelo receptivo:
+ * - O Lino NÃO monitora o celular do vendedor.
+ * - O SLA é acionado APENAS se o cliente voltar a mandar mensagem no número central do Lino.
+ * - O Lino atua como concierge/ouvidoria: notifica o vendedor, acalma o cliente e registra as métricas.
  */
 
-// Tempos em minutos para cada tentativa de notificação
-const FOLLOW_UP_SCHEDULE = [
-  { attempt: 1, afterMinutes: 0 },     // Imediata
-  { attempt: 2, afterMinutes: 40 },    // 40 min
-  { attempt: 3, afterMinutes: 80 },    // 1h20
-];
-const ESCALATION_MINUTES = 120; // 2h → escalar supervisor
+/**
+ * Busca o telefone ativo do vendedor (fallback para whatsapp_number em admin_users).
+ */
+async function getSellerPhone(sellerId: string): Promise<string> {
+  try {
+    const { data: seller } = await supabase
+      .from('admin_users')
+      .select('whatsapp_number')
+      .eq('id', sellerId)
+      .single();
+
+    return seller?.whatsapp_number || '';
+  } catch (e) {
+    console.error('[Lino Suporte] Erro ao buscar telefone do vendedor:', e);
+    return '';
+  }
+}
 
 /**
- * Busca o supervisor de uma equipe de forma robusta.
- * Tenta buscar campos supervisor_phone/supervisor_name da tabela teams, ou gerente manager_id.
+ * Busca o supervisor de uma equipe.
  */
 async function getTeamSupervisor(teamId: string | null): Promise<{ name: string; phone: string } | null> {
   if (!teamId) return null;
@@ -73,244 +77,8 @@ async function getTeamSupervisor(teamId: string | null): Promise<{ name: string;
 }
 
 /**
- * Busca o telefone ativo do vendedor.
- * Tenta obter da tabela de instâncias ativas, ou whatsapp_number de admin_users.
- */
-async function getSellerPhone(sellerId: string): Promise<string> {
-  try {
-    const { data: sellerInstance } = await supabase
-      .from('instances')
-      .select('phone_number')
-      .eq('assigned_user_id', sellerId)
-      .eq('active', true)
-      .limit(1)
-      .single();
-
-    if (sellerInstance?.phone_number) {
-      return sellerInstance.phone_number;
-    }
-
-    const { data: seller } = await supabase
-      .from('admin_users')
-      .select('whatsapp_number')
-      .eq('id', sellerId)
-      .single();
-
-    return seller?.whatsapp_number || '';
-  } catch (e) {
-    console.error('[Lino Suporte] Erro ao buscar telefone do vendedor:', e);
-    return '';
-  }
-}
-
-/**
- * Função principal do Lino Suporte.
- * Deve ser chamada periodicamente (a cada 5 min) pelo cron.
- */
-export async function runSupportMonitor(): Promise<{
-  checked: number;
-  notified: number;
-  escalated: number;
-  resolved: number;
-  errors: string[];
-}> {
-  const result = { checked: 0, notified: 0, escalated: 0, resolved: 0, errors: [] as string[] };
-
-  try {
-    // 1. Buscar todos os leads aguardando vendedor
-    const { data: pendingLeads, error: leadsError } = await supabase
-      .from('leads')
-      .select('*')
-      .eq('status', 'WAITING_SELLER');
-
-    if (leadsError) {
-      result.errors.push(`Erro ao buscar leads: ${leadsError.message}`);
-      return result;
-    }
-
-    if (!pendingLeads || pendingLeads.length === 0) {
-      console.log('[Lino Suporte] Nenhum lead pendente de atendimento.');
-      return result;
-    }
-
-    result.checked = pendingLeads.length;
-    console.log(`[Lino Suporte] ${pendingLeads.length} leads aguardando vendedor...`);
-
-    for (const lead of pendingLeads) {
-      try {
-        await processLead(lead, result);
-      } catch (err: any) {
-        result.errors.push(`Erro processando lead ${lead.id}: ${err.message}`);
-      }
-    }
-  } catch (err: any) {
-    result.errors.push(`Erro geral no monitor: ${err.message}`);
-  }
-
-  console.log(`[Lino Suporte] Ciclo finalizado:`, result);
-  return result;
-}
-
-/**
- * Processa um lead individual — verifica se vendedor respondeu, notifica ou escala.
- */
-async function processLead(
-  lead: any,
-  result: { notified: number; escalated: number; resolved: number; errors: string[] }
-) {
-  const leadId = lead.id;
-  const assignedUserId = lead.current_owner_id;
-  const leadPhone = lead.whatsapp_number || '';
-  const leadName = lead.name || 'Lead sem nome';
-
-  if (!assignedUserId) {
-    console.log(`[Lino Suporte] Lead ${leadId} sem vendedor atribuído. Ignorando.`);
-    return;
-  }
-
-  // Tempo desde que o lead entrou em WAITING_SELLER
-  const waitingSince = new Date(lead.updated_at || lead.created_at);
-  const minutesWaiting = (Date.now() - waitingSince.getTime()) / 60000;
-
-  // Buscar dados do vendedor
-  const { data: seller } = await supabase
-    .from('admin_users')
-    .select('*')
-    .eq('id', assignedUserId)
-    .single();
-
-  if (!seller) {
-    result.errors.push(`Vendedor ${assignedUserId} não encontrado para lead ${leadId}`);
-    return;
-  }
-
-  // Verificar se vendedor já iniciou conversa com o lead
-  const sellerStarted = await checkSellerStartedConversation(assignedUserId, leadPhone);
-
-  if (sellerStarted) {
-    // Vendedor respondeu! Atualizar status do lead
-    console.log(`[Lino Suporte] ✅ Vendedor ${seller.name} já está atendendo lead ${leadName}`);
-    await supabase
-      .from('leads')
-      .update({ status: 'IN_NEGOTIATION', updated_at: new Date().toISOString() })
-      .eq('id', leadId);
-
-    // Marcar follow-ups como resolvidos
-    await supabase
-      .from('lead_follow_ups')
-      .update({ responded: true, response_detected_at: new Date().toISOString(), status: 'RESOLVED' })
-      .eq('lead_id', leadId)
-      .eq('responded', false);
-
-    result.resolved++;
-    return;
-  }
-
-  // Buscar follow-ups já enviados para este lead
-  const { data: followUps } = await supabase
-    .from('lead_follow_ups')
-    .select('*')
-    .eq('lead_id', leadId)
-    .order('attempt_number', { ascending: true });
-
-  const existingAttempts = followUps?.length || 0;
-  const lastAttempt = followUps?.[followUps.length - 1];
-
-  // Verificar se já foi escalado
-  if (lastAttempt?.escalated_to_supervisor) {
-    console.log(`[Lino Suporte] Lead ${leadName} já foi escalado ao supervisor. Ignorando.`);
-    return;
-  }
-
-  // Buscar telefone do vendedor via helper
-  const sellerPhone = await getSellerPhone(assignedUserId);
-
-  if (!sellerPhone) {
-    result.errors.push(`Sem telefone para vendedor ${seller.name} (lead ${leadName})`);
-    return;
-  }
-
-  // === LÓGICA DE ESCALONAMENTO ===
-
-  // Buscar regras de SLA no tenant_config
-  const { data: globalConfig } = await supabase
-    .from('tenant_config')
-    .select('sla_rules')
-    .limit(1)
-    .single();
-  const slaRules = globalConfig?.sla_rules || {};
-  const maxWaitHours = slaRules.max_wait_hours || 2;
-  const escalationMinutes = maxWaitHours * 60;
-
-  // Verificar se precisa escalar ao supervisor
-  if (minutesWaiting >= escalationMinutes && existingAttempts >= 3) {
-    const supervisor = await getTeamSupervisor(seller.team_id);
-    const supervisorPhone = supervisor?.phone;
-
-    if (supervisorPhone) {
-      const sent = await notifySupervisor(
-        supervisorPhone,
-        seller.name,
-        leadName,
-        leadPhone
-      );
-
-      if (sent) {
-        // Registrar escalação
-        await supabase.from('lead_follow_ups').insert([{
-          lead_id: leadId,
-          assigned_user_id: assignedUserId,
-          team_id: seller.team_id,
-          attempt_number: existingAttempts + 1,
-          escalated_to_supervisor: true,
-          escalated_at: new Date().toISOString(),
-          status: 'ESCALATED',
-        }]);
-
-        console.log(`[Lino Suporte] 🚨 Lead ${leadName} ESCALADO para supervisor ${supervisor?.name || 'Supervisor'}`);
-        result.escalated++;
-      }
-    } else {
-      result.errors.push(`Sem supervisor configurado para equipe do vendedor ${seller.name}`);
-    }
-    return;
-  }
-
-  // Verificar próxima notificação a enviar
-  for (const schedule of FOLLOW_UP_SCHEDULE) {
-    if (existingAttempts >= schedule.attempt) continue;
-    if (minutesWaiting < schedule.afterMinutes) continue;
-
-    // Hora de enviar esta notificação
-    const sent = await notifySellerAboutLead(
-      sellerPhone,
-      leadName,
-      leadPhone,
-      schedule.attempt
-    );
-
-    if (sent) {
-      await supabase.from('lead_follow_ups').insert([{
-        lead_id: leadId,
-        assigned_user_id: assignedUserId,
-        team_id: seller.team_id,
-        attempt_number: schedule.attempt,
-        status: 'NOTIFIED',
-      }]);
-
-      console.log(`[Lino Suporte] 📩 Notificação #${schedule.attempt} enviada para ${seller.name} sobre lead ${leadName}`);
-      result.notified++;
-    }
-
-    // Só envia uma notificação por ciclo por lead
-    break;
-  }
-}
-
-/**
- * NOVA FUNÇÃO: HandleClientReturn determinístico
- * Quando o lead volta a falar, consultamos o estado REAL no banco
- * e decidimos a ação baseada no status atual.
+ * ENTRY POINT PASSIVO: HandleClientReturn
+ * Quando o lead volta a falar na central Lino, decidimos a ação baseada no status atual.
  */
 export async function handleClientReturn(
   whatsappNumber: string, 
@@ -322,7 +90,6 @@ export async function handleClientReturn(
 }> {
   console.log(`[Lino Suporte] 🔍 Processando retorno do cliente ${whatsappNumber}`);
 
-  // 1. Buscar lead pelo WhatsApp (Simples primeiro para evitar erro de join)
   const { data: lead, error: leadError } = await supabase
     .from('leads')
     .select('*, current_owner_id')
@@ -337,7 +104,6 @@ export async function handleClientReturn(
     };
   }
 
-  // Tenta buscar dados do dono separadamente
   let currentOwner = null;
   if (lead.current_owner_id) {
     const { data: owner } = await supabase
@@ -349,11 +115,15 @@ export async function handleClientReturn(
   }
   lead.current_owner = currentOwner;
 
-  // 2. Calcular tempo desde envio ao vendedor
+  // Se o lead já comprou, é LINO PÓS-VENDA
+  if (lead.status === 'WON' || lead.status === 'POST_SALE') {
+    return handlePostSaleReturn(lead, message);
+  }
+
+  // LINO SUPORTE ATENDIMENTO (Fase de cotação/orçamento)
   const sentTime = lead.sent_to_seller_at || lead.updated_at;
   const hoursSinceSent = (Date.now() - new Date(sentTime).getTime()) / 3600000;
 
-  // 3. Verificar tentativas de retorno anteriores
   const { data: returnAttempts } = await supabase
     .from('lead_follow_ups')
     .select('*')
@@ -364,43 +134,23 @@ export async function handleClientReturn(
   const returnCount = returnAttempts?.length || 0;
   const lastReturn = returnAttempts?.[0];
   
-  // Reutilizar slot se < 20 minutos da última mensagem do cliente
   const twentyMinutesAgo = Date.now() - 20 * 60000;
   const isRecentReturn = lastReturn?.last_client_message_at && 
     new Date(lastReturn.last_client_message_at).getTime() > twentyMinutesAgo;
 
-  // 4. Verificar se vendedor iniciou conversa (Evolution API)
-  let sellerResponded = false;
-  if (lead.current_owner_id) {
-    sellerResponded = await checkSellerStartedConversation(
-      lead.current_owner_id, 
-      whatsappNumber
-    );
-  }
+  // No modelo passivo, consideramos que o vendedor respondeu se o status for IN_NEGOTIATION ou além.
+  const sellerResponded = lead.status !== 'WAITING_SELLER' && lead.status !== 'SENT_TO_SELLER';
 
-  // 5. Registrar gargalo com lino-support-fiscalization
-  const bottleneckResult = await registerBottleneckIfNeeded(
-    lead, 
-    sellerResponded, 
-    hoursSinceSent, 
-    returnCount
-  );
+  // Registra gargalo se vendedor não atendeu e já passou muito tempo
+  await registerBottleneckIfNeeded(lead, sellerResponded, hoursSinceSent, returnCount);
 
-  // 6. Decidir ação por status atual
-  const action = await decideActionByStatus(
-    lead, 
-    sellerResponded, 
-    hoursSinceSent, 
-    returnCount,
-    isRecentReturn
-  );
+  const action = await decideActionByStatus(lead, sellerResponded, hoursSinceSent, returnCount, isRecentReturn);
 
-  // 7. Registrar tentativa de retorno (se não for recente)
   if (!isRecentReturn) {
     await registerClientReturn(lead.id, lead.current_owner_id, returnCount + 1, hoursSinceSent);
   }
 
-  console.log(`[Lino Suporte] 📊 Ação decided: ${action.action}, Retornos: ${returnCount}, Vendedor respondeu: ${sellerResponded}`);
+  console.log(`[Lino Suporte] 📊 Ação decided: ${action.action}, Retornos: ${returnCount}`);
 
   return {
     ...action,
@@ -408,9 +158,64 @@ export async function handleClientReturn(
   };
 }
 
+async function handlePostSaleReturn(lead: any, message: string): Promise<{ action: string; message: string }> {
+  // O Lino atua como Ouvidoria receptiva.
+  const { data: interactionData } = await supabase
+    .from('interactions')
+    .select('message_content')
+    .eq('lead_id', lead.id)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const aiResponse = await generateSupportResponse(
+    lead, 
+    (interactionData || []).reverse(), 
+    'POS_VENDA_RECEPTIVO'
+  );
+
+  // Armazena o número do pedido se extraído
+  if (aiResponse.numero_pedido && aiResponse.numero_pedido !== 'null') {
+    const qState = lead.qualification_state || { valores: {} };
+    if (!qState.valores) qState.valores = {};
+    qState.valores.numero_pedido = aiResponse.numero_pedido;
+    await supabase.from('leads').update({ qualification_state: qState }).eq('id', lead.id);
+  }
+
+  // Escalação urgente (atraso, chargeback, devolução)
+  if (aiResponse.escalar_urgente) {
+    console.log(`[Lino Pós-Venda] 🚨 Escalação urgente detectada para o lead ${lead.id} - Intenção: ${aiResponse.intencao_pos_venda}`);
+    
+    // Escala para o supervisor imediatamente
+    await escalateToSupervisor(
+      lead.id, 
+      `🚨 URGÊNCIA PÓS-VENDA (${aiResponse.intencao_pos_venda?.toUpperCase() || 'PROBLEMA'}): O cliente relatou um problema grave. Pedido associado: ${aiResponse.numero_pedido || 'Não informado'}.`
+    );
+
+    // Notificar também o vendedor para ciência
+    const sellerPhone = await getSellerPhone(lead.current_owner_id);
+    if (sellerPhone) {
+      await notifySellerAboutUpdate(
+        sellerPhone, 
+        lead.name || 'Cliente', 
+        lead.whatsapp_number, 
+        `⚠️ ALERTA DE ${aiResponse.intencao_pos_venda?.toUpperCase() || 'PROBLEMA'}! O cliente acionou a ouvidoria. A coordenação já foi notificada.`
+      );
+    }
+
+    return {
+      action: 'ESCALATE_SUPERVISOR_POST_SALE',
+      message: aiResponse.message
+    };
+  }
+  
+  return {
+    action: 'POST_SALE_SUPPORT',
+    message: aiResponse.message || 'Sou o Lino Pós-Venda. Se você precisa de assistência com a entrega ou produto, me informe o número do pedido ou da nota fiscal.'
+  };
+}
+
 /**
- * Decide a ação baseada no status real do lead
- * Também dispara notificações ao vendedor quando necessário
+ * Decide a ação baseada no status e dispara notificações
  */
 async function decideActionByStatus(
   lead: any,
@@ -419,43 +224,30 @@ async function decideActionByStatus(
   returnCount: number,
   isRecentReturn: boolean
 ): Promise<{ action: string; message: string }> {
-  
   const status = lead.status;
 
-  // Se o cliente está em qualificação (SDR ainda não terminou)
   if (status === 'SDR_QUALIFICATION' || status === 'QUALIFIED') {
     return {
       action: 'CONTINUE_QUALIFICATION',
-      message: 'Entendi! Deixe-me continuar com as informações que precisamos.'
+      message: 'Deixe-me continuar com as informações que precisamos.'
     };
   }
 
-  // Se está aguardando vendedor
   if (status === 'WAITING_SELLER' || status === 'SENT_TO_SELLER') {
-    
-    // Vendedor NÃO iniciou conversa ainda
     if (!sellerResponded) {
-      
-      // Buscar regras de SLA no tenant_config
-      const { data: globalConfig } = await supabase
-        .from('tenant_config')
-        .select('sla_rules')
-        .limit(1)
-        .single();
-      const slaRules = globalConfig?.sla_rules || {};
-      const maxWaitHours = slaRules.max_wait_hours || 2;
+      const { data: globalConfig } = await supabase.from('tenant_config').select('sla_rules').single();
+      const maxWaitHours = globalConfig?.sla_rules?.max_wait_hours || 2;
 
-      // Se os tempos (prazo SLA) estão estourados
-      if (hoursSinceSent >= maxWaitHours) {
-        // Notificar supervisor urgentemente
+      // Escalar se estourou muito o SLA ou reclamou muitas vezes
+      if (hoursSinceSent >= maxWaitHours || returnCount >= 3) {
         await notifySupervisorUrgent(lead);
         return {
           action: 'ESCALATE_SUPERVISOR',
-          message: 'Entendo sua urgência. Já acionei o supervisor de equipe para verificar seu atendimento imediatamente.'
+          message: 'Entendo sua urgência. Já acionei a coordenação para verificar seu atendimento imediatamente.'
         };
       }
 
-      // Retornos anteriores ou primeiro retorno - USAR IA PARA RESPONDER
+      // IA responde o cliente
       const { data: interactionData } = await supabase.from('interactions').select('sender_type, message_content').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(10);
       const aiResponse = await generateSupportResponse(lead, (interactionData || []).reverse(), returnCount >= 1 ? 'COBRANÇA_URGENTE' : 'PRIMEIRO_RETORNO');
       
@@ -464,12 +256,7 @@ async function decideActionByStatus(
       if (aiResponse.nova_informacao) {
         const sellerPhone = await getSellerPhone(lead.current_owner_id);
         if (sellerPhone) {
-          await notifySellerAboutUpdate(
-            sellerPhone,
-            lead.name || 'Lead',
-            lead.whatsapp_number || '',
-            lastClientMessage
-          );
+          await notifySellerAboutUpdate(sellerPhone, lead.name || 'Lead', lead.whatsapp_number || '', lastClientMessage);
         }
         return {
           action: 'NOTIFY_SELLER_UPDATE',
@@ -485,108 +272,37 @@ async function decideActionByStatus(
         };
       }
 
-      // Buscar telefone do vendedor via helper de forma segura
       const sellerPhone = await getSellerPhone(lead.current_owner_id);
       if (sellerPhone) {
-        await notifySellerAboutLead(
-          sellerPhone,
-          lead.name || 'Lead',
-          lead.whatsapp_number || '',
-          3 // Mensagem de urgência
-        );
+        await notifySellerAboutLead(sellerPhone, lead.name || 'Lead', lead.whatsapp_number || '', 3);
       }
       return {
         action: 'NOTIFY_SELLER',
         message: aiResponse.message
       };
     }
-
-    // Vendedor iniciou mas não confirmou recebimento no sistema
-    if (status === 'SENT_TO_SELLER' && sellerResponded) {
-      // Atualizar status para SELLER_RECEIVED
-      await supabase.from('leads').update({
-        status: 'SELLER_RECEIVED',
-        seller_confirmed_at: new Date().toISOString()
-      }).eq('id', lead.id);
-      
-      // Registrar no histórico
-      await registerStatusHistory(lead.id, 'SENT_TO_SELLER', 'SELLER_RECEIVED', 'system');
-
-      return {
-        action: 'SELLER_CONFIRMED',
-        message: 'O vendedor confirmou o recebimento. Vou verificar se ele já iniciou o atendimento.'
-      };
-    }
   }
 
-  // Vendedor confirmou mas não iniciou atendimento
-  if (status === 'SELLER_RECEIVED') {
-    return {
-      action: 'CHECK_ATTENDANCE_STARTED',
-      message: 'O vendedor recebeu seu contato. Vou verificar se ele já iniciou o atendimento.'
-    };
-  }
-
-  // Atendimento já começou - direcionar para o vendedor
-  if (status === 'ATTENDANCE_STARTED' || status === 'IN_NEGOTIATION') {
+  if (status === 'IN_NEGOTIATION' || status === 'ATTENDANCE_STARTED') {
     return {
       action: 'FORWARD_TO_SELLER',
-      message: 'Deixe-me direcionar você ao vendedor que estava atendendo.'
+      message: 'Seu atendimento já foi iniciado. Vou reforçar com o especialista que você mandou mensagem.'
     };
   }
 
-  // Aguardando orçamento
-  if (status === 'AWAITING_QUOTE' || status === 'QUOTE_SENT') {
-    return {
-      action: 'CHECK_QUOTE_STATUS',
-      message: 'Vou verificar o status do seu orçamento.'
-    };
-  }
-
-  // Cliente cobrindo (já ouviu do vendedor, mas ainda precisa de algo)
-  if (status === 'CLIENT_COBRING') {
-    return {
-      action: 'CLIENT_COBRING',
-      message: 'Entendo. Vou verificar o que está pendente.'
-    };
-  }
-
-  // Já escalado para supervisor
-  if (status === 'ESCALATED_TO_SUPERVISOR') {
-    return {
-      action: 'SUPERVISOR_ESCALATED',
-      message: 'Seu caso já está com o supervisor. Vou verificar o andamento.'
-    };
-  }
-
-  // Default - resposta genérica baseada no contexto
   return {
     action: 'GENERIC_RESPONSE',
-    message: 'Obrigado por entrar em contato. Vou verificar sua situação.'
+    message: 'Vou verificar sua situação e registrar a ocorrência.'
   };
 }
 
-/**
- * Notifica vendedor urgentemente (para retornos do cliente)
- */
 async function notifySellerUrgent(lead: any, returnCount: number): Promise<void> {
   if (!lead.current_owner_id) return;
 
-  const { data: sellerInstance } = await supabase
-    .from('instances')
-    .select('phone_number')
-    .eq('assigned_user_id', lead.current_owner_id)
-    .eq('active', true)
-    .limit(1)
-    .single();
-
-  if (sellerInstance?.phone_number) {
-    const urgentMsg = returnCount >= 2 
-      ? `🚨 URGENTE! Cliente retornou ${returnCount}x sem resposta. Por favor, atende agora!`
-      : `⚠️ Cliente entrou em contato novamente. Por favor, atende!`;
-
+  const sellerPhone = await getSellerPhone(lead.current_owner_id);
+  if (sellerPhone) {
     await notifySellerAboutLead(
-      sellerInstance.phone_number,
+      sellerPhone,
       lead.name || 'Lead',
       lead.whatsapp_number || '',
       3
@@ -596,11 +312,7 @@ async function notifySellerUrgent(lead: any, returnCount: number): Promise<void>
 
 async function notifySupervisorUrgent(lead: any): Promise<void> {
   const supervisor = await getTeamSupervisor(lead.current_owner?.team_id);
-
-  if (!supervisor?.phone) {
-    console.log(`[Lino Suporte] Sem supervisor configurado para equipe do lead ${lead.id}`);
-    return;
-  }
+  if (!supervisor?.phone) return;
 
   await notifySupervisor(
     supervisor.phone,
@@ -609,24 +321,16 @@ async function notifySupervisorUrgent(lead: any): Promise<void> {
     lead.whatsapp_number || ''
   );
 
-  // Registrar escalação
   await supabase.from('supervisor_escalations').insert([{
     lead_id: lead.id,
     user_id: lead.current_owner_id,
     team_id: lead.current_owner?.team_id,
-    escalation_reason: 'Cliente voltou com prazo de SLA estourado'
+    escalation_reason: 'Cliente voltou reclamando de falta de atendimento/prazo.'
   }]);
 
-  // Atualizar status para escalado
-  await supabase.from('leads').update({
-    status: 'ESCALATED_TO_SUPERVISOR'
-  }).eq('id', lead.id);
+  await updateLeadStatus(lead.id, 'ESCALATED_TO_SUPERVISOR');
 }
 
-
-/**
- * Registra gargalo se vendedor não respondeu (lino-support-fiscalization)
- */
 async function registerBottleneckIfNeeded(
   lead: any,
   sellerResponded: boolean,
@@ -639,10 +343,10 @@ async function registerBottleneckIfNeeded(
   const severity = hoursSinceSent > 2 ? 'critical' : hoursSinceSent > 1 ? 'high' : 'medium';
 
   const description = returnCount > 0 
-    ? `Cliente voltou ${returnCount}x sem resposta do vendedor (${hoursSinceSent.toFixed(1)}h)`
-    : `Vendedor não iniciou contato há ${hoursSinceSent.toFixed(1)}h`;
+    ? `Cliente cobrou atendimento na central ${returnCount}x (${hoursSinceSent.toFixed(1)}h desde roteamento)`
+    : `SLA estourado (notificado proativamente pela central): ${hoursSinceSent.toFixed(1)}h`;
 
-  const { error } = await supabase.from('attendance_bottlenecks').insert([{
+  await supabase.from('attendance_bottlenecks').insert([{
     lead_id: lead.id,
     bottleneck_type: type,
     severity: severity,
@@ -650,18 +354,9 @@ async function registerBottleneckIfNeeded(
     hours_waited: hoursSinceSent
   }]);
 
-  if (error) {
-    console.error('[Lino Suporte] Erro ao registrar gargalo:', error);
-    return false;
-  }
-
-  console.log(`[Lino Suporte] ⚠️ Gargalo registrado: ${type} - ${severity}`);
   return true;
 }
 
-/**
- * Registra tentativa de retorno do cliente
- */
 async function registerClientReturn(
   leadId: string,
   userId: string | null,
@@ -679,9 +374,6 @@ async function registerClientReturn(
   }]);
 }
 
-/**
- * Registra mudança de status no histórico
- */
 async function registerStatusHistory(
   leadId: string,
   fromStatus: string,
@@ -693,13 +385,10 @@ async function registerStatusHistory(
     from_status: fromStatus,
     to_status: toStatus,
     changed_by: changedBy === 'system' ? null : changedBy,
-    reason: `Mudança automática via Lino Suporte`
+    reason: `Mudança automática via Lino Suporte Passivo`
   }]);
 }
 
-/**
- * Função para atualizar status do lead e enviar notificação quando necessário
- */
 export async function updateLeadStatus(
   leadId: string,
   newStatus: string,
@@ -713,13 +402,11 @@ export async function updateLeadStatus(
 
   if (!lead || lead.status === newStatus) return;
 
-  // Atualizar status
   const updateData: any = { 
     status: newStatus,
     updated_at: new Date().toISOString()
   };
 
-  // Timestamps baseados no status
   if (newStatus === 'SENT_TO_SELLER') {
     updateData.sent_to_seller_at = new Date().toISOString();
   } else if (newStatus === 'SELLER_RECEIVED') {
@@ -729,16 +416,9 @@ export async function updateLeadStatus(
   }
 
   await supabase.from('leads').update(updateData).eq('id', leadId);
-
-  // Registrar no histórico
   await registerStatusHistory(leadId, lead.status, newStatus, 'system');
-
-  console.log(`[Lino Suporte] 📝 Lead ${leadId} atualizado: ${lead.status} → ${newStatus}`);
 }
 
-/**
- * Escala para supervisor quando necessário
- */
 export async function escalateToSupervisor(
   leadId: string,
   reason: string
@@ -751,12 +431,9 @@ export async function escalateToSupervisor(
 
   if (!lead) return;
 
-  // Atualizar status
   await updateLeadStatus(leadId, 'ESCALATED_TO_SUPERVISOR');
 
-  // Buscar telefone do supervisor
   const supervisor = await getTeamSupervisor(lead.current_owner?.team_id);
-  
   if (supervisor?.phone) {
     await notifySupervisor(
       supervisor.phone,
@@ -766,18 +443,14 @@ export async function escalateToSupervisor(
     );
   }
 
-  // Registrar escalação
   await supabase.from('supervisor_escalations').insert([{
     lead_id: leadId,
     user_id: lead.current_owner_id,
     team_id: lead.current_owner?.team_id,
     escalation_reason: reason
   }]);
-
-  console.log(`[Lino Suporte] 🚨 Lead ${leadId} escalado para supervisor: ${reason}`);
 }
 
-// Mantém a função antiga para compatibilidade (deprecated)
 export async function handleClientReturnedToSDR(leadId: string): Promise<void> {
   const { data: lead } = await supabase
     .from('leads')

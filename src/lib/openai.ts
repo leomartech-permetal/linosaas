@@ -308,7 +308,7 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
 
 4. ESTADO DE COLETA DE DADOS: Enquanto você precisar fazer QUALQUER pergunta ao cliente (ex: perguntar quantidade, aplicação, nome da empresa ou e-mail), sua "acao_executada" deve ser OBRIGATORIAMENTE "coleta_dados".
 
-5. ROTEAMENTO É O PONTO FINAL: SÓ marque "acao_executada": "roteamento_comercial" quando você NÃO TIVER MAIS NENHUMA PERGUNTA a fazer. Se usar essa ação, sua "resposta_whatsapp" deve ser SOMENTE um aviso de transferência (ex: "Tudo certo! Estou te transferindo para o especialista agora."). Nunca misture uma pergunta com a ação de roteamento.
+5. ROTEAMENTO É O PONTO FINAL: SÓ marque "acao_executada": "roteamento_comercial" quando você NÃO TIVER MAIS NENHUMA PERGUNTA a fazer. Se usar essa ação, sua "resposta_whatsapp" deve ser SOMENTE um aviso informando que a triagem acabou, que o especialista entrará em contato em instantes pelo WhatsApp próprio do vendedor, e que este número atual (Central Lino) segue à disposição como canal de suporte e ouvidoria caso o cliente precise de ajuda ou tenha atrasos no atendimento.
 
 6. DADOS DO CLIENTE NO JSON: DDD, telefone e localização são extraídos automaticamente pelo sistema. NÃO tente extrair ddd_regiao do texto, sempre retorne null nesse campo.
 
@@ -474,10 +474,28 @@ export async function generateSupportResponse(leadData: any, history: any[], act
     if (seller?.name) vendedorNome = seller.name;
   }
 
-  // Prompt separado de Suporte
-  const supportPromptBase = config?.support_prompt || `Você é o Lino Suporte, assistente da Permetal S.A.
-Você atua como ponte entre o cliente e o vendedor responsável pelo atendimento.
-Tom: humano, empático, direto. Máximo 2 frases por mensagem.`;
+  // Prompt separado de Suporte e Pós-Venda
+  const supportPromptBase = config?.support_prompt || `Você é o Lino Suporte e Pós-Venda, a central inteligente de relacionamento com o cliente.
+Você atua como ponte entre o cliente e o vendedor, cobrando agilidade no atendimento de orçamentos ou atuando como ouvidoria para pedidos já faturados.
+Tom: humano, empático, resolutivo e direto. Você não acusa o vendedor, mas se posiciona ao lado do cliente para resolver. Máximo 2 frases por mensagem.`;
+
+  const isPosVenda = actionType === 'POS_VENDA_RECEPTIVO';
+
+  let rules = `REGRAS OBRIGATÓRIAS:
+1. Nunca diga que não sabe quem é o vendedor — o vendedor é ${vendedorNome}.
+2. Nunca use frases prontas como "Entendo sua urgência" ou "Vou verificar".
+3. Se o cliente estiver bravo, reconheça o problema sem inventar justificativas.
+4. Nunca diga "alta demanda" sem ter certeza do contexto real.
+5. Não prometa prazos específicos.
+6. CLASSIFICAÇÃO: Analise se a última mensagem do cliente trouxe uma nova especificação técnica ou dúvida que o vendedor precisa saber. Se sim, defina "nova_informacao" como true.`;
+
+  if (isPosVenda) {
+    rules += `
+7. PÓS-VENDA E OUVIDORIA: O cliente JÁ COMPROU. Ele pode estar cobrando a entrega, pedindo a nota fiscal, ou relatando um problema.
+8. EXTRAÇÃO DE DADOS: Sempre tente identificar e extrair o número do pedido ou nota fiscal ("numero_pedido"). Se o cliente não forneceu, peça de forma sutil.
+9. CLASSIFICAÇÃO DE INTENÇÃO: Classifique a "intencao_pos_venda" como: "atraso", "devolucao", "chargeback", "duvida_entrega", "solicitacao_nf", ou "outro".
+10. ESCALAÇÃO: Se a intenção for "atraso", "devolucao" ou "chargeback", defina "escalar_urgente" como true.`;
+  }
 
   const systemPrompt = `${supportPromptBase}
 
@@ -486,18 +504,15 @@ CONTEXTO DO ATENDIMENTO ATUAL:
 - Vendedor responsável: ${vendedorNome}
 - Situação: ${actionType}
 
-REGRAS OBRIGATÓRIAS:
-1. Nunca diga que não sabe quem é o vendedor — o vendedor é ${vendedorNome}.
-2. Nunca use frases prontas como "Entendo sua urgência" ou "Vou verificar".
-3. Se o cliente estiver bravo, reconheça o problem sem inventar justificativas.
-4. Nunca diga "alta demanda" sem ter certeza do contexto real.
-5. Não prometa prazos específicos.
-6. CLASSIFICAÇÃO: Analise se a última mensagem do cliente trouxe uma nova especificação técnica (nova medida, mudança de material, alteração de quantidade, envio de projeto, etc.) que o vendedor precisa saber. Se sim, defina "nova_informacao" como true.
+${rules}
 
 Você deve retornar EXCLUSIVAMENTE um objeto JSON neste formato:
 {
   "nova_informacao": <true|false>,
-  "message": "<Apenas o texto da mensagem para o WhatsApp.>"
+  "message": "<Apenas o texto da mensagem para o WhatsApp.>"${isPosVenda ? `,
+  "intencao_pos_venda": "<atraso|devolucao|chargeback|duvida_entrega|solicitacao_nf|outro>",
+  "numero_pedido": "<número extraído ou null>",
+  "escalar_urgente": <true|false>` : ''}
 }`;
 
   const messages = [

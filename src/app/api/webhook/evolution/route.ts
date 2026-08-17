@@ -397,8 +397,8 @@ export async function POST(request: Request) {
           }
 
         }
-      } else if (lead.status === 'WAITING_SELLER' || lead.status === 'SENT_TO_SELLER' || lead.status === 'SELLER_RECEIVED' || lead.status === 'ATTENDANCE_STARTED') {
-        // LINO SUPORTE
+      } else if (['WAITING_SELLER', 'SENT_TO_SELLER', 'SELLER_RECEIVED', 'ATTENDANCE_STARTED', 'IN_NEGOTIATION', 'WON', 'POST_SALE'].includes(lead.status)) {
+        // LINO SUPORTE & PÓS-VENDA
         if (!lead.current_owner_id) {
           console.log(`[Webhook] Lead ${lead.id} em status de suporte mas SEM vendedor atribuído. Retornando ao SDR.`);
           await supabase.from('leads').update({ status: 'SDR_QUALIFICATION', updated_at: new Date().toISOString() }).eq('id', lead.id);

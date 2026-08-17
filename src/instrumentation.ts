@@ -34,17 +34,9 @@ async function startSupportCron(intervalMs: number) {
 
 async function executeCycle() {
   try {
-    // Importação dinâmica para evitar problemas de import no edge runtime
-    const { runSupportMonitor } = await import('./lib/support-monitor');
-
-    const startTime = Date.now();
-    const result = await runSupportMonitor();
-    const elapsed = Date.now() - startTime;
-
-    console.log(`[Lino Suporte Cron] ✅ Ciclo completo em ${elapsed}ms — ` +
-      `Verificados: ${result.checked} | Notificados: ${result.notified} | ` +
-      `Escalados: ${result.escalated} | Resolvidos: ${result.resolved}` +
-      (result.errors.length > 0 ? ` | Erros: ${result.errors.length}` : ''));
+    // Removido runSupportMonitor pois o modelo agora é 100% passivo (Ouvidoria).
+    // SLA é acionado via Webhook quando o cliente entra em contato na central.
+    console.log('[Lino Suporte Cron] ℹ️ Ciclo ignorado: O sistema de suporte agora opera de forma passiva (Ouvidoria).');
   } catch (error) {
     console.error('[Lino Suporte Cron] ❌ Erro no ciclo:', error);
   }

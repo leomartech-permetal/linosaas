@@ -28,6 +28,7 @@ export default function UnifiedDashboardPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
   const [leadHistory, setLeadHistory] = useState<any[]>([]);
+  const [justificativa, setJustificativa] = useState("");
 
   // Estados calculados de Suporte
   const [supportStats, setSupportStats] = useState({
@@ -153,6 +154,7 @@ export default function UnifiedDashboardPage() {
   // Monitora seleção de lead para o histórico
   useEffect(() => {
     if (selectedLead) {
+      setJustificativa(selectedLead.qualification_state?.valores?.justificativa_sla || "");
       supabase.from("interactions")
         .select("*")
         .eq("lead_id", selectedLead.id)
@@ -204,6 +206,33 @@ export default function UnifiedDashboardPage() {
       }
     } catch (err: any) {
       alert('Erro de conexão: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleSaveJustificativa() {
+    if (!selectedLead) return;
+    setActionLoading('save-justificativa');
+    try {
+      const qState = selectedLead.qualification_state || { valores: {}, tentativas: {} };
+      if (!qState.valores) qState.valores = {};
+      qState.valores.justificativa_sla = justificativa;
+
+      // Atualiza o state e salva
+      await supabase.from('leads').update({ qualification_state: qState }).eq('id', selectedLead.id);
+      
+      // Registra como nota no histórico
+      await supabase.from('interactions').insert([{
+        lead_id: selectedLead.id,
+        sender_type: 'system',
+        message_content: `[JUSTIFICATIVA VENDEDOR]: ${justificativa}`
+      }]);
+
+      flash('✔ Justificativa salva e SLA documentado!');
+      loadAllData();
+    } catch (err: any) {
+      alert('Erro ao salvar: ' + err.message);
     } finally {
       setActionLoading(null);
     }
@@ -736,6 +765,24 @@ export default function UnifiedDashboardPage() {
                   <span className={`text-[9px] font-bold ${selectedLead.sent_to_seller_at ? 'text-green-600' : 'text-red-600'}`}>
                     {selectedLead.sent_to_seller_at ? 'SIM' : 'NÃO'}
                   </span>
+                </div>
+                
+                <div className="pt-2">
+                  <label className="text-[9px] text-[var(--text-soft)] font-bold uppercase tracking-wider block mb-1">Justificativa de SLA</label>
+                  <textarea 
+                    rows={2} 
+                    value={justificativa} 
+                    onChange={(e) => setJustificativa(e.target.value)} 
+                    placeholder="Se o lead não responde ou o orçamento travou, justifique aqui..."
+                    className="w-full bg-white border border-[var(--border-light)] rounded p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] transition-all resize-none mb-2" 
+                  />
+                  <button 
+                    onClick={handleSaveJustificativa}
+                    disabled={actionLoading === 'save-justificativa'}
+                    className="btn-secondary w-full py-1.5 text-[10px] font-bold"
+                  >
+                    {actionLoading === 'save-justificativa' ? 'Salvando...' : 'Salvar Justificativa'}
+                  </button>
                 </div>
               </section>
 
