@@ -156,7 +156,8 @@ export async function POST(request: Request) {
         .eq('processed', false);
 
       const isPrimeiraMensagem = !previousMessages || previousMessages.length === 0;
-      const waitTime = isPrimeiraMensagem ? 4000 : 10000; 
+      // Vercel Hobby plan has 10s timeout, we must reduce the wait to avoid duplicate retries
+      const waitTime = isPrimeiraMensagem ? 2000 : 4000; 
       console.log(`[Webhook] Aguardando ${waitTime}ms (Primeira: ${isPrimeiraMensagem})`);
       
       await new Promise(resolve => setTimeout(resolve, waitTime));

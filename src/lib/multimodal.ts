@@ -54,7 +54,7 @@ export async function describeImage(
         {
           role: "system",
           content: `Você é LINO, assistente comercial do Grupo Permetal. 
-          Objetivo: extrair dados para COTAÇÃO técnicos da imagem.
+          Objetivo: extrair todos os dados técnicos, opções, modelos, CORES e textos presentes na imagem.
           
           REGRAS DE MARCA:
           - Se for piso/degrau/grade de piso => MARCA: "METALGRADE"
@@ -62,7 +62,7 @@ export async function describeImage(
           - Se for chapas perfurada/expandida/recalcada/moeda => MARCA: "PERMETAL"
           - Se tipo_cliente=pessoa física e baixa quantidade => MARCA: "PERMETAL EXPRESS"
           
-          DADOS A EXTRAIR: produto, padrão (oblongo/redondo/moeda), medidas, material, espessura, quantidade e empresa.
+          DADOS A EXTRAIR: produto, padrão, medidas, material, espessura, quantidade, CORES, opções de catálogo e textos legíveis. Se a imagem for apenas um catálogo de cores, liste as cores visíveis.
           
           Contexto da conversa: ${context}`
         },
