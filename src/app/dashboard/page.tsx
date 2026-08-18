@@ -411,13 +411,14 @@ export default function UnifiedDashboardPage() {
 
                 {/* Tabela de Atividade Recente */}
                 <div className="content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                  <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Atividade Recente dos Leads</h3>
+                  <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50 flex justify-between items-center">
+                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Central de Todos os Leads</h3>
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold">{leads.length} registros</span>
                   </div>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-hide">
                     <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-[var(--border-light)] text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
+                      <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm">
+                        <tr className="border-b border-[var(--border-light)] text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
                           <th className="p-4">Lead</th>
                           <th className="p-4">Produto Interesse</th>
                           <th className="p-4">Etapa Atual</th>
@@ -426,8 +427,8 @@ export default function UnifiedDashboardPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--border-light)]">
-                        {leads.slice(0, 10).map((lead) => (
-                          <tr key={lead.id} onClick={() => setSelectedLead(lead)} className="hover:bg-gray-50 cursor-pointer transition-colors">
+                        {leads.map((lead) => (
+                          <tr key={lead.id} onClick={() => setSelectedLead(lead)} className="hover:bg-gray-50 cursor-pointer transition-colors bg-white">
                             <td className="p-4">
                               <div className="font-bold text-sm text-[var(--text-primary)]">{lead.name || "Interesse Anônimo"}</div>
                               <div className="text-[10px] text-[var(--text-soft)] font-mono mt-0.5">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</div>
@@ -446,6 +447,13 @@ export default function UnifiedDashboardPage() {
                             </td>
                           </tr>
                         ))}
+                        {leads.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="p-10 text-center text-xs text-[var(--text-soft)] font-bold uppercase">
+                              Nenhum lead encontrado no banco de dados.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -756,11 +764,45 @@ export default function UnifiedDashboardPage() {
 
               <section className="space-y-3">
                 <h5 className="text-[9px] text-[var(--text-soft)] font-bold uppercase tracking-wider">Metadados e SLA</h5>
-                <div className="flex justify-between p-3 bg-gray-50 rounded border border-[var(--border-light)]">
-                  <span className="text-[9px] text-[var(--text-soft)] uppercase">Vendedor:</span>
-                  <span className="text-xs font-bold text-[var(--text-primary)]">{selectedLead.vendedor_nome}</span>
+                
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-[var(--border-light)]">
+                  <span className="text-[9px] text-[var(--text-soft)] uppercase w-1/3">Status:</span>
+                  <select 
+                    value={selectedLead.status} 
+                    onChange={async (e) => {
+                      const newStatus = e.target.value;
+                      await supabase.from('leads').update({ status: newStatus }).eq('id', selectedLead.id);
+                      setSelectedLead({...selectedLead, status: newStatus});
+                      loadAllData();
+                    }}
+                    className="w-2/3 bg-white border border-[var(--border-light)] rounded px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
+                  >
+                    {Object.keys(STATUS_LABELS).map(k => (
+                      <option key={k} value={k}>{STATUS_LABELS[k]}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex justify-between p-3 bg-gray-50 rounded border border-[var(--border-light)]">
+
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-[var(--border-light)]">
+                  <span className="text-[9px] text-[var(--text-soft)] uppercase w-1/3">Vendedor:</span>
+                  <select 
+                    value={selectedLead.current_owner_id || ""} 
+                    onChange={async (e) => {
+                      const newOwner = e.target.value || null;
+                      await supabase.from('leads').update({ current_owner_id: newOwner }).eq('id', selectedLead.id);
+                      setSelectedLead({...selectedLead, current_owner_id: newOwner});
+                      loadAllData();
+                    }}
+                    className="w-2/3 bg-white border border-[var(--border-light)] rounded px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
+                  >
+                    <option value="">Não atribuído (SDR)</option>
+                    {adminUsers.map(u => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex justify-between p-3 bg-gray-50 rounded border border-[var(--border-light)] mt-2">
                   <span className="text-[9px] text-[var(--text-soft)] uppercase">WhatsApp Notificado:</span>
                   <span className={`text-[9px] font-bold ${selectedLead.sent_to_seller_at ? 'text-green-600' : 'text-red-600'}`}>
                     {selectedLead.sent_to_seller_at ? 'SIM' : 'NÃO'}
@@ -784,6 +826,25 @@ export default function UnifiedDashboardPage() {
                     {actionLoading === 'save-justificativa' ? 'Salvando...' : 'Salvar Justificativa'}
                   </button>
                 </div>
+              </section>
+
+              <section className="space-y-3">
+                <h5 className="text-[9px] text-[var(--text-soft)] font-bold uppercase tracking-wider text-red-600">ZONA DE PERIGO (Ações Administrativas)</h5>
+                <button 
+                  onClick={async () => {
+                    if (!confirm('ATENÇÃO: Deseja excluir este lead permanentemente? Todo o histórico de conversas e SLA será apagado e não poderá ser desfeito.')) return;
+                    try {
+                      await supabase.from('leads').delete().eq('id', selectedLead.id);
+                      setSelectedLead(null);
+                      loadAllData();
+                    } catch (e) {
+                      alert('Erro ao excluir: ' + e);
+                    }
+                  }}
+                  className="btn-secondary w-full py-2 text-[10px] font-bold text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-colors"
+                >
+                  🗑 Excluir Lead Permanentemente
+                </button>
               </section>
 
               <section className="space-y-3">
