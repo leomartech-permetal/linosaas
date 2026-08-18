@@ -376,7 +376,7 @@ export default function SkillsPage() {
                     </div>
                     <p className="text-xs text-[var(--text-secondary)] mt-0.5">{v.description}</p>
                   </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-2">
                     <button onClick={() => { setVarForm(v); setEditingVarIndex(i); setShowVarForm(true); }} className="text-[10px] btn-secondary px-2 py-1 h-auto">Editar</button>
                     <button onClick={() => deleteVariable(i)} className="text-[10px] btn-secondary text-[var(--status-error)] border-[var(--status-error)]/30 hover:bg-[var(--status-error)]/10 px-2 py-1 h-auto">Excluir</button>
                   </div>
@@ -507,7 +507,7 @@ export default function SkillsPage() {
                       {doc.content?.substring(0, 100)}... • {formatSize(doc.file_size || 0)} • {doc.content?.length || 0} caracteres
                     </p>
                   </div>
-                  <div className="flex opacity-0 group-hover:opacity-100 transition-opacity ml-2 gap-2">
+                  <div className="flex ml-2 gap-2">
                     <button 
                       onClick={() => startEditRag(doc)} 
                       className="text-[10px] btn-secondary px-2 py-1 h-auto"
