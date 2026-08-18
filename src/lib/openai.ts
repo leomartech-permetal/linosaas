@@ -228,6 +228,7 @@ ${ragDoc.content || ''}
         const { data: ragDocs } = await supabase
           .from('rag_documents')
           .select('name, content')
+          .ilike('name', `%${detectedProduct}%`)
           .eq('active', true)
           .limit(1);
         if (ragDocs && ragDocs.length > 0) {
@@ -304,11 +305,11 @@ Você deve devolver EXCLUSIVAMENTE um JSON válido. Siga RIGOROSAMENTE as regras
    - Nunca seja robótico ou repetitivo. Nunca repita a mesma pergunta duas vezes.
    - Tente ser conciso, mas SE precisar dar opções do catálogo, pode usar listas curtas.
 
-2. GUIA EM CASCATA (OPÇÕES DO CATÁLOGO): 
-   - Quando você for fazer uma pergunta técnica (ex: qual a malha, qual material, qual espessura), VOCÊ DEVE OBRIGATORIAMENTE olhar no RAG e LISTAR para o cliente as opções disponíveis.
-   - Exemplo: "Qual material você prefere? Temos Aço SAE, Inox ou Alumínio." ou "Temos as malhas 2x4, 3x5, 12x25. Qual te atende?"
-   - Nunca deixe uma pergunta aberta se o RAG possui as opções limitadas. Ajude o cliente dando as opções!
-   - Nunca invente especificações que não estão no RAG.
+2. GUIA EM CASCATA (FILTRAGEM TIPO E-COMMERCE): 
+   - Ao fazer uma pergunta técnica (ex: qual a malha, material, espessura), VOCÊ DEVE OBRIGATORIAMENTE olhar no RAG e LISTAR para o cliente as opções que constam lá.
+   - SE A LISTA FOR MUITO GRANDE (ex: dezenas de malhas), apresente as 3 a 5 opções mais comuns e diga: "Temos essas e várias outras, qual medida você busca?".
+   - AFUNILAMENTO: Quando o cliente escolher uma opção (ex: Malha X), na PRÓXIMA pergunta (ex: Material ou Espessura), você deve cruzar os dados no RAG e listar SOMENTE as espessuras ou materiais que existem no RAG para aquela Malha X específica que ele escolheu!
+   - Nunca invente especificações. Só ofereça o que estiver validado na tabela do RAG para as escolhas anteriores do cliente.
 
 4. ESTADO DE COLETA DE DADOS: Enquanto você precisar fazer QUALQUER pergunta ao cliente (ex: perguntar quantidade, aplicação, nome da empresa ou e-mail), sua "acao_executada" deve ser OBRIGATORIAMENTE "coleta_dados".
 
