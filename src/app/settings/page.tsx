@@ -1352,7 +1352,7 @@ export default function SettingsPage() {
                             </div>
                             <p className="text-[10px] text-neutral-500 mt-1">{v.description}</p>
                           </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-2 transition-opacity">
                             <button onClick={() => { setVarForm(v); setEditingVarIndex(i); setShowVarForm(true); }} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">Editar</button>
                             <button onClick={() => deleteVariable(i)} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded font-bold">Excluir</button>
                           </div>
@@ -1401,7 +1401,8 @@ export default function SettingsPage() {
                             </div>
                             <p className="text-[10px] text-neutral-500 mt-1 truncate max-w-md">{doc.content?.substring(0, 100)}...</p>
                           </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-2 transition-opacity">
+                            <button onClick={() => { setEditingRag(doc); setRagName(doc.name); setRagText(doc.content || ""); setRagFile(null); setShowRagForm(true); }} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">Editar</button>
                             <button onClick={() => deleteRagDoc(doc.id)} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded font-bold">Excluir</button>
                           </div>
                         </div>
@@ -1462,7 +1463,7 @@ export default function SettingsPage() {
                               </div>
                               <p className="text-xs text-neutral-600 font-mono leading-relaxed bg-neutral-50 border border-neutral-200 p-2.5 rounded max-h-20 overflow-y-auto scrollbar-hide">{s.prompt}</p>
                             </div>
-                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0">
+                            <div className="flex gap-2 transition-opacity ml-2 shrink-0">
                               <button onClick={() => toggleSkillActive(s)} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">{s.active ? "Pausar" : "Ativar"}</button>
                               <button onClick={() => { setEditingSkill(s); setSkillForm({ name: s.name, type: s.type, prompt: s.prompt }); const linked = skillRagLinks.filter(l => l.skill_id === s.id).map(l => l.rag_document_id); setSelectedRags(linked); setShowSkillForm(true); }} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">Editar</button>
                               <button onClick={() => deleteSkill(s.id)} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded font-bold">Excluir</button>
