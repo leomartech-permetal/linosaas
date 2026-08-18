@@ -11,6 +11,8 @@ interface LeadDrawerProps {
 export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDeleteLead }: LeadDrawerProps) {
   const [history, setHistory] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [formData, setFormData] = useState<any>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const inputCls = "w-full bg-white border border-[var(--border-light)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] transition-all";
 
@@ -23,7 +25,8 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
   }, []);
 
   useEffect(() => {
-    if (selectedLead) {
+    if (selectedLead && selectedLead.id !== formData.id) {
+      setFormData({ ...selectedLead });
       loadHistory(selectedLead.id);
     }
   }, [selectedLead]);
@@ -37,6 +40,21 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
     if (data) setHistory(data);
   }
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const fields = ['name', 'cargo', 'empresa', 'cnpj', 'email_corporativo', 'produto', 'quantidade', 'cidade_empresa', 'especificacao'];
+      for (const field of fields) {
+        if (formData[field] !== selectedLead[field]) {
+           await onUpdateLead(field, formData[field]);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsSaving(false);
+  };
+
   if (!selectedLead) return null;
 
   return (
@@ -46,7 +64,7 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
           <button onClick={onClose} className="text-[var(--text-muted)] hover:text-black cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
-          <h3 className="font-bold text-base text-[var(--text-primary)]">Detalhes do Lead</h3>
+          <h3 className="font-bold text-base text-[var(--text-primary)]">Perfil do Contato</h3>
         </div>
         <div className="flex items-center gap-2">
           <button 
@@ -61,27 +79,29 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
       <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide text-xs">
         {/* Seção 1: Perfil Profissional */}
         <section className="space-y-4">
-          <h5 className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider">Qualificação Profissional</h5>
+          <div className="flex justify-between items-center">
+            <h5 className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider">Qualificação Profissional</h5>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">Nome</label>
-              <input value={selectedLead.name || ''} onChange={(e) => onUpdateLead('name', e.target.value)} className={inputCls} />
+              <input value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} className={inputCls} />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">Cargo</label>
-              <input value={selectedLead.cargo || ''} onChange={(e) => onUpdateLead('cargo', e.target.value)} className={inputCls} />
+              <input value={formData.cargo || ''} onChange={(e) => setFormData({...formData, cargo: e.target.value})} className={inputCls} />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">Empresa</label>
-              <input value={selectedLead.empresa || selectedLead.company || ''} onChange={(e) => onUpdateLead('empresa', e.target.value)} className={inputCls} />
+              <input value={formData.empresa || formData.company || ''} onChange={(e) => setFormData({...formData, empresa: e.target.value})} className={inputCls} />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">CNPJ</label>
-              <input value={selectedLead.cnpj || ''} onChange={(e) => onUpdateLead('cnpj', e.target.value)} className={inputCls} />
+              <input value={formData.cnpj || ''} onChange={(e) => setFormData({...formData, cnpj: e.target.value})} className={inputCls} />
             </div>
             <div className="col-span-2 space-y-1">
               <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">E-mail Corporativo</label>
-              <input value={selectedLead.email_corporativo || ''} onChange={(e) => onUpdateLead('email_corporativo', e.target.value)} className={inputCls} />
+              <input value={formData.email_corporativo || ''} onChange={(e) => setFormData({...formData, email_corporativo: e.target.value})} className={inputCls} />
             </div>
           </div>
         </section>
@@ -92,21 +112,21 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
           <div className="space-y-3">
             <div className="space-y-1">
               <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">Produto Detectado</label>
-              <input value={selectedLead.produto || selectedLead.detected_product || ''} onChange={(e) => onUpdateLead('produto', e.target.value)} className="input-search-clean w-full h-9 px-3 font-bold text-[var(--text-primary)]" />
+              <input value={formData.produto || formData.detected_product || ''} onChange={(e) => setFormData({...formData, produto: e.target.value})} className="input-search-clean w-full h-9 px-3 font-bold text-[var(--text-primary)]" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">Quantidade</label>
-                <input value={selectedLead.quantidade || ''} onChange={(e) => onUpdateLead('quantidade', e.target.value)} className={inputCls} />
+                <input value={formData.quantidade || ''} onChange={(e) => setFormData({...formData, quantidade: e.target.value})} className={inputCls} />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">Cidade/UF</label>
-                <input value={selectedLead.cidade_empresa || selectedLead.detected_city || ''} onChange={(e) => onUpdateLead('cidade_empresa', e.target.value)} className={inputCls} />
+                <input value={formData.cidade_empresa || formData.detected_city || ''} onChange={(e) => setFormData({...formData, cidade_empresa: e.target.value})} className={inputCls} />
               </div>
             </div>
             <div className="space-y-1">
               <label className="text-[10px] text-[var(--text-muted)] uppercase font-semibold">Especificação Detalhada</label>
-              <textarea rows={2} value={selectedLead.especificacao || ''} onChange={(e) => onUpdateLead('especificacao', e.target.value)} className="w-full bg-white border border-[var(--border-light)] rounded p-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] transition-all resize-none" />
+              <textarea rows={2} value={formData.especificacao || ''} onChange={(e) => setFormData({...formData, especificacao: e.target.value})} className="w-full bg-white border border-[var(--border-light)] rounded p-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] transition-all resize-none" />
             </div>
           </div>
         </section>
@@ -178,19 +198,22 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
         </section>
       </div>
  
-      <div className="p-6 bg-[var(--bg-sidebar)] border-t border-[var(--border-light)] flex gap-4">
-        <button 
-          onClick={onClose}
-          className="btn-primary flex-1"
-        >
-          FECHAR DETALHES
+      <div className="p-6 bg-[var(--bg-sidebar)] border-t border-[var(--border-light)] flex gap-2">
+        <button onClick={onClose} className="btn-secondary px-4 text-xs font-bold">
+          Fechar
         </button>
         <button 
           onClick={() => onDeleteLead(selectedLead.id)}
-          className="btn-secondary px-4 border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-[var(--text-muted)] hover:text-[var(--status-critical-text)] flex items-center justify-center cursor-pointer transition-colors"
-          title="Excluir Lead"
+          className="btn-secondary px-3 border border-[var(--border-light)] hover:border-[var(--status-critical-border)] hover:bg-[var(--status-critical-bg)] text-red-600 font-bold text-xs"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          Excluir
+        </button>
+        <button 
+          onClick={handleSave}
+          disabled={isSaving}
+          className="btn-primary flex-1 text-xs font-bold"
+        >
+          {isSaving ? 'Salvando...' : 'Salvar Alterações'}
         </button>
       </div>
     </div>
