@@ -7,6 +7,7 @@ import { sendTextMessage } from '@/lib/evolution-api';
 import { describeImage, transcribeAudio } from '@/lib/multimodal';
 
 const WHITELIST_NUMBERS = ['5516991415319', '551635187121', '551699141531', '55163518712'];
+const processedMessageIds = new Set<string>();
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,14 @@ export async function POST(request: Request) {
 
     if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
       if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
+
+      if (messageId) {
+        if (processedMessageIds.has(messageId)) {
+          return NextResponse.json({ status: 'ignored', reason: 'duplicate_retry' });
+        }
+        processedMessageIds.add(messageId);
+        if (processedMessageIds.size > 1000) processedMessageIds.clear();
+      }
 
       const fromMe = messageData.key?.fromMe;
 
@@ -157,7 +166,7 @@ export async function POST(request: Request) {
 
       const isPrimeiraMensagem = !previousMessages || previousMessages.length === 0;
       // Vercel Hobby plan has 10s timeout, we must reduce the wait to avoid duplicate retries
-      const waitTime = isPrimeiraMensagem ? 2000 : 4000; 
+      const waitTime = isPrimeiraMensagem ? 1000 : 2500; 
       console.log(`[Webhook] Aguardando ${waitTime}ms (Primeira: ${isPrimeiraMensagem})`);
       
       await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -368,7 +377,7 @@ export async function POST(request: Request) {
                                   || acao_executada.includes('transfer')
                                   || qState.precisa_vendedor === true;
 
-            const deveRotear = temTodasObrigatorias && acaoEhRoteamento;
+            const deveRotear = acaoEhRoteamento; // Confia na decisao final da IA para nao deixar o lead preso
 
             console.log(`[Webhook] Roteamento check — produto: ${prodNome}, ddd: ${dddValido}, obrigatórias satisfeitas: ${temTodasObrigatorias}, acao: ${acao_executada}, precisa_vendedor: ${qState.precisa_vendedor}, deveRotear: ${deveRotear}`);
 
