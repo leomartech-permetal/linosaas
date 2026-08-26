@@ -212,7 +212,7 @@ REGRAS DE CONVERSAÃ‡ÃƒO ULTRA FLUIDA:
 
         if (chunks && chunks.length > 0) {
           ragContent = `\n=== BASE TÉCNICA ESTRUTURADA ===\n`;
-          chunks.forEach(c => {
+          chunks.forEach((c: any) => {
              ragContent += `- Variante/Regra: ${c.content}\n`;
           });
           ragContent += `\nINSTRUÇÃO DE FILTRAGEM: O cliente quer ${detectedProduct}. Use a base acima para cruzar com o que ele já disse. Se a base não tiver combinação para o que ele pediu, diga que não encontrou e roteie para o comercial. Se faltar dados (ex: material), mostre APENAS as opções presentes na base acima.`;
