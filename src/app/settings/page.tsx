@@ -442,7 +442,7 @@ export default function SettingsPage() {
     if (error) { flash("❌ Erro ao salvar: " + error.message); } else { flash("✅ Schema salvo!"); loadAll(); }
   }
 
-  const toggleObrigatoria = (prodId: string, campo: string, schema: any) => {
+  const toggleObrigatoria = async (prodId: string, campo: string, schema: any) => {
     let obrigatorias = [...schema.obrigatorias];
     if (obrigatorias.includes(campo)) {
       obrigatorias = obrigatorias.filter(c => c !== campo);
@@ -452,17 +452,19 @@ export default function SettingsPage() {
     }
     const newSchema = { ...schema, obrigatorias };
     setProducts(products.map(p => p.id === prodId ? { ...p, qualification_schema: newSchema } : p));
+    await supabase.from("products").update({ qualification_schema: newSchema }).eq("id", prodId);
   };
 
-  const handleOpcionalChange = (prodId: string, idx: number, field: string, value: any, schema: any) => {
+  const handleOpcionalChange = async (prodId: string, idx: number, field: string, value: any, schema: any) => {
     const opcionais = [...(schema.opcionais || [])];
     opcionais[idx] = { ...opcionais[idx], [field]: value };
     if (field === 'max_tentativas') opcionais[idx][field] = Number(value);
     const newSchema = { ...schema, opcionais };
     setProducts(products.map(p => p.id === prodId ? { ...p, qualification_schema: newSchema } : p));
+    await supabase.from("products").update({ qualification_schema: newSchema }).eq("id", prodId);
   };
 
-  const addOpcionalField = (prodId: string, schema: any) => {
+  const addOpcionalField = async (prodId: string, schema: any) => {
     const opcionais = [...(schema.opcionais || [])];
     const jaUsados = new Set([...schema.obrigatorias, ...opcionais.map(o => o.campo)]);
     const disponivel = CAMPOS_DISPONIVEIS.find(c => !jaUsados.has(c.value));
@@ -471,17 +473,20 @@ export default function SettingsPage() {
     opcionais.push({ campo: disponivel.value, max_tentativas: 2 });
     const newSchema = { ...schema, opcionais };
     setProducts(products.map(p => p.id === prodId ? { ...p, qualification_schema: newSchema } : p));
+    await supabase.from("products").update({ qualification_schema: newSchema }).eq("id", prodId);
   };
 
-  const removeOpcionalField = (prodId: string, idx: number, schema: any) => {
+  const removeOpcionalField = async (prodId: string, idx: number, schema: any) => {
     const opcionais = (schema.opcionais || []).filter((_: any, i: number) => i !== idx);
     const newSchema = { ...schema, opcionais };
     setProducts(products.map(p => p.id === prodId ? { ...p, qualification_schema: newSchema } : p));
+    await supabase.from("products").update({ qualification_schema: newSchema }).eq("id", prodId);
   };
 
-  const handleProductRagChange = (prodId: string, value: string, schema: any) => {
+  const handleProductRagChange = async (prodId: string, value: string, schema: any) => {
     const newSchema = { ...schema, rag_document_name: value };
     setProducts(products.map(p => p.id === prodId ? { ...p, qualification_schema: newSchema } : p));
+    await supabase.from("products").update({ qualification_schema: newSchema }).eq("id", prodId);
   };
 
   // === VARIAVEIS DE EXTRAÇÃO ===
@@ -754,6 +759,7 @@ export default function SettingsPage() {
                 <button onClick={() => setRoutingSubTab('segments')} className={`tab-item-clean ${routingSubTab === 'segments' ? 'active' : ''}`}>Segmentos</button>
                 <button onClick={() => setRoutingSubTab('rules')} className={`tab-item-clean ${routingSubTab === 'rules' ? 'active' : ''}`}>Regras de Rota</button>
                 <button onClick={() => setRoutingSubTab('bizrules')} className={`tab-item-clean ${routingSubTab === 'bizrules' ? 'active' : ''}`}>Regras Express</button>
+                <button onClick={() => setRoutingSubTab('schemas')} className={`tab-item-clean ${routingSubTab === 'schemas' ? 'active' : ''}`}>Schemas B2B</button>
               </div>
 
               {/* ROTEAMENTO - REGIÕES */}
@@ -1031,9 +1037,14 @@ export default function SettingsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
 
+              {/* ROTEAMENTO - SCHEMAS B2B */}
+              {routingSubTab === 'schemas' && (
+                <div className="space-y-6">
                   {/* Schema de Qualificação de Produto */}
-                  <div className="border border-[var(--border-light)] rounded-lg overflow-hidden bg-white mt-8">
+                  <div className="border border-[var(--border-light)] rounded-lg overflow-hidden bg-white mt-0">
                     <div className="p-4 border-b border-[var(--border-light)] bg-gray-50 flex justify-between items-center">
                       <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Schemas de Qualificação B2B</h3>
                       <input type="text" value={productSearch} onChange={e => setProductSearch(e.target.value)} placeholder="Pesquisar produto..." className="input-clean w-48 h-8" />
