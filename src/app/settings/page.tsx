@@ -4,19 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import FlowVisualizer from "@/app/components/FlowVisualizer";
 
-const CAMPOS_DISPONIVEIS = [
-  { value: "nome_cliente", label: "Nome do Cliente" },
-  { value: "empresa", label: "Nome da Empresa" },
-  { value: "cnpj", label: "CNPJ" },
-  { value: "email", label: "E-mail Corporativo" },
-  { value: "quantidade", label: "Quantidade / Metragem" },
-  { value: "espessura", label: "Espessura da Chapa" },
-  { value: "ec", label: "Espaçamento entre Centros (EC)" },
-  { value: "dimensoes", label: "Dimensões da Chapa" },
-  { value: "material", label: "Material (Aço Carbono, Inox, etc.)" },
-  { value: "acabamento", label: "Acabamento / Pintura" },
-];
-
 const SKILL_TYPES = [
   { value: "product", label: "Produto", color: "#3b82f6", desc: "Conhecimento técnico de um produto" },
   { value: "atendimento", label: "Atendimento", color: "#10b981", desc: "Tom de voz e saudação" },
@@ -464,10 +451,26 @@ export default function SettingsPage() {
     await supabase.from("products").update({ qualification_schema: newSchema }).eq("id", prodId);
   };
 
+  const baseCampos = [
+    { value: "nome_cliente", label: "Nome do Cliente" },
+    { value: "empresa", label: "Nome da Empresa" },
+    { value: "cnpj", label: "CNPJ" },
+    { value: "email", label: "E-mail Corporativo" },
+    { value: "endereco_sede", label: "Endereço Sede Empresa" },
+    { value: "segmento", label: "Segmento" },
+    { value: "quantidade", label: "Quantidade / Metragem" }
+  ];
+  
+  const customCampos = variables.map(v => ({ value: v.name, label: v.description || v.name }));
+  const camposDisponiveis = [...baseCampos];
+  customCampos.forEach(c => {
+    if (!camposDisponiveis.find(b => b.value === c.value)) camposDisponiveis.push(c);
+  });
+
   const addOpcionalField = async (prodId: string, schema: any) => {
     const opcionais = [...(schema.opcionais || [])];
     const jaUsados = new Set([...schema.obrigatorias, ...opcionais.map(o => o.campo)]);
-    const disponivel = CAMPOS_DISPONIVEIS.find(c => !jaUsados.has(c.value));
+    const disponivel = camposDisponiveis.find(c => !jaUsados.has(c.value));
     if (!disponivel) return;
 
     opcionais.push({ campo: disponivel.value, max_tentativas: 2 });
@@ -1073,7 +1076,7 @@ export default function SettingsPage() {
                               <div>
                                 <h5 className="text-[10px] font-bold text-neutral-600 uppercase mb-2">Campos Obrigatórios</h5>
                                 <div className="grid grid-cols-2 gap-1.5 p-3 border border-neutral-200 rounded bg-white max-h-40 overflow-y-auto">
-                                  {CAMPOS_DISPONIVEIS.map(campo => (
+                                  {camposDisponiveis.map(campo => (
                                     <label key={campo.value} className="flex items-center gap-2 text-[11px] cursor-pointer hover:bg-neutral-50 p-1 rounded">
                                       <input type="checkbox" checked={schema.obrigatorias.includes(campo.value)} onChange={() => toggleObrigatoria(p.id, campo.value, schema)} className="accent-black w-3.5 h-3.5" />
                                       <span className={schema.obrigatorias.includes(campo.value) ? "font-bold text-black" : "text-neutral-500"}>{campo.label}</span>
@@ -1092,7 +1095,7 @@ export default function SettingsPage() {
                                   {(schema.opcionais || []).map((opt: any, idx: number) => (
                                     <div key={idx} className="flex gap-2 items-center bg-gray-50 p-1.5 rounded border border-neutral-200">
                                       <select value={opt.campo} onChange={e => handleOpcionalChange(p.id, idx, 'campo', e.target.value, schema)} className="input-clean h-7 py-0 text-[11px] bg-white flex-1">
-                                        {CAMPOS_DISPONIVEIS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                        {camposDisponiveis.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                       </select>
                                       <span className="text-[10px] text-neutral-500">Tentativas:</span>
                                       <input type="number" value={opt.max_tentativas} onChange={e => handleOpcionalChange(p.id, idx, 'max_tentativas', e.target.value, schema)} className="input-clean h-7 w-12 text-center text-xs" min={1} max={5} />
