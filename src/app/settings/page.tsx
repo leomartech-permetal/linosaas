@@ -34,7 +34,7 @@ export default function SettingsPage() {
   // Controle de Abas Macro
   const [macroTab, setMacroTab] = useState<'routing' | 'teams' | 'ia' | 'integrations'>('routing');
   // Controle de Sub-abas
-  const [routingSubTab, setRoutingSubTab] = useState<'regions' | 'products' | 'segments' | 'rules' | 'bizrules'>('regions');
+  const [routingSubTab, setRoutingSubTab] = useState<'regions' | 'products' | 'segments' | 'rules' | 'bizrules' | 'schemas'>('regions');
   const [teamsSubTab, setTeamsSubTab] = useState<'teams' | 'sellers' | 'users'>('teams');
   const [iaSubTab, setIaSubTab] = useState<'cerebro' | 'skills' | 'flow'>('cerebro');
   const [integrationsSubTab, setIntegrationsSubTab] = useState<'whatsapp' | 'credentials'>('whatsapp');
