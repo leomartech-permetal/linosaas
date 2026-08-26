@@ -1,4 +1,4 @@
-﻿import OpenAI from 'openai';
+import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -211,13 +211,13 @@ REGRAS DE CONVERSAÃ‡ÃƒO ULTRA FLUIDA:
         });
 
         if (chunks && chunks.length > 0) {
-          ragContent = \n=== BASE T%CNICA ESTRUTURADA ===\n;
+          ragContent = `\n=== BASE TÉCNICA ESTRUTURADA ===\n`;
           chunks.forEach(c => {
-             ragContent += - Variante/Regra: \n;
+             ragContent += `- Variante/Regra: ${c.content}\n`;
           });
-          ragContent += \nINSTRUǟO DE FILTRAGEM: O cliente quer . Use a base acima para cruzar com o que ele jǭ disse. Se a base nǜo tiver combinaǜo para o que ele pediu, diga que nǜo encontrou e roteie para o comercial. Se faltar dados (ex: material), mostre APENAS as opes presentes na base acima.;
+          ragContent += `\nINSTRUÇÃO DE FILTRAGEM: O cliente quer ${detectedProduct}. Use a base acima para cruzar com o que ele já disse. Se a base não tiver combinação para o que ele pediu, diga que não encontrou e roteie para o comercial. Se faltar dados (ex: material), mostre APENAS as opções presentes na base acima.`;
         }
-      }} else if (detectedProduct) {
+      } else if (detectedProduct) {
         // Fallback RAG pelo nome do produto
         const { data: ragDocs } = await supabase
           .from('rag_documents')
