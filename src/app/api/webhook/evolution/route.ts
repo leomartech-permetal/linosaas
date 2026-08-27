@@ -2,22 +2,18 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { processLeadWithSkills } from '@/lib/openai';
 import { routeLead } from '@/lib/router';
-import { handleClientReturn } from '@/lib/support-monitor';
 import { sendTextMessage } from '@/lib/evolution-api';
 import { describeImage, transcribeAudio } from '@/lib/multimodal';
 
-const WHITELIST_NUMBERS = ['5516991415319', '551635187121', '551699141531', '55163518712'];
 const processedMessageIds = new Set<string>();
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Captura flexível dos dados da mensagem
     const messageData = body.data?.messages?.[0] || body.data;
     const remoteJid = messageData?.key?.remoteJid || messageData?.remoteJid || body.data?.key?.remoteJid || body.sender;
     const messageId = messageData?.key?.id || messageData?.id;
-    // Captura nome real do WhatsApp (pushName)
     const pushName: string | null = messageData?.pushName || body.data?.pushName || null;
 
     if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
@@ -33,7 +29,7 @@ export async function POST(request: Request) {
 
       const fromMe = messageData.key?.fromMe;
 
-      // 1. INTERVENÇÃO HUMANA
+      // 1. Intervenção Humana
       if (fromMe) {
         const { data: leadToPause } = await supabase.from('leads').select('id').eq('whatsapp_number', remoteJid).single();
         if (leadToPause) {
@@ -44,7 +40,7 @@ export async function POST(request: Request) {
 
       if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
-      // 1.5 IGNORAR SE O REMETENTE FOR UM FUNCIONÁRIO/VENDEDOR INTERNO
+      // 1.5 Ignorar se for funcionário interno
       const senderPhone = remoteJid.replace(/\D/g, '');
       const { data: internalUser } = await supabase
         .from('admin_users')
@@ -54,11 +50,10 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (internalUser) {
-        console.log(`[Webhook] Mensagem ignorada: remetente é funcionário interno (${internalUser.name} - ${senderPhone})`);
         return NextResponse.json({ status: 'ignored', reason: 'sender_is_internal_user', name: internalUser.name });
       }
 
-      // 2. EXTRAÇÃO DE TEXTO
+      // 2. Extração de Mensagem
       const messageObj = messageData.message || messageData;
       let messageContent = messageObj?.conversation || 
                            messageObj?.extendedTextMessage?.text || 
@@ -68,390 +63,129 @@ export async function POST(request: Request) {
                            messageObj?.videoMessage?.caption ||
                            messageObj?.documentMessage?.caption ||
                            '';
-      
-      console.log(`[Webhook] Recebido: "${messageContent}" de ${remoteJid}`);
 
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'GLOBAL_BOT_OFF' });
 
-      // 3. BUSCAR/CRIAR LEAD
+      // 3. Buscar ou Criar Lead
       let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).single();
-      
-      // Buscar tenant_id real (não o ID da config)
-      let actualTenantId = globalConfig?.tenant_id;
-      if (!actualTenantId) {
-        const { data: tenant } = await supabase.from('tenants').select('id').limit(1).single();
-        actualTenantId = tenant?.id;
-      }
 
       if (!lead) {
-        console.log('[Webhook] Criando novo lead para:', remoteJid, '| pushName:', pushName);
         const { data: newLead, error: insertError } = await supabase.from('leads').insert([{ 
           whatsapp_number: remoteJid, 
-          name: pushName || null,  // salva nome real do WhatsApp
+          name: pushName || null,
           status: 'SDR_QUALIFICATION', 
-          tenant_id: actualTenantId,
           bot_active: true
         }]).select().single();
         
         if (insertError) {
-          console.error('[Webhook] Erro ao inserir lead:', insertError);
           return NextResponse.json({ status: 'error', reason: 'LEAD_INSERT_FAILED', detail: insertError });
         }
         lead = newLead;
       } else if (!lead.name && pushName) {
-        // Lead já existe mas ainda sem nome — atualiza com pushName
         await supabase.from('leads').update({ name: pushName }).eq('id', lead.id);
         lead.name = pushName;
-        console.log('[Webhook] pushName atualizado para lead existente:', pushName);
       }
 
-      if (!lead) return NextResponse.json({ status: 'error', reason: 'LEAD_NOT_FOUND_AFTER_INSERT' });
+      if (!lead) return NextResponse.json({ status: 'error', reason: 'LEAD_NOT_FOUND' });
       if (!lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'LEAD_BOT_PAUSED' });
 
-      // Se o lead estava cancelado ou finalizado e mandou nova mensagem, recomeça o fluxo
-      if (lead.status === 'CANCELED' || lead.status === 'FINISHED' || lead.status === 'OTHER_DEPARTMENT') {
-        console.log(`[Webhook] Reativando lead ${remoteJid} que estava ${lead.status}`);
-        await supabase.from('leads').update({ status: 'SDR_QUALIFICATION', updated_at: new Date().toISOString() }).eq('id', lead.id);
-        lead.status = 'SDR_QUALIFICATION';
-      }
-
-      // 4. PROCESSAMENTO MULTIMODAL
+      // 4. Suporte Multimodal
       const openaiKey = globalConfig?.openai_key;
       const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
 
       try {
         let mediaBase64 = body.data?.base64 || messageData.base64 || null;
-
         if (messageType === 'imageMessage' && openaiKey && globalConfig) {
           const visionDescription = await describeImage(globalConfig.evolution_url, globalConfig.evolution_instance_name, globalConfig.evolution_key, messageId, remoteJid, openaiKey, messageContent, mediaBase64);
           messageContent = `[IMAGEM RECEBIDA: ${visionDescription}] ${messageContent}`;
         } else if (messageType === 'audioMessage' && openaiKey && globalConfig) {
           const audioText = await transcribeAudio(globalConfig.evolution_url, globalConfig.evolution_instance_name, globalConfig.evolution_key, messageId, remoteJid, openaiKey, mediaBase64);
           messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
-        } else if (messageType === 'documentMessage') {
-          const fileName = messageObj.documentMessage?.fileName || 'documento.pdf';
-          messageContent = `[DOCUMENTO RECEBIDO: ${fileName}] ${messageContent}`;
         }
       } catch (mediaError) {
         console.error('[Media Error]', mediaError);
       }
 
-      // 5. SISTEMA DE BUFFER (DEBOUNCE)
-      const finalContent = messageContent 
-        || (messageData as any).texto_completo 
-        || (messageData as any).texto_midia 
-        || (messageData as any).message_raw 
-        || '';
+      const finalContent = messageContent || '';
 
-      console.log(`[Webhook] Processando para o Buffer: "${finalContent.substring(0, 50)}..."`);
+      // 5. Buffer rápido (debounce de 1.5s)
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const { data: bufferEntry, error: bufferError } = await supabase.from('conversation_buffers').insert([{
-        lead_id: lead.id,
-        content: finalContent
-      }]).select().single();
+      // 6. Salvar Mensagem do Cliente no Histórico
+      await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: finalContent }]);
 
-      if (bufferError) {
-        console.error('[Buffer Error]', bufferError);
-        return NextResponse.json({ status: 'error', reason: 'BUFFER_INSERT_FAILED', detail: bufferError });
-      }
-
-      // Buffer Wait
-      const { data: previousMessages } = await supabase
-        .from('conversation_buffers')
-        .select('id')
-        .eq('lead_id', lead.id)
-        .lt('created_at', bufferEntry.created_at)
-        .eq('processed', false);
-
-      const isPrimeiraMensagem = !previousMessages || previousMessages.length === 0;
-      // Vercel Hobby plan has 10s timeout, we must reduce the wait to avoid duplicate retries
-      const waitTime = isPrimeiraMensagem ? 1000 : 2500; 
-      console.log(`[Webhook] Aguardando ${waitTime}ms (Primeira: ${isPrimeiraMensagem})`);
-      
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-
-      const { data: newerMessages } = await supabase
-        .from('conversation_buffers')
-        .select('id')
-        .eq('lead_id', lead.id)
-        .gt('created_at', bufferEntry.created_at)
-        .eq('processed', false);
-
-      if (newerMessages && newerMessages.length > 0) {
-        console.log(`[Webhook] Mensagem ${bufferEntry.id} ignorada (há mensagens mais novas)`);
-        return NextResponse.json({ status: 'success', detail: 'WAITING_FOR_MORE_MESSAGES' });
-      }
-
-      // Atômico: Marcar como processado e pegar todas as pendentes
-      const { data: allUnprocessed, error: updateError } = await supabase
-        .from('conversation_buffers')
-        .update({ processed: true })
-        .eq('lead_id', lead.id)
-        .eq('processed', false)
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (updateError || !allUnprocessed || allUnprocessed.length === 0) {
-        return NextResponse.json({ status: 'ignored', reason: 'already_processed_by_another_instance' });
-      }
-
-      const fullContext = allUnprocessed.map(m => m.content).filter(Boolean).join(' | ');
-
-      // 6. SALVAR INTERAÇÃO
-      await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: fullContext }]);
-
-      // 7. LÓGICA DE RESPOSTA (SDR NO N8N OU REPASSE)
+      // 7. Processar SDR com Novo Motor
       if (lead.status === 'SDR_QUALIFICATION' || lead.status === 'novo' || lead.status === 'qualificando') {
-        try {
-          console.log('[Webhook] Encaminhando mensagem para o n8n SDR:', remoteJid);
-          const n8nWebhookUrl = 'https://prontoatendimento.n8n.jbads.com.br/webhook/lino-sdr';
-          
-          const n8nResp = await fetch(n8nWebhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              whatsapp: remoteJid,
-              pushName: pushName || lead.name || 'Cliente',
-              message: fullContext,
-              instance: globalConfig?.evolution_instance_name || 'linooficial',
-              lead_id: lead.id
-            })
-          });
+        const { data: historyData } = await supabase
+          .from('interactions')
+          .select('sender_type, message_content')
+          .eq('lead_id', lead.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-          console.log('[Webhook] Resposta do n8n status:', n8nResp.status);
-          return NextResponse.json({ status: 'success', handler: 'n8n_sdr_delegated' });
-        } catch (n8nErr: any) {
-          console.error('[Webhook] Erro ao delegar para o n8n SDR:', n8nErr);
-          return NextResponse.json({ status: 'error', reason: 'N8N_DELEGATION_FAILED', error: n8nErr.message });
-        }
-      }
-          
-          // DDD
-          const rawPhone = remoteJid.replace(/\D/g, '');
-          const systemDdd = rawPhone.length >= 12 && rawPhone.startsWith('55') ? rawPhone.substring(2, 4) : null;
-          const aiDdd = aiResult.cliente?.ddd_regiao;
-          const aiDddClean = aiDdd && /^\d{2}$/.test(String(aiDdd).trim()) ? String(aiDdd).trim() : null;
-          const dddToUse = systemDdd || aiDddClean || null;
+        const history = (historyData || []).reverse();
 
-          // Roteamento e qualificação baseada em schemas
-          const { data: leadAtual } = await supabase.from('leads').select('*').eq('id', lead.id).single();
-          const qState = leadAtual?.qualification_state || { valores: {}, tentativas: {} };
-          if (!qState.valores) qState.valores = {};
-          if (!qState.tentativas) qState.tentativas = {};
+        const aiResult = await processLeadWithSkills(history, lead.id);
 
-          // 1. Atualizar valores extraídos pela IA no estado estruturado
-          const camposCliente = ['nome', 'empresa', 'cnpj', 'email'];
-          camposCliente.forEach(c => {
-            const key = c === 'nome' ? 'nome_cliente' : c;
-            if (aiResult.cliente?.[c]) {
-              qState.valores[key] = aiResult.cliente[c];
-            }
-          });
+        if (aiResult && !aiResult.erro_openai) {
+          const resposta_whatsapp = aiResult.resposta_whatsapp;
 
-          const camposDemanda = ['produto_normalizado', 'quantidade_metragem', 'material', 'acabamento', 'dimensoes', 'ec', 'segmento_normalizado'];
-          camposDemanda.forEach(c => {
-            const key = c === 'quantidade_metragem' ? 'quantidade' : (c === 'produto_normalizado' ? 'produto' : c);
-            if (aiResult.demanda?.[c]) {
-              qState.valores[key] = aiResult.demanda[c];
-            }
-          });
+          // Atualizar Lead com dados extraídos
+          const leadUpdate: any = { updated_at: new Date().toISOString() };
+          if (aiResult.cliente?.nome) leadUpdate.name = aiResult.cliente.nome;
+          if (aiResult.cliente?.empresa) leadUpdate.company = aiResult.cliente.empresa;
+          if (aiResult.cliente?.cnpj) leadUpdate.cnpj = aiResult.cliente.cnpj;
+          if (aiResult.cliente?.email) leadUpdate.email_corporativo = aiResult.cliente.email;
+          if (aiResult.demanda?.produto_normalizado) leadUpdate.detected_product = aiResult.demanda.produto_normalizado;
+          if (aiResult.demanda?.quantidade_metragem) leadUpdate.quantidade = aiResult.demanda.quantidade_metragem;
 
-          // Mesclar dinamicamente os valores_campos_pendentes extraídos pelo LLM
-          if (aiResult.valores_campos_pendentes && typeof aiResult.valores_campos_pendentes === 'object') {
-            Object.entries(aiResult.valores_campos_pendentes).forEach(([k, v]) => {
-              if (v !== null && v !== undefined && v !== 'null' && v !== '') {
-                qState.valores[k] = v;
-              }
+          // Se qualificação estiver concluída
+          if (aiResult.qualificacao_concluida) {
+            leadUpdate.status = 'WAITING_SELLER';
+          }
+
+          await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
+
+          // Salvar resposta do bot no histórico
+          await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'sdr_ai', message_content: resposta_whatsapp }]);
+
+          // Enviar resposta no WhatsApp via Evolution API
+          if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
+            await sendTextMessage(
+              globalConfig.evolution_instance_name || 'linooficial',
+              globalConfig.evolution_url,
+              globalConfig.evolution_key,
+              remoteJid,
+              resposta_whatsapp
+            );
+          }
+
+          // Se concluiu, executar roleta de roteamento
+          if (aiResult.qualificacao_concluida) {
+            const rawPhone = remoteJid.replace(/\D/g, '');
+            const ddd = rawPhone.length >= 12 && rawPhone.startsWith('55') ? rawPhone.substring(2, 4) : '';
+            await routeLead(lead.id, lead.tenant_id || globalConfig?.tenant_id || '', {
+              produto: leadUpdate.detected_product || lead.detected_product,
+              quantidade: leadUpdate.quantidade || lead.quantidade,
+              nome_cliente: leadUpdate.name || lead.name,
+              empresa: leadUpdate.company || lead.company,
+              cnpj: leadUpdate.cnpj || lead.cnpj,
+              email: leadUpdate.email_corporativo || lead.email_corporativo,
+              ddd
             });
           }
 
-          // 2. Incrementar contador de tentativas da variável que a IA acabou de tentar perguntar
-          const campoSolicitado = aiResult.campo_solicitado_nesta_rodada;
-          if (campoSolicitado && campoSolicitado !== 'null' && campoSolicitado !== 'none') {
-            qState.tentativas[campoSolicitado] = (qState.tentativas[campoSolicitado] || 0) + 1;
-          }
-
-          // Salvar metadados recomendados de status_qualificacao
-          if (aiResult.status_qualificacao) {
-            qState.status_qualificacao = aiResult.status_qualificacao.status_qualificacao;
-            qState.campos_faltantes = aiResult.status_qualificacao.campos_faltantes;
-            qState.precisa_vendedor = aiResult.status_qualificacao.precisa_vendedor;
-            qState.precisa_engenharia = aiResult.status_qualificacao.precisa_engenharia;
-            qState.motivo_engenharia = aiResult.status_qualificacao.motivo_engenharia;
-            qState.resumo_para_vendedor = aiResult.status_qualificacao.resumo_para_vendedor;
-          }
-
-          // 3. Atualizar o banco de dados
-          const leadUpdate: any = { 
-            updated_at: new Date().toISOString(),
-            qualification_state: qState
-          };
-
-          // Sincronizar com as colunas nativas da tabela leads para compatibilidade
-          if (qState.valores.produto) {
-            leadUpdate.detected_product = qState.valores.produto;
-            leadUpdate.produto = qState.valores.produto;
-          }
-          if (dddToUse) leadUpdate.detected_ddd = dddToUse;
-          if (qState.valores.empresa) {
-            leadUpdate.company = qState.valores.empresa;
-            leadUpdate.empresa = qState.valores.empresa;
-          }
-          if (qState.valores.nome_cliente) leadUpdate.name = qState.valores.nome_cliente;
-          if (qState.valores.cnpj) leadUpdate.cnpj = qState.valores.cnpj;
-          if (qState.valores.email) leadUpdate.email_corporativo = qState.valores.email;
-          if (qState.valores.quantidade) leadUpdate.quantidade = qState.valores.quantidade;
-
-          if (qState.resumo_para_vendedor) {
-            leadUpdate.especificacao = qState.resumo_para_vendedor;
-          } else {
-            const especParts = [qState.valores.dimensoes, qState.valores.acabamento, qState.valores.material].filter(Boolean);
-            if (especParts.length > 0) leadUpdate.especificacao = especParts.join(' | ');
-          }
-
-          const intent = (aiResult.intent || '').toUpperCase();
-          const isNonCommercialIntent = ['VAGAS', 'FORNECEDOR', 'LOGISTICA', 'FINANCEIRO', 'COMEX', 'MARKETING'].includes(intent);
-          
-          if (acao_executada.includes('outro_setor') || isNonCommercialIntent) {
-            leadUpdate.status = 'OTHER_DEPARTMENT';
-          }
-          
-          const { error: updateError } = await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
-          if (updateError) {
-            console.error('[Webhook] ❌ ERRO ao salvar lead:', updateError);
-          }
-
-          if (resposta_whatsapp) {
-            await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'sdr_ai', message_content: resposta_whatsapp }]);
-            if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-              await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, resposta_whatsapp);
-            }
-          }
-
-          if (acao_executada.includes('outro_setor')) {
-            const msgSetores = "Vou te passar os contatos dos nossos outros departamentos:\n\n*COMEX:* Janaina Coelho - +55 16 3518-7115\n*Compras:* Vitor de Faria - +55 16 3518-7111\n*Logística:* André - +55 16 3518-7193\n*RH:* Margarida - +55 16 3518-7136\n*Outros:* Fabiana Martins - +55 16 99798-0918";
-            if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-              await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgSetores);
-            }
-          } else {
-            // --- ROTEAMENTO BASEADO EM SCHEMAS ---
-            let schema: any = null;
-            const prodNome = qState.valores.produto || leadUpdate.produto || leadAtual?.produto;
-            if (prodNome) {
-              const { data: productData } = await supabase
-                .from('products')
-                .select('qualification_schema')
-                .ilike('name', `%${prodNome}%`)
-                .limit(1)
-                .maybeSingle();
-              if (productData?.qualification_schema) {
-                schema = productData.qualification_schema;
-              }
-            }
-
-            if (!schema) {
-              schema = {
-                obrigatorias: ["nome_cliente", "empresa", "email", "quantidade"],
-                opcionais: []
-              };
-            }
-
-            // Mesclar para checagem determinística
-            const todasVariaveis = {
-              nome_cliente: leadUpdate.name || leadAtual?.name || null,
-              empresa: leadUpdate.company || leadAtual?.company || null,
-              email: leadUpdate.email_corporativo || leadAtual?.email_corporativo || null,
-              cnpj: leadUpdate.cnpj || leadAtual?.cnpj || null,
-              produto: prodNome || null,
-              quantidade: leadUpdate.quantidade || leadAtual?.quantidade || null,
-              ...qState.valores
-            };
-
-            const dddValido = !!(dddToUse || leadAtual?.detected_ddd);
-            const temTodasObrigatorias = schema.obrigatorias.every((f: string) => !!todasVariaveis[f]) && dddValido;
-
-            const acaoEhRoteamento = acao_executada.includes('roteamento') 
-                                  || acao_executada.includes('encaminhar') 
-                                  || acao_executada.includes('transfer')
-                                  || qState.precisa_vendedor === true;
-
-            const deveRotear = acaoEhRoteamento; // Confia na decisao final da IA para nao deixar o lead preso
-
-            console.log(`[Webhook] Roteamento check — produto: ${prodNome}, ddd: ${dddValido}, obrigatórias satisfeitas: ${temTodasObrigatorias}, acao: ${acao_executada}, precisa_vendedor: ${qState.precisa_vendedor}, deveRotear: ${deveRotear}`);
-
-            if (deveRotear) {
-              console.log(`[Webhook] ✅ Roteando lead ${lead.id} deterministicamente.`);
-              if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-                await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, "Estou te transferindo para o especialista agora...");
-              }
-              const variaveisRoteamento = {
-                produto: prodNome || null,
-                ddd: dddToUse || leadAtual?.detected_ddd || null,
-                quantidade: todasVariaveis.quantidade,
-                aplicacao: todasVariaveis.segmento_normalizado || todasVariaveis.segmento_aplicacao || null,
-                nome_cliente: todasVariaveis.nome_cliente,
-                empresa: todasVariaveis.empresa,
-                cnpj: todasVariaveis.cnpj,
-                email: todasVariaveis.email,
-                segmento_detectado: todasVariaveis.segmento_normalizado || null
-              };
-              await routeLead(lead.id, lead.tenant_id, variaveisRoteamento);
-            } else {
-              const motivo = !temTodasObrigatorias ? 'faltam dados obrigatorios do schema' 
-                           : !acaoEhRoteamento ? 'IA ainda no fluxo conversacional'
-                           : 'aguardando confirmacao final do lead';
-              console.log(`[Webhook] ⏳ Não rotear ainda — motivo: ${motivo}`);
-            }
-          }
-
-        }
-      } else if (['WAITING_SELLER', 'SENT_TO_SELLER', 'SELLER_RECEIVED', 'ATTENDANCE_STARTED', 'IN_NEGOTIATION', 'WON', 'POST_SALE'].includes(lead.status)) {
-        // LINO SUPORTE & PÓS-VENDA
-        if (!lead.current_owner_id) {
-          console.log(`[Webhook] Lead ${lead.id} em status de suporte mas SEM vendedor atribuído. Retornando ao SDR.`);
-          await supabase.from('leads').update({ status: 'SDR_QUALIFICATION', updated_at: new Date().toISOString() }).eq('id', lead.id);
-          
-          const msgSemVendedor = "Desculpe a demora! Vou verificar qual especialista está disponível agora e te aviso em breve.";
-          await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'sdr_ai', message_content: msgSemVendedor }]);
-          if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-            await sendTextMessage(globalConfig.evolution_instance_name, globalConfig.evolution_url, globalConfig.evolution_key, remoteJid, msgSemVendedor);
-          }
-          return NextResponse.json({ status: 'success', reason: 'REDIRECTED_TO_SDR_NO_SELLER' });
-        }
-
-        const result = await handleClientReturn(remoteJid, fullContext);
-        console.log(`[Webhook] Lino Suporte ação: ${result.action}`);
-        
-        await supabase.from('interactions').insert([{ 
-          lead_id: lead.id, 
-          sender_type: 'sdr_ai', 
-          message_content: result.message 
-        }]);
-        
-        if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-          await sendTextMessage(
-            globalConfig.evolution_instance_name, 
-            globalConfig.evolution_url, 
-            globalConfig.evolution_key, 
-            remoteJid, 
-            result.message
-          );
-        }
-
-        if (result.action === 'NOTIFY_SELLER' || result.action === 'NOTIFY_SELLER_URGENT') {
-          console.log(`[Webhook] Notificação ao vendedor acionada`);
-        } else if (result.action === 'ESCALATE_SUPERVISOR') {
-          console.log(`[Webhook] Escalação para supervisor acionada`);
+          return NextResponse.json({ status: 'success', action: 'sdr_responded' });
         }
       }
 
-      return NextResponse.json({ status: 'success', processed_count: allUnprocessed.length });
+      return NextResponse.json({ status: 'success', action: 'processed' });
     }
 
-    return NextResponse.json({ status: 'ignored', event: body.event });
-  } catch (error) {
+    return NextResponse.json({ status: 'ignored', reason: 'not_messages_upsert' });
+  } catch (error: any) {
     console.error('[Webhook Error]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
   }
 }

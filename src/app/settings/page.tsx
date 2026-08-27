@@ -56,6 +56,9 @@ export default function SettingsPage() {
     seller_notify_interval_minutes: 15
   });
   const [savingCerebro, setSavingCerebro] = useState(false);
+  const [testMessage, setTestMessage] = useState("");
+  const [testResponse, setTestResponse] = useState("");
+  const [testingPrompt, setTestingPrompt] = useState(false);
 
   // APIs Globais (OpenAI e Evolution)
   const [evolutionUrl, setEvolutionUrl] = useState("");
@@ -216,6 +219,35 @@ export default function SettingsPage() {
     setSavingCerebro(false);
     flash(error ? "Erro: " + error.message : "✔ Prompt Mestre e SLAs salvos!");
     loadAll();
+  }
+
+  async function handleTestPrompt() {
+    if (!testMessage.trim()) {
+      flash("⚠️ Digite uma mensagem de teste.");
+      return;
+    }
+    setTestingPrompt(true);
+    setTestResponse("");
+    try {
+      const res = await fetch("/api/test-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt_teste: masterPrompt,
+          mensagem_cliente: testMessage
+        })
+      });
+      const data = await res.json();
+      if (data.resposta) {
+        setTestResponse(data.resposta);
+      } else {
+        setTestResponse("Erro: " + (data.error || "Sem resposta."));
+      }
+    } catch (err: any) {
+      setTestResponse("Erro: " + err.message);
+    } finally {
+      setTestingPrompt(false);
+    }
   }
 
   // === REGION ===
@@ -1290,6 +1322,34 @@ export default function SettingsPage() {
                       <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Prompt Mestre do Cérebro</h3>
                       <p className="text-[10px] text-neutral-500 mt-1 mb-3">Define as instruções base e a identidade da Inteligência SDR.</p>
                       <textarea value={masterPrompt} onChange={e => setMasterPrompt(e.target.value)} className="input-clean h-48 font-mono text-[11px] leading-relaxed p-3 resize-none" placeholder="Identidade e regras da IA..." />
+                      
+                      {/* Simulador de Teste de Prompt */}
+                      <div className="mt-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200 space-y-3">
+                        <h4 className="font-bold text-xs uppercase tracking-wider text-neutral-700">🧪 Testar Prompt Antes de Publicar</h4>
+                        <div className="flex gap-2">
+                          <input 
+                            type="text" 
+                            value={testMessage} 
+                            onChange={e => setTestMessage(e.target.value)} 
+                            placeholder="Digite uma mensagem simulada do cliente (ex: quero orçamento de chapa 2mm)..." 
+                            className="input-clean text-xs flex-1 bg-white" 
+                          />
+                          <button 
+                            type="button" 
+                            onClick={handleTestPrompt} 
+                            disabled={testingPrompt} 
+                            className="btn-secondary text-xs px-4 h-9 font-bold shrink-0"
+                          >
+                            {testingPrompt ? "Simulando..." : "Testar com IA"}
+                          </button>
+                        </div>
+                        {testResponse && (
+                          <div className="p-3 bg-white rounded border border-neutral-300 text-xs text-neutral-800 space-y-1">
+                            <span className="font-bold text-[10px] uppercase text-emerald-700 block">Resposta da IA:</span>
+                            <p className="whitespace-pre-wrap">{testResponse}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="border-t border-neutral-200 pt-6">
@@ -1325,81 +1385,33 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* CÉREBRO IA - HABILIDADES MODULARES & BASE RAG */}
+              {/* CÉREBRO IA - BASE DE CATÁLOGOS TÉCNICOS RAG */}
               {iaSubTab === 'skills' && (
-                <div className="space-y-8 animate-fade-in">
-                  
-                  {/* Variáveis de Extração */}
+                <div className="space-y-6 animate-fade-in">
                   <div className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
                     <div className="flex justify-between items-center border-b border-neutral-100 pb-3">
                       <div>
-                        <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Variaveis de Coleta de Dados</h3>
-                        <p className="text-[10px] text-neutral-500 mt-0.5">Campos que a IA deve capturar no roteamento.</p>
+                        <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Catálogos Técnicos e Biblioteca RAG</h3>
+                        <p className="text-[10px] text-neutral-500 mt-0.5">Catálogos e especificações técnicas consultadas pela IA.</p>
                       </div>
-                      <button onClick={() => { setVarForm({ name: "", description: "", required: false }); setEditingVarIndex(null); setShowVarForm(!showVarForm); }} className="btn-secondary h-8 px-3 text-xs font-bold">{showVarForm ? "Fechar" : "+ Nova Variável"}</button>
-                    </div>
-
-                    {showVarForm && (
-                      <form onSubmit={handleSaveVariable} className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg space-y-3">
-                        <div className="grid grid-cols-2 gap-4">
-                          <input type="text" value={varForm.name} onChange={e => setVarForm({...varForm, name: e.target.value})} placeholder="Nome da variável (ex: cnpj)" className="input-clean text-xs bg-white" required />
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={varForm.required} onChange={e => setVarForm({...varForm, required: e.target.checked})} className="w-4 h-4 accent-black" />
-                            <span className="text-xs font-bold text-neutral-800">Roteamento Obrigatório</span>
-                          </label>
-                        </div>
-                        <input type="text" value={varForm.description} onChange={e => setVarForm({...varForm, description: e.target.value})} placeholder="Descrição e instruções de extração da IA" className="input-clean text-xs bg-white" required />
-                        <div className="flex gap-2">
-                          <button type="submit" className="btn-primary flex-1 h-8 text-xs">{editingVarIndex !== null ? "Atualizar" : "Salvar"}</button>
-                          <button type="button" onClick={() => setShowVarForm(false)} className="btn-secondary flex-1 h-8 text-xs">Cancelar</button>
-                        </div>
-                      </form>
-                    )}
-
-                    <div className="list-container-clean">
-                      {variables.map((v, i) => (
-                        <div key={i} className="list-item-clean flex justify-between items-center group">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-sm text-[var(--text-primary)]">{v.name}</span>
-                              <span className={`text-[8px] px-2 py-0.5 rounded font-bold border ${v.required ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500 border-neutral-200'}`}>{v.required ? 'Obrigatória' : 'Opcional'}</span>
-                            </div>
-                            <p className="text-[10px] text-neutral-500 mt-1">{v.description}</p>
-                          </div>
-                          <div className="flex gap-2 transition-opacity">
-                            <button onClick={() => { setVarForm(v); setEditingVarIndex(i); setShowVarForm(true); }} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">Editar</button>
-                            <button onClick={() => deleteVariable(i)} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded font-bold">Excluir</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Bases RAG */}
-                  <div className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
-                    <div className="flex justify-between items-center border-b border-neutral-100 pb-3">
-                      <div>
-                        <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Catálogos e Biblioteca RAG</h3>
-                        <p className="text-[10px] text-neutral-500 mt-0.5">Informações técnicas lidas pela IA para resolver dúvidas.</p>
-                      </div>
-                      <button onClick={() => { setEditingRag(null); setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(!showRagForm); }} className="btn-secondary h-8 px-3 text-xs font-bold">{showRagForm ? "Fechar" : "+ Novo Documento RAG"}</button>
+                      <button onClick={() => { setEditingRag(null); setRagName(""); setRagText(""); setRagFile(null); setShowRagForm(!showRagForm); }} className="btn-secondary h-8 px-3 text-xs font-bold">{showRagForm ? "Fechar" : "+ Novo Documento / PDF"}</button>
                     </div>
 
                     {showRagForm && (
                       <form onSubmit={handleUploadRag} className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg space-y-4">
-                        <input type="text" value={ragName} onChange={e => setRagName(e.target.value)} placeholder="Nome do documento (ex: Grade Industrial SP)" className="input-clean text-xs bg-white" required />
+                        <input type="text" value={ragName} onChange={e => setRagName(e.target.value)} placeholder="Nome do catálogo (ex: Catálogo Sucroenergética)" className="input-clean text-xs bg-white" required />
                         
                         <div className="border border-dashed border-neutral-300 rounded p-4 text-center bg-white">
                           <input type="file" accept=".pdf,.txt,.csv,.doc,.docx" onChange={e => { setRagFile(e.target.files?.[0] || null); setRagText(""); }} id="rag-file" className="hidden" />
                           <label htmlFor="rag-file" className="cursor-pointer text-xs font-bold block">
-                            {ragFile ? `Arquivo Selecionado: ${ragFile.name}` : "Clique para selecionar arquivo de texto ou PDF"}
+                            {ragFile ? `Arquivo Selecionado: ${ragFile.name}` : "Clique para selecionar arquivo PDF ou texto"}
                           </label>
                         </div>
 
-                        {!ragFile && <textarea value={ragText} onChange={e => setRagText(e.target.value)} rows={4} placeholder="Ou digite o conteúdo manualmente..." className="input-clean text-xs bg-white h-24 py-2 resize-none" />}
+                        {!ragFile && <textarea value={ragText} onChange={e => setRagText(e.target.value)} rows={4} placeholder="Ou digite/cole o conteúdo do catálogo..." className="input-clean text-xs bg-white h-24 py-2 resize-none" />}
 
                         <div className="flex gap-2">
-                          <button type="submit" className="btn-primary flex-1 h-8 text-xs">{uploadingRag ? "Enviando..." : (editingRag ? "Atualizar" : "Salvar")}</button>
+                          <button type="submit" className="btn-primary flex-1 h-8 text-xs">{uploadingRag ? "Enviando..." : (editingRag ? "Atualizar" : "Salvar Catálogo")}</button>
                           <button type="button" onClick={() => { setShowRagForm(false); setEditingRag(null); }} className="btn-secondary flex-1 h-8 text-xs">Cancelar</button>
                         </div>
                       </form>
@@ -1410,7 +1422,7 @@ export default function SettingsPage() {
                         <div key={doc.id} className="list-item-clean flex justify-between items-center group">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[9px] bg-purple-50 text-purple-700 border border-purple-200 font-bold px-2 py-0.5 rounded">{doc.source_type || 'TXT'}</span>
+                              <span className="text-[9px] bg-purple-50 text-purple-700 border border-purple-200 font-bold px-2 py-0.5 rounded">{doc.source_type || 'CATÁLOGO'}</span>
                               <h4 className="font-bold text-sm text-[var(--text-primary)]">{doc.name}</h4>
                             </div>
                             <p className="text-[10px] text-neutral-500 mt-1 truncate max-w-md">{doc.content?.substring(0, 100)}...</p>
@@ -1423,71 +1435,6 @@ export default function SettingsPage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Habilidades Específicas */}
-                  <div className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
-                    <div className="flex justify-between items-center border-b border-neutral-100 pb-3">
-                      <div>
-                        <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Habilidades Modulares (Skills)</h3>
-                        <p className="text-[10px] text-neutral-500 mt-0.5">Ativadas automaticamente de acordo com as conversas.</p>
-                      </div>
-                      <button onClick={() => { setEditingSkill(null); setSkillForm({ name: "", type: "product", prompt: "" }); setSelectedRags([]); setShowSkillForm(!showSkillForm); }} className="btn-secondary h-8 px-3 text-xs font-bold">{showSkillForm ? "Fechar" : "+ Nova Habilidade"}</button>
-                    </div>
-
-                    {showSkillForm && (
-                      <form onSubmit={saveSkill} className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <input type="text" value={skillForm.name} onChange={e => setSkillForm({...skillForm, name: e.target.value})} placeholder="Nome da Skill" className="input-clean text-xs bg-white" required />
-                          <select value={skillForm.type} onChange={e => setSkillForm({...skillForm, type: e.target.value})} className="input-clean text-xs bg-white">
-                            {SKILL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                          </select>
-                        </div>
-                        <textarea value={skillForm.prompt} onChange={e => setSkillForm({...skillForm, prompt: e.target.value})} rows={4} placeholder="Instruções para a IA nesta skill..." className="input-clean text-xs bg-white h-24 py-2 resize-none" required />
-                        
-                        {ragDocs.length > 0 && (
-                          <div className="space-y-1.5">
-                            <label className="block text-[9px] font-bold text-neutral-500 uppercase">Vincular Base RAG</label>
-                            <div className="grid grid-cols-2 gap-2 p-2 border border-neutral-200 rounded bg-white max-h-28 overflow-y-auto">
-                              {ragDocs.map(doc => (
-                                <label key={doc.id} className="flex items-center gap-2 text-[10px] cursor-pointer hover:bg-neutral-50 p-1 rounded">
-                                  <input type="checkbox" checked={selectedRags.includes(doc.id)} onChange={() => setSelectedRags(toggleChip(selectedRags, doc.id))} className="accent-black w-3.5 h-3.5" />
-                                  <span className="truncate">{doc.name}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex gap-2">
-                          <button type="submit" className="btn-primary flex-1 h-8 text-xs">{editingSkill ? "Atualizar" : "Salvar"}</button>
-                          <button type="button" onClick={() => { setShowSkillForm(false); setEditingSkill(null); }} className="btn-secondary flex-1 h-8 text-xs">Cancelar</button>
-                        </div>
-                      </form>
-                    )}
-
-                    <div className="grid grid-cols-1 gap-3">
-                      {skills.map(s => {
-                        const info = getTypeInfo(s.type);
-                        return (
-                          <div key={s.id} className={`p-4 border border-[var(--border-light)] rounded-lg bg-white flex justify-between items-start group ${!s.active ? "opacity-50" : ""}`}>
-                            <div className="space-y-2 flex-1 pr-4">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[9px] px-2 py-0.5 rounded font-bold uppercase" style={{ background: info.color + "15", color: info.color }}>{info.label}</span>
-                                <h4 className="font-bold text-sm text-[var(--text-primary)]">{s.name}</h4>
-                              </div>
-                              <p className="text-xs text-neutral-600 font-mono leading-relaxed bg-neutral-50 border border-neutral-200 p-2.5 rounded max-h-20 overflow-y-auto scrollbar-hide">{s.prompt}</p>
-                            </div>
-                            <div className="flex gap-2 transition-opacity ml-2 shrink-0">
-                              <button onClick={() => toggleSkillActive(s)} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">{s.active ? "Pausar" : "Ativar"}</button>
-                              <button onClick={() => { setEditingSkill(s); setSkillForm({ name: s.name, type: s.type, prompt: s.prompt }); const linked = skillRagLinks.filter(l => l.skill_id === s.id).map(l => l.rag_document_id); setSelectedRags(linked); setShowSkillForm(true); }} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">Editar</button>
-                              <button onClick={() => deleteSkill(s.id)} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded font-bold">Excluir</button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
                 </div>
               )}
 
