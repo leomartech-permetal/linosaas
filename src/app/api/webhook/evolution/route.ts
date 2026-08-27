@@ -201,32 +201,31 @@ export async function POST(request: Request) {
       // 6. SALVAR INTERAÇÃO
       await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: fullContext }]);
 
-      // 7. LÓGICA DE RESPOSTA (SDR OU ESPERA)
-      if (lead.status === 'SDR_QUALIFICATION') {
-        const { data: historyData } = await supabase.from('interactions').select('sender_type, message_content').eq('lead_id', lead.id).order('created_at', { ascending: false }).limit(15);
-        const history = (historyData || []).reverse();
+      // 7. LÓGICA DE RESPOSTA (SDR NO N8N OU REPASSE)
+      if (lead.status === 'SDR_QUALIFICATION' || lead.status === 'novo' || lead.status === 'qualificando') {
+        try {
+          console.log('[Webhook] Encaminhando mensagem para o n8n SDR:', remoteJid);
+          const n8nWebhookUrl = 'https://prontoatendimento.n8n.jbads.com.br/webhook/lino-sdr';
+          
+          const n8nResp = await fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              whatsapp: remoteJid,
+              pushName: pushName || lead.name || 'Cliente',
+              message: fullContext,
+              instance: globalConfig?.evolution_instance_name || 'linooficial',
+              lead_id: lead.id
+            })
+          });
 
-        const aiResult = await processLeadWithSkills(history || [], lead.id);
-        
-        if (aiResult && !aiResult.erro_openai) {
-          const resposta_whatsapp = aiResult.resposta_whatsapp;
-          const acao_executada = (aiResult.acao_executada || '').toLowerCase();
-
-          // Log de Auditoria
-          await supabase.from('debug_logs').insert([{
-            lead_id: lead.id,
-            level: 'DEBUG',
-            module: 'AI_SDR',
-            action: `Qualificacao_Schemas`,
-            details: {
-              intent: aiResult.intent,
-              acao: acao_executada,
-              campo_solicitado: aiResult.campo_solicitado_nesta_rodada,
-              dados_coletados: aiResult.cliente,
-              demanda: aiResult.demanda,
-              observacoes: aiResult.observacoes
-            }
-          }]);
+          console.log('[Webhook] Resposta do n8n status:', n8nResp.status);
+          return NextResponse.json({ status: 'success', handler: 'n8n_sdr_delegated' });
+        } catch (n8nErr: any) {
+          console.error('[Webhook] Erro ao delegar para o n8n SDR:', n8nErr);
+          return NextResponse.json({ status: 'error', reason: 'N8N_DELEGATION_FAILED', error: n8nErr.message });
+        }
+      }
           
           // DDD
           const rawPhone = remoteJid.replace(/\D/g, '');
