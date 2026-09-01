@@ -190,14 +190,26 @@ export function formatFacetedContextForPrompt(facets: CatalogFacetResult, detect
     text += `Espessuras disponíveis: [${esps}]\n`;
   }
 
-  if (facets.variantes_exatas.length > 0 && facets.variantes_exatas.length <= 5) {
-    text += `Correspondências diretas no catálogo:\n`;
-    facets.variantes_exatas.forEach(v => {
-      text += `- ${v.categoria} | Malha: ${v.malha_original || (v.malha_a_mm + 'x' + v.malha_b_mm)} | Material: ${v.material_original || v.material} | Espessura: ${v.espessura_mm}mm\n`;
+  // Dimensões / Modelos / Alturas disponíveis
+  const dimensoesUnicas = Array.from(new Set(facets.variantes_exatas.map(v => v.dimensoes_raw || v.faixa_permitida_raw).filter(Boolean)));
+  if (dimensoesUnicas.length > 0) {
+    text += `Opções e Medidas Disponíveis no Catálogo:\n`;
+    dimensoesUnicas.slice(0, 10).forEach(d => {
+      text += `- ${d}\n`;
     });
   }
 
-  text += `\nREGRA E-COMMERCE: Apresente as opções reais acima ao cliente passo a passo, eliminando as opções não escolhidas até chegar no produto exato. NUNCA invente medidas ou materiais fora dessa lista.\n`;
+  if (facets.variantes_exatas.length > 0 && facets.variantes_exatas.length <= 8) {
+    text += `Modelos específicos no catálogo:\n`;
+    facets.variantes_exatas.forEach(v => {
+      text += `- Modelo: ${v.categoria} | Malha: ${v.malha_original || (v.malha_a_mm + 'x' + v.malha_b_mm)} | Medida/Altura: ${v.dimensoes_raw || v.espessura_mm + 'mm'} | Material: ${v.material_original || v.material}\n`;
+    });
+  }
+
+  text += `\nREGRA E-COMMERCE:
+1. Se o cliente perguntar tamanhos, modelos, alturas ou materiais, RESPONDA IMEDIATAMENTE com as opções reais acima.
+2. NUNCA ignore a pergunta do cliente para cobrar checklist ou quantidade. Responda a pergunta do cliente primeiro!
+3. Apresente as opções reais passo a passo até o cliente definir a configuração desejada.\n`;
 
   return text;
 }

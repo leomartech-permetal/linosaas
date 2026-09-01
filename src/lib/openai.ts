@@ -88,8 +88,16 @@ export async function processLeadWithSkills(
   const todoHistoricoTexto = history.map(h => h.message_content).join(' ');
   const technicalDetected = extractTechnicalAttributes(todoHistoricoTexto);
 
+  let targetFamilia = technicalDetected.familia;
+  const textoCompletoLower = (todoHistoricoTexto + ' ' + (detectedProduct || '')).toLowerCase();
+  if (!targetFamilia) {
+    if (textoCompletoLower.includes('gradil')) targetFamilia = 'gradil';
+    else if (textoCompletoLower.includes('expandid')) targetFamilia = 'chapa_expandida';
+    else if (textoCompletoLower.includes('perfurad')) targetFamilia = 'chapa_perfurada';
+  }
+
   const facetCriteria = {
-    familia: technicalDetected.familia || (detectedProduct?.toLowerCase().includes('expandid') ? 'chapa_expandida' : undefined),
+    familia: targetFamilia,
     malha_a: technicalDetected.malha_a,
     malha_b: technicalDetected.malha_b,
     material: technicalDetected.material,
@@ -157,11 +165,19 @@ ${catalogoEcommerceContexto}
 
 ${instrucoesB2B}
 
-=== REGRAS DE DIÁLOGO ===
-1. Mantenha tom cordial, consultivo e objetivo para WhatsApp.
-2. Faça no máximo 1 a 2 perguntas curtas por mensagem.
-3. Se o cliente enviou especificações ou imagem com medidas (ex: AxB 20x50mm, Inox, 400x500mm), confira no catálogo acima, valide e confirme com o cliente.
-4. Quando todos os campos OBRIGATÓRIOS estiverem preenchidos (e os opcionais tentados ou preenchidos), conclua a qualificação com uma confirmação cordial e marque "qualificacao_concluida": true.
+=== REGRAS OBRIGATÓRIAS DE DIÁLOGO E CONSULTORIA ===
+1. PRIORIDADE TOTAL: SE O CLIENTE FEZ UMA PERGUNTA, RESPONDA A PERGUNTA PRIMEIRO!
+   - Se o cliente perguntou "quais as opções de tamanho?", "quais os modelos?", "qual o mais alto?", "qual o preço?", "quais os materiais?", etc.:
+     Você DEVE responder a dúvida de forma clara e completa usando os dados do CATÁLOGO E-COMMERCE acima antes de fazer qualquer outra pergunta.
+   - NUNCA responda à dúvida do cliente cobrando quantidade ou repetindo perguntas de checklist. Isso irrita o cliente e demonstra descaso.
+   - Exemplo Gradil: Se o cliente perguntar opções de tamanho ou altura, liste as opções reais:
+     "Nossos painéis de gradil possuem largura padrão de 2,50m e trabalhamos com as seguintes alturas: 1,03m, 1,20m, 1,50m, 1,80m, 2,03m e até 2,40m (para condomínios, as mais comuns são 1,80m e 2,03m). Qual dessas alturas se encaixa no seu projeto?"
+2. NÃO REPITA PERGUNTAS JÁ RESPONDIDAS:
+   - Se o cliente já informou a aplicação (ex: "será para obra de um condomínio"), NUNCA pergunte a aplicação novamente. Guarde o dado e aproveite o contexto.
+3. SOBRE PREÇO:
+   - Se o cliente perguntar preço logo de início: explique com naturalidade que os gradis são orçados por metro linear de acordo com a altura e acabamento (galvanizado a fogo ou com pintura eletrostática), e que o vendedor passará a proposta formal assim que definirem a altura e metragem.
+4. Mantenha tom cordial, empático, direto e profissional de consultor técnico Permetal.
+5. Quando todos os campos OBRIGATÓRIOS estiverem preenchidos (e os opcionais tentados), conclua e marque "qualificacao_concluida": true.
 
 === FORMATO OBRIGATÓRIO DE RESPOSTA ===
 Responda EXCLUSIVAMENTE em formato JSON com a estrutura:
