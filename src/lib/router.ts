@@ -489,7 +489,7 @@ ${resumoExecutivo}
             },
             body: JSON.stringify({
               number: testerNumber,
-              text: `ℹ️ *[CÓPIA DE AUDITORIA — NOTIFICAÇÃO DO VENDEDOR]*\n*(Enviado para ${seller.name} — ${sellerPhone})*\n\n${text}`
+              text: `ℹ️ *[CÓPIA DE AUDITORIA — NOTIFICAÇÃO DO VENDEDOR]*\n*(Vendedor Atribuído: ${seller.name})*\n\n${text}`
             })
           });
         } catch (e) {}
