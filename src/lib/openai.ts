@@ -73,6 +73,8 @@ export async function processLeadWithSkills(
           const customFields: B2BFieldConfig[] = [];
 
           // 1. Campos Básicos Sempre Obrigatórios do Domínio
+          customFields.push({ key: 'nome_cliente', label: 'Nome do Contato', obrigatorio: true, max_tentativas: 99 });
+          customFields.push({ key: 'empresa', label: 'Nome da Empresa', obrigatorio: true, max_tentativas: 99 });
           customFields.push({ key: 'produto', label: 'Produto / Família', obrigatorio: true, max_tentativas: 99 });
           customFields.push({ key: 'quantidade', label: 'Quantidade / Metragem', obrigatorio: true, max_tentativas: 99 });
           customFields.push({ key: 'especificacao', label: 'Especificação Técnica', obrigatorio: true, max_tentativas: 99 });
@@ -179,7 +181,7 @@ export async function processLeadWithSkills(
       instrucoesB2B += `- [PREENCHIDO] ${field.label}: "${valorAtual}" (NUNCA pergunte novamente).\n`;
     } else if (field.obrigatorio) {
       camposFaltantesObrigatorios.push(field.label);
-      instrucoesB2B += `- [OBRIGATÓRIO PENDENTE] ${field.label}: É OBRIGATÓRIO pelo Schema B2B. A qualificação NÃO pode ser concluída sem este dado.\n`;
+      instrucoesB2B += `- [OBRIGATÓRIO PENDENTE] ${field.label}: É OBRIGATÓRIO. Colete antes de montar o resumo.\n`;
     } else {
       // Campo opcional regrado estritamente pelo preset
       if (tentativas >= field.max_tentativas) {
@@ -209,25 +211,31 @@ ${catalogoEcommerceContexto}
 
 ${instrucoesB2B}
 
-=== REGRAS OBRIGATÓRIAS DE DIÁLOGO E CONSULTORIA ===
-1. PRIORIDADE TOTAL: SE O CLIENTE FEZ UMA PERGUNTA, RESPONDA A PERGUNTA PRIMEIRO!
-   - Se o cliente perguntou "quais as opções de tamanho?", "quais os modelos?", "qual o mais alto?", "qual o preço?", "quais os materiais?", etc.:
-     Você DEVE responder a dúvida de forma clara e completa usando os dados do CATÁLOGO E-COMMERCE acima antes de fazer qualquer outra pergunta.
-   - NUNCA responda à dúvida do cliente cobrando quantidade ou repetindo perguntas de checklist. Isso irrita o cliente e demonstra descaso.
+=== PROTOCOLO OBRIGATÓRIO DE RESUMO E CONFIRMAÇÃO COM SIM OU NÃO ===
+Quando todos os dados estiverem coletados (Nome, Empresa, Produto, Especificação, Quantidade, CNPJ/PF, E-mail, Cidade se houver):
 
-2. REGRA DE CNPJ / PESSOA FÍSICA:
-   - Se o cliente disser que NÃO TEM CNPJ, NÃO SABE, NÃO QUER PASSAR ou que VAI COMPRAR COMO PESSOA FÍSICA (PF / CPF):
-     * Encerre IMEDIATAMENTE qualquer tentativa de CNPJ.
-     * NUNCA pergunte CNPJ novamente.
-     * Avance com naturalidade para as demais coletas necessárias (quantidade, medidas, produto, segmento) sem travar o atendimento.
+1. O Lino DEVE formatar o resumo rigorosamente no SCHEMA PADRÃO DE SAÍDA:
+"Aqui está o resumo das informações do seu projeto:
 
-3. NÃO REPITA PERGUNTAS JÁ RESPONDIDAS:
-   - Se o cliente já informou a aplicação (ex: "será para obra de um condomínio"), NUNCA pergunte a aplicação novamente. Guarde o dado e aproveite o contexto.
+- Nome: [Nome do Contato]
+- Empresa: [Nome da Empresa]
+- Produto: [Produto / Linha]
+- Especificação: [Especificação técnica detalhada, modelo, malha, arames, pilares, fixadores]
+- Quantidade: [Quantidade / Metragem linear ou m²]
+- CNPJ: [CNPJ ou 'Pessoa Física']
+- E-mail: [E-mail Corporativo ou 'Não informado']
+- Cidade da Sede da Empresa: [Cidade/UF ou 'Não informado']
+- Resumo da Aplicação: [Breve descrição da aplicação e projeto para o vendedor]
 
-4. SOBRE PREÇO:
-   - Se o cliente perguntar preço logo de início: explique com naturalidade que os gradis são orçados por metro linear de acordo com a altura e acabamento (galvanizado a fogo ou com pintura eletrostática), e que o vendedor passará a proposta formal assim que definirem a altura e metragem.
-4. Mantenha tom cordial, empático, direto e profissional de consultor técnico Permetal.
-5. Quando todos os campos OBRIGATÓRIOS estiverem preenchidos (e os opcionais tentados), conclua e marque "qualificacao_concluida": true.
+As informações acima estão corretas? Por favor, responda com 'Sim' para confirmar ou 'Não' se precisar atualizar algo."
+
+2. REGRA DE OURO DE CONFIRMAÇÃO:
+- O Lino NUNCA transfere ou encerra antes do cliente responder 'Sim'.
+- Enquanto estiver apresentando o resumo para o cliente confirmar, "qualificacao_concluida" DEVE SER false e "acao_executada": "qualificar".
+- SOMENTE quando a última mensagem do cliente for uma confirmação positiva ('Sim', 'sim', 'está correto', 'pode seguir', 'ok'):
+  * Marque "qualificacao_concluida": true e "acao_executada": "roteamento_vendedor".
+  * Envie a mensagem cordial de que a solicitação foi encaminhada para o especialista responsável.
+- Se o cliente responder 'Não' ou pedir alteração: pergunte o que deseja mudar, ajuste o dado e reapresente o resumo para nova confirmação de 'Sim' ou 'Não'.
 
 === FORMATO OBRIGATÓRIO DE RESPOSTA ===
 Responda EXCLUSIVAMENTE em formato JSON com a estrutura:
@@ -249,7 +257,7 @@ Responda EXCLUSIVAMENTE em formato JSON com a estrutura:
     "dimensoes": "Dimensões ou null"
   },
   "campos_opcionais_perguntados": ["cnpj" ou "email" caso tenha feito a tentativa nesta mensagem],
-  "qualificacao_concluida": ${camposFaltantesObrigatorios.length === 0 ? 'true ou false' : 'false'}
+  "qualificacao_concluida": false
 }`;
 
   // 5. Histórico da conversa
