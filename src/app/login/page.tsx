@@ -17,39 +17,25 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Consultar admin_users diretamente do client
-      const { data: user, error: dbError } = await supabase
-        .from("admin_users")
-        .select("*")
-        .eq("email", email)
-        .eq("password", password)
-        .single();
-
-      if (dbError || !user) {
-        setError("E-mail ou senha incorretos.");
-        setLoading(false);
-        return;
-      }
-
-      if (user.active === false) {
-        setError("Usuário desativado. Contate o administrador.");
-        setLoading(false);
-        return;
-      }
-
-      // Salvar nos cookies via API simples
+      // Autenticar diretamente no servidor (contorna bloqueio de RLS no cliente)
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verified: true, user: { id: user.id, name: user.name, role: user.role, email: user.email } })
+        body: JSON.stringify({ email: email.trim(), password: password.trim() })
       });
 
-      if (res.ok) {
-        router.push("/");
-        router.refresh();
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error || "E-mail ou senha incorretos.");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError("Erro ao tentar fazer login.");
+
+      router.push("/");
+      router.refresh();
+    } catch (err: any) {
+      setError("Erro ao tentar fazer login: " + err.message);
     } finally {
       setLoading(false);
     }
