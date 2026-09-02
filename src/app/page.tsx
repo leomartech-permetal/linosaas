@@ -84,8 +84,16 @@ export default function PipelinePage() {
   }, []);
 
   async function carregarAdminUsers() {
-    const { data } = await supabase.from("admin_users").select("id, name");
-    if (data) setAdminUsers(data);
+    try {
+      const res = await fetch("/api/admin-users");
+      if (res.ok) {
+        const data = await res.json();
+        setAdminUsers(data || []);
+        return;
+      }
+    } catch (e) {
+      console.error("Erro ao carregar admin users:", e);
+    }
   }
 
   async function carregarLeads() {
@@ -305,7 +313,7 @@ export default function PipelinePage() {
                       </div>
                     ) : (
                       colLeads.map((lead) => {
-                        const seller = adminUsers.find(u => u.id === lead.current_owner_id);
+                        const seller = lead.seller || adminUsers.find(u => u.id === lead.current_owner_id);
                         return (
                           <div
                             key={lead.id}

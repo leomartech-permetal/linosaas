@@ -21,6 +21,16 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
 
   useEffect(() => {
     async function fetchSellers() {
+      try {
+        const res = await fetch("/api/admin-users");
+        if (res.ok) {
+          const data = await res.json();
+          setAdminUsers(data || []);
+          return;
+        }
+      } catch (e) {
+        console.error("[LeadDrawer] Erro ao carregar sellers:", e);
+      }
       const { data } = await supabase.from("admin_users").select("id, name, whatsapp_number, role");
       if (data) setAdminUsers(data);
     }
@@ -92,7 +102,7 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
 
   if (!selectedLead) return null;
 
-  const currentSeller = adminUsers.find(u => u.id === (formData.current_owner_id || selectedLead.current_owner_id));
+  const currentSeller = adminUsers.find(u => u.id === (formData.current_owner_id || selectedLead.current_owner_id)) || selectedLead.seller;
   const rawPhone = (selectedLead.whatsapp_number || '').replace(/\D/g, '');
 
   return (
@@ -317,7 +327,7 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
                   Vendedor Responsável
                 </label>
                 <select
-                  value={formData.current_owner_id || ''}
+                  value={formData.current_owner_id || selectedLead.current_owner_id || ''}
                   onChange={(e) => {
                     const newOwnerId = e.target.value || null;
                     setFormData({ ...formData, current_owner_id: newOwnerId });
@@ -326,6 +336,12 @@ export default function LeadDrawer({ selectedLead, onClose, onUpdateLead, onDele
                   className="w-full bg-transparent font-bold text-xs text-neutral-900 outline-none cursor-pointer"
                 >
                   <option value="">— Sem Vendedor —</option>
+                  {(formData.current_owner_id || selectedLead.current_owner_id) && 
+                   !adminUsers.some(u => u.id === (formData.current_owner_id || selectedLead.current_owner_id)) && (
+                    <option value={formData.current_owner_id || selectedLead.current_owner_id}>
+                      {selectedLead.seller?.name || 'Vendedor Atribuído'}
+                    </option>
+                  )}
                   {adminUsers.map(u => (
                     <option key={u.id} value={u.id}>
                       {u.name} {u.whatsapp_number ? `(${u.whatsapp_number})` : ''}

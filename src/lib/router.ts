@@ -388,27 +388,6 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
   if (!sellerPhone.startsWith('55')) sellerPhone = '55' + sellerPhone;
   console.log(`[Roteador] Número vendedor normalizado: ${sellerPhone}`);
 
-  // ── GUARD DE MODO DE TESTE: bloquear ou simular notificação
-  let targetPhone = sellerPhone;
-  let isSimulatedTest = false;
-  if (!isPhoneAuthorized(sellerPhone)) {
-    if (isTestMode()) {
-      const testPhones = (process.env.LINO_TEST_ALLOWLIST || '').split(',').map(p => p.trim().replace(/\D/g, '')).filter(Boolean);
-      const primaryTestPhone = testPhones[0];
-      if (primaryTestPhone) {
-        targetPhone = primaryTestPhone.startsWith('55') ? primaryTestPhone : '55' + primaryTestPhone;
-        isSimulatedTest = true;
-        console.log(`[Roteador Teste] Notificação do vendedor ${seller.name} (${sellerPhone}) redirecionada para testador: ${targetPhone}`);
-      } else {
-        console.log(`[Roteador Guard] Notificação a vendedor bloqueada em modo de teste: ${sellerPhone}`);
-        return;
-      }
-    } else {
-      console.log(`[Roteador Guard] Notificação a vendedor bloqueada em modo de teste: ${sellerPhone}`);
-      return;
-    }
-  }
-
   // 2. Buscar dados completos do lead
   const { data: lead } = await supabase.from('leads').select('*').eq('id', leadId).single();
   
@@ -438,11 +417,8 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
   }
 
   const whatsappUrl = `https://wa.me/${lead?.whatsapp_number?.replace(/\D/g, '')}`;
-  const simulatedHeader = isSimulatedTest 
-    ? `⚠️ *[MODO DE TESTE — NOTIFICAÇÃO VENDEDOR]*\n*(Destinado originalmente a: ${seller.name} — ${sellerPhone})*\n\n`
-    : '';
 
-  const text = `${simulatedHeader}🔥 *NOVO LEAD* 🔥
+  const text = `🔥 *NOVO LEAD* 🔥
 📌 *CÓDIGO:* ${ticketCode}
 
 ━━━━━━━━━━━━━━━━━━━━
@@ -463,7 +439,7 @@ ${resumoExecutivo}
 
 ⏰ ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`;
 
-  // 4. Envio via HTTP POST direto na Evolution API
+  // 4. Envio via HTTP POST direto na Evolution API para o vendedor
   const url = `${config.evolution_url}message/sendText/${config.evolution_instance_name}`;
   
   try {
@@ -474,13 +450,13 @@ ${resumoExecutivo}
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        number: targetPhone,
+        number: sellerPhone,
         text
       })
     });
     
     const responseData = await response.json().catch(() => ({}));
-    console.log(`[Roteador] Notificação enviada para ${seller.name} (${targetPhone}):`, response.status, responseData);
+    console.log(`[Roteador] Notificação enviada para o vendedor ${seller.name} (${sellerPhone}):`, response.status, responseData);
     
     // Registrar no log de auditoria
     await supabase.from('debug_logs').insert([{
@@ -493,5 +469,29 @@ ${resumoExecutivo}
     
   } catch (err: any) {
     console.error(`[Roteador] Erro ao enviar notificação para ${seller.name}:`, err.message);
+  }
+
+  // 5. Se em modo de teste e o testador for diferente do vendedor, enviar também uma cópia informativa ao testador
+  if (isTestMode()) {
+    const testPhones = (process.env.LINO_TEST_ALLOWLIST || '').split(',').map(p => p.trim().replace(/\D/g, '')).filter(Boolean);
+    const primaryTestPhone = testPhones[0];
+    if (primaryTestPhone) {
+      const testerNumber = primaryTestPhone.startsWith('55') ? primaryTestPhone : '55' + primaryTestPhone;
+      if (testerNumber !== sellerPhone) {
+        try {
+          await fetch(url, {
+            method: 'POST',
+            headers: {
+              'apikey': config.evolution_key,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              number: testerNumber,
+              text: `ℹ️ *[CÓPIA DE AUDITORIA — NOTIFICAÇÃO DO VENDEDOR]*\n*(Enviado para ${seller.name} — ${sellerPhone})*\n\n${text}`
+            })
+          });
+        } catch (e) {}
+      }
+    }
   }
 }
