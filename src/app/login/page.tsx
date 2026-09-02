@@ -53,24 +53,33 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Usuário</label>
+            <label className="block text-xs uppercase font-bold text-neutral-300 tracking-wider mb-2">Usuário / E-mail</label>
             <input 
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#222] border border-gray-700 rounded-md px-4 py-3 text-white focus:outline-none focus:border-[hsl(var(--tenant-primary))] transition-colors"
-              placeholder="seu@email.com" required
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full !bg-[#222222] border border-neutral-700 rounded-lg px-4 py-3 !text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm font-medium"
+              placeholder="admin@lino.com" 
+              required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Senha de Acesso</label>
+            <label className="block text-xs uppercase font-bold text-neutral-300 tracking-wider mb-2">Senha de Acesso</label>
             <input 
-              type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#222] border border-gray-700 rounded-md px-4 py-3 text-white focus:outline-none focus:border-[hsl(var(--tenant-primary))] transition-colors"
-              placeholder="••••••••" required
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full !bg-[#222222] border border-neutral-700 rounded-lg px-4 py-3 !text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm font-medium"
+              placeholder="••••••••" 
+              required
             />
           </div>
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-          <button type="submit" disabled={loading}
-            className="w-full bg-[hsl(var(--tenant-primary))] hover:bg-[hsl(var(--tenant-primary)/0.8)] text-white font-bold py-3 px-4 rounded-md transition-all shadow-lg disabled:opacity-50">
+          {error && <p className="text-red-400 text-xs font-semibold bg-red-950/40 border border-red-800/60 p-2.5 rounded text-center">{error}</p>}
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-emerald-500 hover:bg-emerald-400 !text-neutral-950 font-bold py-3 px-4 rounded-lg transition-all shadow-lg disabled:opacity-50 text-sm tracking-wider uppercase cursor-pointer"
+          >
             {loading ? "Autenticando..." : "ENTRAR NO SISTEMA"}
           </button>
         </form>
