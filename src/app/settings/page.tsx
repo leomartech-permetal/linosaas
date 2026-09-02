@@ -1298,17 +1298,12 @@ export default function SettingsPage() {
                               </div>
                             </div>
 
-                            {/* RAG Associado */}
-                            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-neutral-200">
-                              <span className="text-[10px] font-bold uppercase text-neutral-500 whitespace-nowrap">RAG Técnico:</span>
-                              <select 
-                                value={schema.rag_document_name || ""} 
-                                onChange={e => handleProductRagChange(p.id, e.target.value, schema)} 
-                                className="input-clean h-7 py-0 text-xs bg-transparent border-0 font-semibold cursor-pointer"
-                              >
-                                <option value="">Sem Catálogo RAG</option>
-                                {ragDocs.map(doc => <option key={doc.id} value={doc.name}>{doc.name}</option>)}
-                              </select>
+                            {/* Status do Catálogo Técnico */}
+                            <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                                Catálogo Técnico Supabase Ativo
+                              </span>
                             </div>
                           </div>
 
