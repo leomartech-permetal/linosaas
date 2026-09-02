@@ -60,7 +60,7 @@ export async function processLeadWithSkills(
         b2bAttempts = { ...b2bAttempts, ...lead.b2b_attempts };
       }
 
-      // Buscar schema específico se cadastrado
+      // Buscar schema específico se cadastrado para o produto
       if (detectedProduct) {
         const { data: prod } = await supabase
           .from('products')
@@ -69,15 +69,63 @@ export async function processLeadWithSkills(
           .limit(1)
           .maybeSingle();
 
-        if (prod?.qualification_schema?.campos) {
-          schemaB2BFields = prod.qualification_schema.campos;
-        } else if (prod?.qualification_schema?.obrigatorias) {
-          // Normalizar formato legado
-          const obrigatorias = prod.qualification_schema.obrigatorias as string[];
-          schemaB2BFields = schemaB2BFields.map(f => ({
-            ...f,
-            obrigatorio: obrigatorias.includes(f.key)
-          }));
+        if (prod?.qualification_schema) {
+          const qs = prod.qualification_schema;
+          const obrigatorias: string[] = qs.obrigatorias || [];
+          const opcionais: { campo: string; max_tentativas?: number }[] = qs.opcionais || [];
+
+          // Montar lista de campos estritamente baseada no preset do schema
+          const customFields: B2BFieldConfig[] = [];
+
+          // 1. Campos Básicos Sempre Obrigatórios do Domínio
+          customFields.push({ key: 'produto', label: 'Produto / Família', obrigatorio: true, max_tentativas: 99 });
+          customFields.push({ key: 'quantidade', label: 'Quantidade / Metragem', obrigatorio: true, max_tentativas: 99 });
+          customFields.push({ key: 'especificacao', label: 'Especificação Técnica', obrigatorio: true, max_tentativas: 99 });
+
+          // 2. Mapeamento de Labels Amigáveis
+          const labelMap: Record<string, string> = {
+            nome_cliente: 'Nome do Contato',
+            name: 'Nome do Contato',
+            empresa: 'Nome da Empresa',
+            company: 'Nome da Empresa',
+            cnpj: 'CNPJ da Empresa',
+            email: 'E-mail Corporativo',
+            email_corporativo: 'E-mail Corporativo',
+            cargo: 'Cargo do Contato',
+            segmento: 'Segmento / Aplicação',
+            endereco_sede: 'Endereço da Empresa',
+            project_location: 'Local da Obra / Entrega'
+          };
+
+          // 3. Adicionar campos configurados como OBRIGATÓRIOS no preset
+          obrigatorias.forEach(k => {
+            if (!customFields.find(f => f.key === k)) {
+              customFields.push({
+                key: k,
+                label: labelMap[k] || k,
+                obrigatorio: true,
+                max_tentativas: 99
+              });
+            }
+          });
+
+          // 4. Adicionar campos configurados como OPCIONAIS com a quantidade EXATA de tentativas do preset
+          opcionais.forEach(opt => {
+            const k = opt.campo;
+            const maxTentativas = typeof opt.max_tentativas === 'number' ? opt.max_tentativas : 2;
+            if (!customFields.find(f => f.key === k)) {
+              customFields.push({
+                key: k,
+                label: labelMap[k] || k,
+                obrigatorio: false,
+                max_tentativas: maxTentativas
+              });
+            }
+          });
+
+          if (customFields.length > 0) {
+            schemaB2BFields = customFields;
+          }
         }
       }
     }
@@ -111,17 +159,20 @@ export async function processLeadWithSkills(
   const qStateValores = leadData?.qualification_state?.valores || {};
   const dadosCadastrados: Record<string, any> = {
     nome_cliente: leadData?.name || qStateValores.nome_cliente || null,
+    name: leadData?.name || qStateValores.nome_cliente || null,
     empresa: leadData?.company || qStateValores.empresa || null,
+    company: leadData?.company || qStateValores.empresa || null,
     cnpj: leadData?.cnpj || qStateValores.cnpj || null,
     email: leadData?.email_corporativo || qStateValores.email || null,
+    email_corporativo: leadData?.email_corporativo || qStateValores.email || null,
     produto: detectedProduct || qStateValores.produto || technicalDetected.familia || null,
     quantidade: leadData?.quantidade || qStateValores.quantidade || technicalDetected.quantidade || null,
     especificacao: leadData?.especificacao || technicalDetected.dimensoes || null,
     ...qStateValores
   };
 
-  // Montar instruções de campos com lógica de tentativas
-  let instrucoesB2B = '=== REGRAS DE COLETA SCHEMA B2B ===\n';
+  // Montar instruções de campos com lógica dinâmica baseada no preset do Schema
+  let instrucoesB2B = '=== REGRAS DE COLETA SCHEMA B2B (PRESET DO PRODUTO) ===\n';
   const camposFaltantesObrigatorios: string[] = [];
 
   schemaB2BFields.forEach(field => {
@@ -133,15 +184,13 @@ export async function processLeadWithSkills(
       instrucoesB2B += `- [PREENCHIDO] ${field.label}: "${valorAtual}" (NUNCA pergunte novamente).\n`;
     } else if (field.obrigatorio) {
       camposFaltantesObrigatorios.push(field.label);
-      instrucoesB2B += `- [OBRIGATÓRIO PENDENTE] ${field.label}: É OBRIGATÓRIO. A qualificação NÃO pode ser concluída sem este dado.\n`;
+      instrucoesB2B += `- [OBRIGATÓRIO PENDENTE] ${field.label}: É OBRIGATÓRIO pelo Schema B2B. A qualificação NÃO pode ser concluída sem este dado.\n`;
     } else {
-      // Campo opcional
+      // Campo opcional regrado estritamente pelo preset
       if (tentativas >= field.max_tentativas) {
-        instrucoesB2B += `- [OPCIONAL DESISTIDO] ${field.label}: Já atingiu o limite de ${field.max_tentativas} tentativas. NÃO pergunte nem insista mais.\n`;
-      } else if (tentativas === 0) {
-        instrucoesB2B += `- [OPCIONAL - TENTATIVA 1] ${field.label}: Tente coletar usando argumento de BENEFÍCIO COMERCIAL (ex: "Para consultar se temos faturamento a prazo ou tabela com desconto para pessoa jurídica, qual o CNPJ?").\n`;
+        instrucoesB2B += `- [OPCIONAL LIMITE ATINGIDO] ${field.label}: Atingiu o limite de ${field.max_tentativas} tentativa(s) do Schema. NÃO pergunte nem insista mais.\n`;
       } else {
-        instrucoesB2B += `- [OPCIONAL - TENTATIVA 2] ${field.label}: Tente em momento posterior usando argumento FORMAL DE PROPOSTA (ex: "Para o consultor anexar seus dados na ficha da cotação, você teria o CNPJ ou e-mail corporativo?"). Se o cliente recusar, siga em frente sem travar.\n`;
+        instrucoesB2B += `- [OPCIONAL - TENTATIVA ${tentativas + 1} de ${field.max_tentativas}] ${field.label}: Tente coletar amigavelmente nesta mensagem. Se o cliente recusar ou se atingir ${field.max_tentativas} tentativa(s), siga em frente sem travar o lead.\n`;
       }
     }
   });
