@@ -246,15 +246,18 @@ Responda EXCLUSIVAMENTE em formato JSON com a estrutura:
   "cliente": {
     "nome": "Nome identificado ou null",
     "empresa": "Nome da empresa ou null",
-    "cnpj": "CNPJ identificado ou null",
-    "email": "E-mail identificado ou null"
+    "cnpj": "CNPJ identificado ou 'Pessoa Física' ou null",
+    "email": "E-mail identificado ou null",
+    "cidade": "Cidade/UF identificada ou null"
   },
   "demanda": {
     "produto_normalizado": "Nome do produto ou null",
     "quantidade_metragem": "Quantidade ou null",
     "material": "Material identificado ou null",
     "acabamento": "Acabamento ou null",
-    "dimensoes": "Dimensões ou null"
+    "dimensoes": "Dimensões ou null",
+    "segmento_detectado": "Indústria | Construção | Revenda | Serralheria | null",
+    "resumo_executivo": "Resumo sintético em 1 a 2 linhas do projeto e especificações para o vendedor"
   },
   "campos_opcionais_perguntados": ["cnpj" ou "email" caso tenha feito a tentativa nesta mensagem],
   "qualificacao_concluida": false

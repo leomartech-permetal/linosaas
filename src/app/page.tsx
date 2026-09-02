@@ -90,39 +90,63 @@ export default function PipelinePage() {
 
   async function carregarLeads() {
     setLoading(true);
-    const { data } = await supabase
-      .from("leads")
-      .select("*, seller:current_owner_id(name, whatsapp_number)")
-      .order("updated_at", { ascending: false });
-    if (data) setLeads(data);
+    try {
+      const res = await fetch("/api/leads");
+      if (res.ok) {
+        const data = await res.json();
+        setLeads(data || []);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar leads:", e);
+    }
     setLoading(false);
   }
 
   async function criarLead(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name || !form.whatsapp_number) return;
-    await supabase.from("leads").insert([{ ...form }]);
-    setForm({ name: "", whatsapp_number: "", gtm_tag: "", status: "SDR_QUALIFICATION" });
-    setShowNewModal(false);
-    carregarLeads();
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      setForm({ name: "", whatsapp_number: "", gtm_tag: "", status: "SDR_QUALIFICATION" });
+      setShowNewModal(false);
+      carregarLeads();
+    } catch (e) {
+      console.error("Erro ao criar lead:", e);
+    }
   }
 
   async function atualizarStatus(leadId: string, novoStatus: string) {
-    await supabase.from("leads").update({ status: novoStatus, updated_at: new Date().toISOString() }).eq("id", leadId);
-    carregarLeads();
+    try {
+      await fetch("/api/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: leadId, status: novoStatus })
+      });
+      carregarLeads();
+    } catch (e) {
+      console.error("Erro ao atualizar status:", e);
+    }
   }
 
   async function excluirLead(id: string) {
     if (!confirm("Tem certeza que deseja excluir este lead?")) return;
-    await supabase.from("leads").delete().eq("id", id);
-    setSelectedLead(null);
-    carregarLeads();
+    try {
+      await fetch(`/api/leads?id=${id}`, { method: "DELETE" });
+      setSelectedLead(null);
+      carregarLeads();
+    } catch (e) {
+      console.error("Erro ao excluir lead:", e);
+    }
   }
 
   const handleUpdateLead = async (field: string, value: any) => {
     if (!selectedLead) return;
 
-    let updatePayload: any = { [field]: value };
+    let updatePayload: any = { id: selectedLead.id, [field]: value };
     if (field === 'empresa') {
       updatePayload.company = value;
     } else if (field === 'company') {
@@ -137,11 +161,19 @@ export default function PipelinePage() {
       updatePayload.cidade_empresa = value;
     }
 
-    const { error } = await supabase.from('leads').update(updatePayload).eq('id', selectedLead.id);
-    if (!error) {
-      const updated = { ...selectedLead, ...updatePayload };
-      setSelectedLead(updated);
-      setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
+    try {
+      const res = await fetch("/api/leads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatePayload)
+      });
+      if (res.ok) {
+        const updated = { ...selectedLead, ...updatePayload };
+        setSelectedLead(updated);
+        setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
+      }
+    } catch (e) {
+      console.error("Erro ao atualizar lead:", e);
     }
   };
 
@@ -157,8 +189,8 @@ export default function PipelinePage() {
   // Filtragem Fila SDR
   const filteredSdrLeads = leads.filter(l => {
     const isOutros = l.status === 'OTHER_DEPARTMENT' || l.status === 'CANCELED';
-    if (sdrFilter === 'incomplete') return l.status === 'SDR_QUALIFICATION';
-    if (sdrFilter === 'complete') return l.status !== 'SDR_QUALIFICATION' && !isOutros;
+    if (sdrFilter === 'incomplete') return l.status === 'SDR_QUALIFICATION' || l.status === 'new' || !l.status;
+    if (sdrFilter === 'complete') return l.status !== 'SDR_QUALIFICATION' && l.status !== 'new' && !isOutros;
     if (sdrFilter === 'outros') return isOutros;
     return !isOutros; // todos
   });
@@ -242,7 +274,12 @@ export default function PipelinePage() {
             }}
           >
             {COLUMNS.map((col) => {
-              const colLeads = leads.filter((l) => l.status === col.key);
+              const colLeads = leads.filter((l) => {
+                if (col.key === "SDR_QUALIFICATION") {
+                  return l.status === "SDR_QUALIFICATION" || l.status === "new" || !l.status;
+                }
+                return l.status === col.key;
+              });
               return (
                 <div
                   key={col.key}

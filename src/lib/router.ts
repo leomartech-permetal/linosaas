@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from './supabase-server';
 import { isPhoneAuthorized } from './test-guard';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export interface LeadVariables {
   produto?: string;
@@ -20,6 +15,8 @@ export interface LeadVariables {
   cnpj?: string;
   cidade?: string;
   segmento_detectado?: string;
+  especificacao?: string;
+  resumo?: string;
   m2?: number;
   pecas_2x1?: number;
   pecas_3x1?: number;
@@ -397,8 +394,8 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
     return;
   }
 
-  // 2. Buscar dados do lead
-  const { data: lead } = await supabase.from('leads').select('whatsapp_number, name').eq('id', leadId).single();
+  // 2. Buscar dados completos do lead
+  const { data: lead } = await supabase.from('leads').select('*').eq('id', leadId).single();
   
   // 3. Buscar configurações da Evolution API
   const { data: config } = await supabase.from('tenant_config').select('evolution_url, evolution_key, evolution_instance_name').limit(1).single();
@@ -407,14 +404,24 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
     return;
   }
 
-  const ticketCode = `LINO.${leadId.split('-')[0].toUpperCase()}`;
-  const { data: interactions } = await supabase.from('interactions')
-    .select('message_content')
-    .eq('lead_id', leadId)
-    .order('created_at', { ascending: false })
-    .limit(3);
+  const ticketCode = lead?.tracking_code || `LINO.${leadId.split('-')[0].toUpperCase()}`;
   
-  const resumo = interactions?.reverse().map(i => i.message_content).join('\n') || 'Sem observações.';
+  // Construir resumo sintetizado executivo
+  let resumoExecutivo = variables.resumo || lead?.observacao || '';
+  if (!resumoExecutivo) {
+    const partes: string[] = [];
+    if (variables.especificacao || lead?.especificacao) {
+      partes.push(`Especificação: ${variables.especificacao || lead?.especificacao}`);
+    }
+    if (variables.quantidade || lead?.quantidade) {
+      partes.push(`Quantidade: ${variables.quantidade || lead?.quantidade}`);
+    }
+    if (variables.aplicacao) {
+      partes.push(`Aplicação: ${variables.aplicacao}`);
+    }
+    resumoExecutivo = partes.join('\n') || 'Solicitação comercial qualificada via Lino SDR.';
+  }
+
   const whatsappUrl = `https://wa.me/${lead?.whatsapp_number?.replace(/\D/g, '')}`;
 
   const text = `🔥 *NOVO LEAD* 🔥
@@ -422,19 +429,19 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
 
 ━━━━━━━━━━━━━━━━━━━━
 *Cliente:* ${variables.nome_cliente || lead?.name || 'Não informado'}
-*Empresa:* ${variables.empresa || 'Não informado'}
-*CNPJ:* ${variables.cnpj || 'Não informado'}
+*Empresa:* ${variables.empresa || lead?.company || 'Não informado'}
+*CNPJ:* ${variables.cnpj || lead?.cnpj || 'Pessoa Física'}
 *WhatsApp:* ${whatsappUrl}
-*E-mail:* ${variables.email || 'Não informado'}
+*E-mail:* ${variables.email || lead?.email_corporativo || 'Não informado'}
 
-*Produto:* ${variables.produto || 'Não informado'}
-*Segmento:* ${variables.segmento_detectado || 'Indústria'}
-*Localização:* ${variables.cidade || 'Não informado'} (DDD ${variables.ddd || '?'})
+*Produto:* ${variables.produto || lead?.detected_product || 'Não informado'}
+*Segmento:* ${variables.segmento_detectado || lead?.segmento || 'Indústria'}
+*Localização:* ${variables.cidade || lead?.cidade_empresa || 'Não informado'} (DDD ${variables.ddd || '?'})
 *Marca:* ${brand.toUpperCase()}
 ━━━━━━━━━━━━━━━━━━━━
 
-📝 *Resumo:*
-${resumo}
+📝 *Resumo do Projeto:*
+${resumoExecutivo}
 
 ⏰ ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`;
 
