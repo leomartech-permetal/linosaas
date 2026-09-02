@@ -11,18 +11,11 @@
  * - Fallback para busca em JSONB quando campos facetados ainda não existem
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { supabaseServer } from './supabase-server';
 
-// Lazy initialization — evita erro em testes sem SUPABASE_URL configurada
-let _supabase: SupabaseClient | null = null;
 function getSupabase(): SupabaseClient {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }
-  return _supabase;
+  return supabaseServer;
 }
 
 export interface CatalogSearchParams {

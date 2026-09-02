@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer as supabase } from '@/lib/supabase-server';
 import { processLeadWithSkills, generateSupportResponse } from '@/lib/openai';
 import { processPostSaleMessage } from '@/lib/postsale';
 import { classifyReturnIntent } from '@/lib/intent-classifier';
 import { routeLead } from '@/lib/router';
 import { sendTextMessage } from '@/lib/evolution-api';
 import { describeImage, transcribeAudio } from '@/lib/multimodal';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 import {
   isPhoneAuthorized,
   isTestMode,
