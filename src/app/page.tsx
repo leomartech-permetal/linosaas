@@ -155,10 +155,6 @@ export default function PipelinePage() {
       updatePayload.detected_product = value;
     } else if (field === 'detected_product') {
       updatePayload.produto = value;
-    } else if (field === 'cidade_empresa') {
-      updatePayload.detected_city = value;
-    } else if (field === 'detected_city') {
-      updatePayload.cidade_empresa = value;
     }
 
     try {

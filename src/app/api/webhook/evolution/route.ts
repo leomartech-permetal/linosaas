@@ -308,23 +308,40 @@ export async function POST(request: Request) {
           };
 
           if (aiResult.cliente?.nome) leadUpdate.name = aiResult.cliente.nome;
-          if (aiResult.cliente?.empresa) leadUpdate.company = aiResult.cliente.empresa;
+          if (aiResult.cliente?.empresa) {
+            leadUpdate.company = aiResult.cliente.empresa;
+            leadUpdate.empresa = aiResult.cliente.empresa;
+          }
           if (aiResult.cliente?.cnpj) leadUpdate.cnpj = aiResult.cliente.cnpj;
           if (aiResult.cliente?.email) leadUpdate.email_corporativo = aiResult.cliente.email;
           if (aiResult.cliente?.cidade) leadUpdate.cidade_empresa = aiResult.cliente.cidade;
-          if (aiResult.demanda?.produto_normalizado) leadUpdate.detected_product = aiResult.demanda.produto_normalizado;
+          if (aiResult.demanda?.produto_normalizado) {
+            leadUpdate.detected_product = aiResult.demanda.produto_normalizado;
+            leadUpdate.produto = aiResult.demanda.produto_normalizado;
+          }
           if (aiResult.demanda?.quantidade_metragem) leadUpdate.quantidade = aiResult.demanda.quantidade_metragem;
           if (aiResult.demanda?.dimensoes) leadUpdate.especificacao = aiResult.demanda.dimensoes;
-          if (aiResult.demanda?.segmento_detectado) leadUpdate.segmento = aiResult.demanda.segmento_detectado;
           if (aiResult.demanda?.resumo_executivo) leadUpdate.observacao = aiResult.demanda.resumo_executivo;
+
+          // Salvar segmento com segurança no qualification_state (já que a coluna 'segmento' não existe na tabela)
+          if (aiResult.demanda?.segmento_detectado) {
+            leadUpdate.qualification_state = {
+              ...(lead.qualification_state || {}),
+              segmento: aiResult.demanda.segmento_detectado
+            };
+          }
 
           // A IA sugere qualificacao_concluida, mas o BACKEND valida deterministicamente
           if (aiResult.qualificacao_concluida) {
             leadUpdate.status = 'WAITING_SELLER';
             leadUpdate.qualification_completed = true;
+            leadUpdate.qualified_at = new Date().toISOString();
           }
 
-          await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
+          const { error: updateError } = await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
+          if (updateError) {
+            console.error('[Supabase Lead Update Error]', updateError);
+          }
 
           if (aiResult.qualificacao_concluida) {
             const normalizedPhone = normalizePhone(remoteJid) || remoteJid;
@@ -332,15 +349,15 @@ export async function POST(request: Request) {
               ? normalizedPhone.substring(2, 4)
               : '';
             await routeLead(lead.id, lead.tenant_id || globalConfig?.tenant_id || '', {
-              produto: leadUpdate.detected_product || lead.detected_product,
+              produto: leadUpdate.detected_product || lead.detected_product || lead.produto,
               quantidade: leadUpdate.quantidade || lead.quantidade,
               especificacao: leadUpdate.especificacao || lead.especificacao,
               nome_cliente: leadUpdate.name || lead.name,
-              empresa: leadUpdate.company || lead.company,
+              empresa: leadUpdate.company || lead.company || lead.empresa,
               cnpj: leadUpdate.cnpj || lead.cnpj,
               email: leadUpdate.email_corporativo || lead.email_corporativo,
               cidade: leadUpdate.cidade_empresa || lead.cidade_empresa,
-              segmento_detectado: leadUpdate.segmento || lead.segmento,
+              segmento_detectado: aiResult.demanda?.segmento_detectado || leadUpdate.qualification_state?.segmento || 'Indústria',
               resumo: leadUpdate.observacao || lead.observacao,
               ddd
             });

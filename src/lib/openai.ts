@@ -296,14 +296,19 @@ Responda EXCLUSIVAMENTE em formato JSON com a estrutura:
       });
     }
 
+    const hasNome = !!(parsed.cliente?.nome || dadosCadastrados.nome_cliente || dadosCadastrados.name);
+    const hasEmpresa = !!(parsed.cliente?.empresa || dadosCadastrados.empresa || dadosCadastrados.company);
+    const isConfirmed = !!parsed.qualificacao_concluida || parsed.acao_executada === 'roteamento_vendedor';
+    const qualificacaoConcluida = isConfirmed && hasNome && hasEmpresa;
+
     return {
       resposta_whatsapp: parsed.resposta_whatsapp || 'Olá! Como posso te ajudar com nossos produtos?',
       intent: parsed.intent || 'produto_comercial',
-      acao_executada: parsed.acao_executada || 'qualificar',
+      acao_executada: qualificacaoConcluida ? 'roteamento_vendedor' : (parsed.acao_executada || 'qualificar'),
       cliente: parsed.cliente || {},
       demanda: parsed.demanda || {},
       b2b_attempts: novosTentativas,
-      qualificacao_concluida: !!parsed.qualificacao_concluida && camposFaltantesObrigatorios.length === 0,
+      qualificacao_concluida: qualificacaoConcluida,
       observacoes: 'Processado com motor facetado e regras dinâmicas de Schema B2B.'
     };
   } catch (error: any) {

@@ -1,5 +1,5 @@
 import { supabaseServer as supabase } from './supabase-server';
-import { isPhoneAuthorized } from './test-guard';
+import { isPhoneAuthorized, isTestMode } from './test-guard';
 
 export interface LeadVariables {
   produto?: string;
@@ -388,10 +388,25 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
   if (!sellerPhone.startsWith('55')) sellerPhone = '55' + sellerPhone;
   console.log(`[Roteador] Número vendedor normalizado: ${sellerPhone}`);
 
-  // ── GUARD DE MODO DE TESTE: bloquear notificação a vendedor não autorizado
+  // ── GUARD DE MODO DE TESTE: bloquear ou simular notificação
+  let targetPhone = sellerPhone;
+  let isSimulatedTest = false;
   if (!isPhoneAuthorized(sellerPhone)) {
-    console.log(`[Roteador Guard] Notificação a vendedor bloqueada em modo de teste: ${sellerPhone}`);
-    return;
+    if (isTestMode()) {
+      const testPhones = (process.env.LINO_TEST_ALLOWLIST || '').split(',').map(p => p.trim().replace(/\D/g, '')).filter(Boolean);
+      const primaryTestPhone = testPhones[0];
+      if (primaryTestPhone) {
+        targetPhone = primaryTestPhone.startsWith('55') ? primaryTestPhone : '55' + primaryTestPhone;
+        isSimulatedTest = true;
+        console.log(`[Roteador Teste] Notificação do vendedor ${seller.name} (${sellerPhone}) redirecionada para testador: ${targetPhone}`);
+      } else {
+        console.log(`[Roteador Guard] Notificação a vendedor bloqueada em modo de teste: ${sellerPhone}`);
+        return;
+      }
+    } else {
+      console.log(`[Roteador Guard] Notificação a vendedor bloqueada em modo de teste: ${sellerPhone}`);
+      return;
+    }
   }
 
   // 2. Buscar dados completos do lead
@@ -423,8 +438,11 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
   }
 
   const whatsappUrl = `https://wa.me/${lead?.whatsapp_number?.replace(/\D/g, '')}`;
+  const simulatedHeader = isSimulatedTest 
+    ? `⚠️ *[MODO DE TESTE — NOTIFICAÇÃO VENDEDOR]*\n*(Destinado originalmente a: ${seller.name} — ${sellerPhone})*\n\n`
+    : '';
 
-  const text = `🔥 *NOVO LEAD* 🔥
+  const text = `${simulatedHeader}🔥 *NOVO LEAD* 🔥
 📌 *CÓDIGO:* ${ticketCode}
 
 ━━━━━━━━━━━━━━━━━━━━
@@ -446,8 +464,6 @@ ${resumoExecutivo}
 ⏰ ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`;
 
   // 4. Envio via HTTP POST direto na Evolution API
-  // Formato: POST {baseurl}message/sendText/{instancia}
-  // number = whatsapp_number do vendedor (cadastrado no perfil)
   const url = `${config.evolution_url}message/sendText/${config.evolution_instance_name}`;
   
   try {
@@ -458,13 +474,13 @@ ${resumoExecutivo}
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        number: sellerPhone,
+        number: targetPhone,
         text
       })
     });
     
     const responseData = await response.json().catch(() => ({}));
-    console.log(`[Roteador] Notificação enviada para ${seller.name} (${sellerPhone}):`, response.status, responseData);
+    console.log(`[Roteador] Notificação enviada para ${seller.name} (${targetPhone}):`, response.status, responseData);
     
     // Registrar no log de auditoria
     await supabase.from('debug_logs').insert([{
