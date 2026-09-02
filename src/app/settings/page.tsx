@@ -1078,69 +1078,194 @@ export default function SettingsPage() {
               {/* ROTEAMENTO - SCHEMAS B2B */}
               {routingSubTab === 'schemas' && (
                 <div className="space-y-6">
-                  {/* Schema de Qualificação de Produto */}
-                  <div className="border border-[var(--border-light)] rounded-lg overflow-hidden bg-white mt-0">
-                    <div className="p-4 border-b border-[var(--border-light)] bg-gray-50 flex justify-between items-center">
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Schemas de Qualificação B2B</h3>
-                      <input type="text" value={productSearch} onChange={e => setProductSearch(e.target.value)} placeholder="Pesquisar produto..." className="input-clean w-48 h-8" />
+                  {/* Cabeçalho explicativo */}
+                  <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white p-5 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">📋</span>
+                        <h3 className="font-bold text-sm tracking-wide">Configuração de Schemas B2B por Linha de Produto</h3>
+                      </div>
+                      <p className="text-xs text-neutral-300 mt-1 max-w-2xl leading-relaxed">
+                        O Lino exige que os <strong className="text-white">Campos Obrigatórios</strong> sejam preenchidos antes de liberar o roteamento comercial. Os <strong className="text-white">Campos Opcionais</strong> serão tentados até o limite de vezes configurado.
+                      </p>
                     </div>
-                    <div className="p-4 space-y-6">
-                      {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => {
-                        const schema = p.qualification_schema;
-                        return (
-                          <div key={p.id} className="p-4 border border-[var(--border-light)] rounded bg-gray-50/50 space-y-4">
-                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-neutral-200 pb-3">
+                    <div className="shrink-0">
+                      <input 
+                        type="text" 
+                        value={productSearch} 
+                        onChange={e => setProductSearch(e.target.value)} 
+                        placeholder="🔍 Buscar produto..." 
+                        className="input-clean w-56 h-9 bg-white text-neutral-900 text-xs shadow-sm" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Lista de Schemas por Produto */}
+                  <div className="space-y-6">
+                    {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => {
+                      const schema = p.qualification_schema;
+                      const obrigatorias = schema.obrigatorias || [];
+                      const opcionais = schema.opcionais || [];
+
+                      return (
+                        <div key={p.id} className="bg-white border border-[var(--border-light)] rounded-xl shadow-sm overflow-hidden hover:border-neutral-400 transition-all">
+                          {/* Cabeçalho do Card */}
+                          <div className="p-4 bg-neutral-50/80 border-b border-neutral-200 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="w-8 h-8 rounded-lg bg-neutral-900 text-white flex items-center justify-center font-bold text-xs">
+                                {p.name.charAt(0).toUpperCase()}
+                              </span>
                               <div>
-                                <h4 className="font-bold text-sm text-[var(--text-primary)]">{p.name}</h4>
-                                <p className="text-[10px] text-neutral-500 font-semibold mt-0.5">Catálogo técnico associado ao RAG:</p>
-                              </div>
-                              <div className="flex items-center gap-3 w-full sm:w-auto">
-                                <select value={schema.rag_document_name || ""} onChange={e => handleProductRagChange(p.id, e.target.value, schema)} className="input-clean h-8 text-xs bg-white flex-1 sm:w-48">
-                                  <option value="">Nenhum Catálogo Técnico</option>
-                                  {ragDocs.map(doc => <option key={doc.id} value={doc.name}>{doc.name}</option>)}
-                                </select>
-                                <button onClick={() => updateProductSchema(p.id, schema)} className="btn-primary py-1 px-3 text-[11px] h-8 shrink-0">Salvar Schema</button>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-bold text-sm text-[var(--text-primary)]">{p.name}</h4>
+                                  {p.brands?.name && (
+                                    <span className="text-[10px] bg-neutral-200 text-neutral-800 font-bold px-2 py-0.5 rounded">
+                                      {p.brands.name}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-neutral-500 mt-0.5">
+                                  {obrigatorias.length} obrigatórios • {opcionais.length} opcionais
+                                </p>
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                              {/* Obrigatórias */}
-                              <div>
-                                <h5 className="text-[10px] font-bold text-neutral-600 uppercase mb-2">Campos Obrigatórios</h5>
-                                <div className="grid grid-cols-2 gap-1.5 p-3 border border-neutral-200 rounded bg-white max-h-40 overflow-y-auto">
-                                  {camposDisponiveis.map(campo => (
-                                    <label key={campo.value} className="flex items-center gap-2 text-[11px] cursor-pointer hover:bg-neutral-50 p-1 rounded">
-                                      <input type="checkbox" checked={schema.obrigatorias.includes(campo.value)} onChange={() => toggleObrigatoria(p.id, campo.value, schema)} className="accent-black w-3.5 h-3.5" />
-                                      <span className={schema.obrigatorias.includes(campo.value) ? "font-bold text-black" : "text-neutral-500"}>{campo.label}</span>
-                                    </label>
-                                  ))}
-                                </div>
+                            {/* RAG Associado */}
+                            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-neutral-200">
+                              <span className="text-[10px] font-bold uppercase text-neutral-500 whitespace-nowrap">RAG Técnico:</span>
+                              <select 
+                                value={schema.rag_document_name || ""} 
+                                onChange={e => handleProductRagChange(p.id, e.target.value, schema)} 
+                                className="input-clean h-7 py-0 text-xs bg-transparent border-0 font-semibold cursor-pointer"
+                              >
+                                <option value="">Sem Catálogo RAG</option>
+                                {ragDocs.map(doc => <option key={doc.id} value={doc.name}>{doc.name}</option>)}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Corpo: Obrigatórios vs Opcionais */}
+                          <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            
+                            {/* Coluna 1: Obrigatórias */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-[11px] font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                  Campos Obrigatórios (Bloqueiam Roteamento)
+                                </h5>
+                                <span className="text-[10px] text-neutral-400">Clique para ativar/desativar</span>
                               </div>
 
-                              {/* Opcionais */}
-                              <div>
-                                <div className="flex justify-between items-center mb-2">
-                                  <h5 className="text-[10px] font-bold text-neutral-600 uppercase">Campos Opcionais (Com Limite)</h5>
-                                  <button onClick={() => addOpcionalField(p.id, schema)} className="text-[10px] bg-white border border-neutral-300 rounded px-2 py-0.5 font-bold hover:bg-neutral-50">Adicionar Campo</button>
-                                </div>
-                                <div className="space-y-1.5 p-3 border border-neutral-200 rounded bg-white max-h-40 overflow-y-auto">
-                                  {(schema.opcionais || []).map((opt: any, idx: number) => (
-                                    <div key={idx} className="flex gap-2 items-center bg-gray-50 p-1.5 rounded border border-neutral-200">
-                                      <select value={opt.campo} onChange={e => handleOpcionalChange(p.id, idx, 'campo', e.target.value, schema)} className="input-clean h-7 py-0 text-[11px] bg-white flex-1">
-                                        {camposDisponiveis.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                      </select>
-                                      <span className="text-[10px] text-neutral-500">Tentativas:</span>
-                                      <input type="number" value={opt.max_tentativas} onChange={e => handleOpcionalChange(p.id, idx, 'max_tentativas', e.target.value, schema)} className="input-clean h-7 w-12 text-center text-xs" min={1} max={5} />
-                                      <button onClick={() => removeOpcionalField(p.id, idx, schema)} className="text-red-500 hover:text-red-700 text-xs px-2 font-bold">✕</button>
+                              <div className="grid grid-cols-2 gap-2 p-3 bg-neutral-50/60 rounded-lg border border-neutral-200">
+                                {camposDisponiveis.map(campo => {
+                                  const isChecked = obrigatorias.includes(campo.value);
+                                  return (
+                                    <button
+                                      key={campo.value}
+                                      type="button"
+                                      onClick={() => toggleObrigatoria(p.id, campo.value, schema)}
+                                      className={`flex items-center justify-between p-2 rounded-md text-xs font-semibold border transition-all text-left ${
+                                        isChecked 
+                                          ? "bg-neutral-900 text-white border-neutral-900 shadow-sm" 
+                                          : "bg-white text-neutral-600 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-100"
+                                      }`}
+                                    >
+                                      <span className="truncate mr-2">{campo.label}</span>
+                                      <span className={`text-[10px] font-bold ${isChecked ? "text-emerald-400" : "text-neutral-400"}`}>
+                                        {isChecked ? "✓" : "+"}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Coluna 2: Opcionais com Limite de Tentativas */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-[11px] font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                  Campos Opcionais (Com Limite de Tentativas)
+                                </h5>
+                                <button 
+                                  type="button" 
+                                  onClick={() => addOpcionalField(p.id, schema)} 
+                                  className="text-[11px] bg-neutral-900 text-white hover:bg-black rounded px-3 py-1 font-bold transition-all shadow-sm flex items-center gap-1"
+                                >
+                                  + Adicionar Campo
+                                </button>
+                              </div>
+
+                              <div className="p-3 bg-neutral-50/60 rounded-lg border border-neutral-200 min-h-[140px] space-y-2">
+                                {opcionais.length === 0 ? (
+                                  <div className="text-center py-6 text-neutral-400 text-xs italic">
+                                    Nenhum campo opcional configurado.<br/>
+                                    <span className="text-[10px] text-neutral-500">Clique em "+ Adicionar Campo" acima para incluir CNPJ, E-mail, etc.</span>
+                                  </div>
+                                ) : (
+                                  opcionais.map((opt: any, idx: number) => (
+                                    <div key={idx} className="flex gap-2 items-center bg-white p-2 rounded-md border border-neutral-200 shadow-sm">
+                                      <div className="flex-1">
+                                        <label className="text-[9px] text-neutral-400 uppercase font-bold block mb-0.5">Campo Opcional</label>
+                                        <select 
+                                          value={opt.campo} 
+                                          onChange={e => handleOpcionalChange(p.id, idx, 'campo', e.target.value, schema)} 
+                                          className="input-clean h-7 py-0 text-xs bg-white w-full font-medium"
+                                        >
+                                          {camposDisponiveis.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                        </select>
+                                      </div>
+
+                                      <div className="w-28">
+                                        <label className="text-[9px] text-neutral-400 uppercase font-bold block mb-0.5 text-center">Máx. Tentativas</label>
+                                        <input 
+                                          type="number" 
+                                          value={opt.max_tentativas} 
+                                          onChange={e => handleOpcionalChange(p.id, idx, 'max_tentativas', e.target.value, schema)} 
+                                          className="input-clean h-7 w-full text-center text-xs font-bold" 
+                                          min={1} 
+                                          max={5} 
+                                        />
+                                      </div>
+
+                                      <div className="pt-3">
+                                        <button 
+                                          type="button"
+                                          onClick={() => removeOpcionalField(p.id, idx, schema)} 
+                                          className="w-7 h-7 rounded bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 text-xs font-bold flex items-center justify-center transition-colors"
+                                          title="Remover campo"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
                                     </div>
-                                  ))}
-                                </div>
+                                  ))
+                                )}
                               </div>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          {/* Rodapé: Botão de Salvar Isolado */}
+                          <div className="px-5 py-3.5 bg-neutral-100/80 border-t border-neutral-200 flex justify-between items-center">
+                            <div className="text-xs text-neutral-600 font-medium">
+                              {obrigatorias.length === 0 ? (
+                                <span className="text-amber-700 font-bold">⚠️ Selecione ao menos 1 campo obrigatório</span>
+                              ) : (
+                                <span className="text-emerald-700 font-bold">✓ Configuração válida pronta para salvar</span>
+                              )}
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={() => updateProductSchema(p.id, schema)} 
+                              className="btn-primary py-2 px-5 text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                            >
+                              <span>💾</span> Salvar Schema de {p.name}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1317,21 +1442,77 @@ export default function SettingsPage() {
               {/* CÉREBRO IA - GERAL & SLA */}
               {iaSubTab === 'cerebro' && (
                 <div className="space-y-6">
-                  <div className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-6">
+                  <div className="bg-white p-6 rounded-xl border border-[var(--border-light)] space-y-6 shadow-sm">
                     <div>
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Prompt Mestre do Cérebro</h3>
-                      <p className="text-[10px] text-neutral-500 mt-1 mb-3">Define as instruções base e a identidade da Inteligência SDR.</p>
-                      <textarea value={masterPrompt} onChange={e => setMasterPrompt(e.target.value)} className="input-clean h-48 font-mono text-[11px] leading-relaxed p-3 resize-none" placeholder="Identidade e regras da IA..." />
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                        <div>
+                          <h3 className="font-bold text-sm uppercase tracking-wider text-[var(--text-primary)]">Prompt Mestre do Cérebro LINO v3</h3>
+                          <p className="text-xs text-neutral-500 mt-0.5">Define a identidade, limites comerciais, protocolos de qualificação B2B e handoff do Lino.</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const defaultPrompt = `Você é o Lino, o Agente Supervisor SDR e Suporte do Grupo Permetal.
+
+Sua missão é atender clientes via WhatsApp e canais digitais, identificar a intenção da conversa, coletar somente os dados mínimos faltantes, consultar Skills/RAG quando houver dúvida técnica e preparar o atendimento para o roteamento automático do sistema interno.
+
+Você atende demandas relacionadas ao Grupo Permetal, incluindo Permetal, Metalgrade, Permetal Express e PSA Permetal.
+
+LIMITES INVIOLÁVEIS:
+- Nunca informe preços ou prazos de entrega.
+- Nunca confirme estoque ou disponibilidade.
+- Nunca faça orçamento ou cotação diretamente.
+- Nunca prometa retorno imediato ou tempo fixo.
+- Nunca invente especificações técnicas — consulte o Catálogo/RAG.
+- Nunca pergunte dados que o sistema já possui (como cidade/UF inferida por DDD).
+- Nunca continue fazendo perguntas após acionar ferramenta de roteamento ou suporte.
+
+DADOS MÍNIMOS OBRIGATÓRIOS (SCHEMA B2B):
+1. Produto ou família (Gradil, Chapa Perfurada, Tela Expandida, Brise, etc.)
+2. Segmento ou aplicação (CONSTRUÇÃO, INDUSTRIAL ou REVENDA)
+3. Quantidade ou metragem aproximada com unidade (m², metros, peças)
+4. Especificação técnica básica ou indicação de necessidade de especialista.
+
+DADOS CADASTRAIS OPCIONAIS (Até 2 tentativas amigáveis):
+- Nome, Empresa, CNPJ, E-mail corporativo.
+
+ESTILO:
+- Mensagens curtas, direto ao ponto (máximo 1 a 2 perguntas por mensagem).
+- Aproveite tudo que o cliente já informou em texto, áudio ou imagem.
+- Tom profissional, prestativo e cordial.`;
+                              setMasterPrompt(defaultPrompt);
+                              flash("📄 Prompt Padrão Lino v3 carregado no editor!");
+                            }}
+                            className="text-[11px] bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-3 py-1.5 rounded-md font-bold border border-neutral-300 transition-all"
+                          >
+                            🔄 Carregar Prompt Padrão
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="relative mt-3">
+                        <textarea 
+                          value={masterPrompt} 
+                          onChange={e => setMasterPrompt(e.target.value)} 
+                          className="input-clean h-80 font-mono text-xs leading-relaxed p-4 bg-neutral-900 text-neutral-100 border-neutral-800 rounded-lg resize-y w-full focus:ring-2 focus:ring-neutral-700" 
+                          placeholder="Digite ou cole aqui o Prompt Mestre do Lino..." 
+                        />
+                        <div className="flex justify-between items-center text-[10px] text-neutral-400 mt-1.5 px-1">
+                          <span>Dica: As alterações salvas aqui passam a valer imediatamente no atendimento do WhatsApp.</span>
+                          <span className="font-mono">{masterPrompt.length} caracteres</span>
+                        </div>
+                      </div>
                       
                       {/* Simulador de Teste de Prompt */}
-                      <div className="mt-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200 space-y-3">
-                        <h4 className="font-bold text-xs uppercase tracking-wider text-neutral-700">🧪 Testar Prompt Antes de Publicar</h4>
+                      <div className="mt-5 p-4 bg-neutral-50 rounded-lg border border-neutral-200 space-y-3">
+                        <h4 className="font-bold text-xs uppercase tracking-wider text-neutral-700">🧪 Simulador Rápido de Resposta</h4>
                         <div className="flex gap-2">
                           <input 
                             type="text" 
                             value={testMessage} 
                             onChange={e => setTestMessage(e.target.value)} 
-                            placeholder="Digite uma mensagem simulada do cliente (ex: quero orçamento de chapa 2mm)..." 
+                            placeholder="Digite uma mensagem simulada do cliente (ex: Olá, gostaria de orçamento de chapa perfurada furo redondo)..." 
                             className="input-clean text-xs flex-1 bg-white" 
                           />
                           <button 
@@ -1345,42 +1526,44 @@ export default function SettingsPage() {
                         </div>
                         {testResponse && (
                           <div className="p-3 bg-white rounded border border-neutral-300 text-xs text-neutral-800 space-y-1">
-                            <span className="font-bold text-[10px] uppercase text-emerald-700 block">Resposta da IA:</span>
-                            <p className="whitespace-pre-wrap">{testResponse}</p>
+                            <span className="font-bold text-[10px] uppercase text-emerald-700 block">Resposta do Lino:</span>
+                            <p className="whitespace-pre-wrap leading-relaxed">{testResponse}</p>
                           </div>
                         )}
                       </div>
                     </div>
 
                     <div className="border-t border-neutral-200 pt-6">
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Prompt de Suporte (Enquanto o Vendedor Não Chega)</h3>
-                      <p className="text-[10px] text-neutral-500 mt-1 mb-3">Define como a IA deve acalmar e manter o cliente respondido enquanto ele aguarda o vendedor humano.</p>
-                      <textarea value={supportPrompt} onChange={e => setSupportPrompt(e.target.value)} className="input-clean h-32 font-mono text-[11px] leading-relaxed p-3 resize-none" placeholder="Prompt de Suporte SLA..." />
+                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Prompt de Suporte & Monitoramento (Aguardando Vendedor)</h3>
+                      <p className="text-[10px] text-neutral-500 mt-1 mb-3">Define como a IA responde quando o cliente cobra retorno enquanto aguarda o vendedor humano.</p>
+                      <textarea value={supportPrompt} onChange={e => setSupportPrompt(e.target.value)} className="input-clean h-28 font-mono text-xs leading-relaxed p-3 resize-none bg-white" placeholder="Prompt de Suporte SLA..." />
                     </div>
 
                     <div className="border-t border-neutral-200 pt-6">
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)] mb-4">Regras Gerais de SLA & Cobrança</h3>
+                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)] mb-4">Regras Gerais de SLA & Cobrança de Vendedores</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Tempo de Espera Máximo (Horas antes de escalar)</label>
-                          <input type="number" value={slaRules.max_wait_hours} onChange={e => setSlaRules({...slaRules, max_wait_hours: parseInt(e.target.value) || 2})} className="input-clean" min={1} />
+                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Tempo de Espera Máximo (Horas antes de escalar ao supervisor)</label>
+                          <input type="number" value={slaRules.max_wait_hours} onChange={e => setSlaRules({...slaRules, max_wait_hours: parseInt(e.target.value) || 2})} className="input-clean bg-white" min={1} />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Intervalo de Cobrança ao Vendedor (Minutos)</label>
-                          <input type="number" value={slaRules.retry_interval_minutes} onChange={e => setSlaRules({...slaRules, retry_interval_minutes: parseInt(e.target.value) || 15})} className="input-clean" min={1} />
+                          <input type="number" value={slaRules.retry_interval_minutes} onChange={e => setSlaRules({...slaRules, retry_interval_minutes: parseInt(e.target.value) || 15})} className="input-clean bg-white" min={1} />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Máximo de Notificações / Cobranças</label>
-                          <input type="number" value={slaRules.seller_notify_max} onChange={e => setSlaRules({...slaRules, seller_notify_max: parseInt(e.target.value) || 3})} className="input-clean" min={1} />
+                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Máximo de Cobranças Automáticas</label>
+                          <input type="number" value={slaRules.seller_notify_max} onChange={e => setSlaRules({...slaRules, seller_notify_max: parseInt(e.target.value) || 3})} className="input-clean bg-white" min={1} />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Intervalo entre Notificações (Minutos)</label>
-                          <input type="number" value={slaRules.seller_notify_interval_minutes} onChange={e => setSlaRules({...slaRules, seller_notify_interval_minutes: parseInt(e.target.value) || 15})} className="input-clean" min={1} />
+                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Intervalo entre Cobranças (Minutos)</label>
+                          <input type="number" value={slaRules.seller_notify_interval_minutes} onChange={e => setSlaRules({...slaRules, seller_notify_interval_minutes: parseInt(e.target.value) || 15})} className="input-clean bg-white" min={1} />
                         </div>
                       </div>
                     </div>
 
-                    <button onClick={saveCerebro} disabled={savingCerebro} className="btn-primary w-full h-[40px] text-xs font-bold">{savingCerebro ? "Salvando Configurações..." : "Salvar Configurações do Cérebro"}</button>
+                    <button onClick={saveCerebro} disabled={savingCerebro} className="btn-primary w-full h-[42px] text-xs font-bold shadow-md">
+                      {savingCerebro ? "Salvando Configurações..." : "💾 Salvar Configurações do Cérebro IA"}
+                    </button>
                   </div>
                 </div>
               )}
@@ -1448,129 +1631,84 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
                       <input type="text" placeholder="Nome ou WhatsApp do Lead" className="input-clean text-xs h-9 bg-white w-56" value={flowSearchInput} onChange={e => setFlowSearchInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && setFlowLeadId(flowSearchInput)} />
-                      <button onClick={() => setFlowLeadId(flowSearchInput)} className="btn-secondary h-9 text-xs font-bold">Rastrear</button>
+                      <button className="btn-primary text-xs h-9 px-4 font-bold shrink-0" onClick={() => setFlowLeadId(flowSearchInput)}>Buscar</button>
                     </div>
                   </div>
-                  <div className="h-[600px] border border-neutral-200 rounded-lg overflow-hidden bg-[#fafafa] relative">
-                    <FlowVisualizer leadId={flowLeadId} />
-                  </div>
+                  <FlowVisualizer leadId={flowLeadId} />
                 </div>
               )}
             </div>
           )}
 
           {/* ==============================================
-              4. MACRO TAB: WHATSAPP & APIS
+              4. MACRO TAB: CENTRAL WHATSAPP & APIS
               ============================================== */}
           {macroTab === 'integrations' && (
             <div className="space-y-6">
-              <div className="tabs-container-clean mb-6">
-                <button onClick={() => setIntegrationsSubTab('whatsapp')} className={`tab-item-clean ${integrationsSubTab === 'whatsapp' ? 'active' : ''}`}>WhatsApp (Instâncias)</button>
-                <button onClick={() => setIntegrationsSubTab('credentials')} className={`tab-item-clean ${integrationsSubTab === 'credentials' ? 'active' : ''}`}>Credenciais de APIs</button>
+              
+              {/* Banner Explicativo de Arquitetura Centralizada */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+                <span className="text-xl">ℹ️</span>
+                <div className="text-xs text-blue-900 leading-relaxed">
+                  <p className="font-bold mb-1">Arquitetura de Atendimento Centralizada</p>
+                  <p className="text-blue-800">
+                    O Lino opera através de uma <strong className="font-bold">instância central única de WhatsApp</strong> na Evolution API. Os vendedores não precisam conectar seus aparelhos individuais — quando um lead é qualificado, o Lino envia uma notificação automática direta para o número de WhatsApp cadastrado no perfil de cada vendedor.
+                  </p>
+                </div>
               </div>
 
-              {/* WHATSAPP & APIS - INSTÂNCIAS DO CELULAR */}
-              {integrationsSubTab === 'whatsapp' && (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
-                    <div>
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Conexões WhatsApp dos Vendedores</h3>
-                      <p className="text-[10px] text-neutral-500 mt-0.5">Cadastre cada celular corporativo como uma instância na Evolution API.</p>
-                    </div>
-                    <button onClick={() => { setEditingInstance(null); setInstForm({ name: "", phone_number: "", evolution_instance_name: "", evolution_url: "", evolution_key: "", assigned_user_id: "" }); setShowInstForm(!showInstForm); }} className="btn-primary h-8 text-xs font-bold">+ Nova Instância</button>
+              {/* Formulário de Configuração Central */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                {/* Evolution API & OpenAI */}
+                <form onSubmit={saveAPIConfig} className="bg-white p-6 rounded-xl border border-[var(--border-light)] space-y-4 shadow-sm">
+                  <div className="border-b border-neutral-200 pb-3">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Central WhatsApp (Evolution API) & IA</h3>
+                    <p className="text-[11px] text-neutral-500 mt-0.5">Credenciais de conexão com o servidor Evolution API e OpenAI.</p>
                   </div>
-
-                  {showInstForm && (
-                    <form onSubmit={saveInstance} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4">
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">{editingInstance ? "Editar Instância" : "Nova Instância WhatsApp"}</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" value={instForm.name} onChange={e => setInstForm({...instForm, name: e.target.value})} placeholder="Nome (ex: Celular Vendas)" className="input-clean bg-white text-xs" required />
-                        <input type="text" value={instForm.phone_number} onChange={e => setInstForm({...instForm, phone_number: e.target.value})} placeholder="Número (ex: 5511999999999)" className="input-clean bg-white text-xs" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" value={instForm.evolution_instance_name} onChange={e => setInstForm({...instForm, evolution_instance_name: e.target.value})} placeholder="Nome da Instância na Evolution API" className="input-clean bg-white text-xs" />
-                        <select value={instForm.assigned_user_id} onChange={e => setInstForm({...instForm, assigned_user_id: e.target.value})} className="input-clean bg-white text-xs cursor-pointer">
-                          <option value="">Distribuição de Leads Automática</option>
-                          {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                        </select>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="url" value={instForm.evolution_url} onChange={e => setInstForm({...instForm, evolution_url: e.target.value})} placeholder="URL Evolution específica (opcional)" className="input-clean bg-white text-xs" />
-                        <input type="password" value={instForm.evolution_key} onChange={e => setInstForm({...instForm, evolution_key: e.target.value})} placeholder="Token Evolution específico (opcional)" className="input-clean bg-white text-xs" />
-                      </div>
-                      <div className="flex gap-3 pt-2">
-                        <button type="submit" className="btn-primary flex-1 h-[38px]">{editingInstance ? "Atualizar" : "Criar"}</button>
-                        <button type="button" onClick={() => { setShowInstForm(false); setEditingInstance(null); }} className="btn-secondary flex-1 h-[38px]">Cancelar</button>
-                      </div>
-                    </form>
-                  )}
-
-                  <div className="list-container-clean">
-                    {instances.map(inst => (
-                      <div key={inst.id} className={`list-item-clean flex justify-between items-center group ${!inst.active ? "opacity-50" : ""}`}>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${inst.active ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                            <h4 className="font-bold text-sm text-[var(--text-primary)]">{inst.name}</h4>
-                          </div>
-                          <p className="text-[10px] text-neutral-500 mt-1.5">📱 WhatsApp: {inst.phone_number || '—'} • Evolution: {inst.evolution_instance_name || '—'} • Vendedor Associado: <span className="font-semibold text-neutral-800">{getName(users, inst.assigned_user_id)}</span></p>
-                        </div>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <button onClick={() => startEditInstance(inst)} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">Editar</button>
-                          <button onClick={() => toggleInstanceActive(inst)} className="text-[10px] bg-white border border-neutral-300 px-2 py-1 rounded font-bold">{inst.active ? "Desativar" : "Ativar"}</button>
-                          <button onClick={() => deleteInstance(inst.id)} className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded font-bold">Excluir</button>
-                        </div>
-                      </div>
-                    ))}
-                    {instances.length === 0 && (
-                      <p className="text-xs text-neutral-500 text-center py-10 uppercase font-bold">Nenhuma conexão WhatsApp registrada.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* WHATSAPP & APIS - CREDENCIAIS DE APIS */}
-              {integrationsSubTab === 'credentials' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
                   
-                  {/* Evolution API & OpenAI */}
-                  <form onSubmit={saveAPIConfig} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4 self-start">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Credenciais de Servidores</h3>
-                    <div>
-                      <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Evolution API — URL Base</label>
-                      <input type="url" value={evolutionUrl} onChange={e => setEvolutionUrl(e.target.value)} placeholder="https://api.vendas.com" className="input-clean" required />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Evolution API — Token Global</label>
-                      <input type="password" value={evolutionKey} onChange={e => setEvolutionKey(e.target.value)} placeholder="apikey_global_..." className="input-clean" required />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Evolution API — Instância Global</label>
-                      <input type="text" value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="permetal_sp" className="input-clean" required />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">OpenAI API Key</label>
-                      <input type="password" value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="input-clean" required />
-                    </div>
-                    <button type="submit" className="btn-primary w-full h-[38px] text-xs font-bold">Salvar Credenciais</button>
-                  </form>
+                  <div>
+                    <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Evolution API — URL Base</label>
+                    <input type="url" value={evolutionUrl} onChange={e => setEvolutionUrl(e.target.value)} placeholder="https://evolution.seuservidor.com" className="input-clean" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Evolution API — Token Global de Autenticação</label>
+                    <input type="password" value={evolutionKey} onChange={e => setEvolutionKey(e.target.value)} placeholder="apikey_global_..." className="input-clean" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Evolution API — Nome da Instância Central</label>
+                    <input type="text" value={evolutionInstanceName} onChange={e => setEvolutionInstanceName(e.target.value)} placeholder="linooficial" className="input-clean font-mono font-bold" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">OpenAI API Key</label>
+                    <input type="password" value={openaiKey} onChange={e => setOpenaiKey(e.target.value)} placeholder="sk-proj-..." className="input-clean" required />
+                  </div>
+                  
+                  <button type="submit" className="btn-primary w-full h-[40px] text-xs font-bold shadow-md">
+                    💾 Salvar Configurações da Central
+                  </button>
+                </form>
 
-                  {/* Atualização de Senha */}
-                  <form onSubmit={updatePassword} className="bg-white p-6 rounded-lg border border-[var(--border-light)] space-y-4 self-start">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Alterar Senha Administrativa</h3>
-                    <div>
-                      <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">E-mail Cadastrado</label>
-                      <input type="email" value={passwordEmail} onChange={e => setPasswordEmail(e.target.value)} placeholder="ex: admin@permetal.com" className="input-clean" required />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Nova Senha de Acesso</label>
-                      <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="input-clean" required />
-                    </div>
-                    <button type="submit" className="btn-secondary w-full h-[38px] text-xs font-bold border border-neutral-300">Atualizar Senha</button>
-                  </form>
+                {/* Alterar Senha */}
+                <form onSubmit={updatePassword} className="bg-white p-6 rounded-xl border border-[var(--border-light)] space-y-4 shadow-sm self-start">
+                  <div className="border-b border-neutral-200 pb-3">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">Alterar Senha do Administrador</h3>
+                    <p className="text-[11px] text-neutral-500 mt-0.5">Atualize a senha de acesso administrativo ao painel Lino.</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">E-mail Cadastrado</label>
+                    <input type="email" value={passwordEmail} onChange={e => setPasswordEmail(e.target.value)} placeholder="admin@permetal.com" className="input-clean" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-neutral-500 uppercase font-bold mb-1">Nova Senha de Acesso</label>
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="input-clean" required />
+                  </div>
+                  <button type="submit" className="btn-secondary w-full h-[40px] text-xs font-bold border border-neutral-300">
+                    Atualizar Senha
+                  </button>
+                </form>
 
-                </div>
-              )}
+              </div>
             </div>
           )}
 
