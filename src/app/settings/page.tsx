@@ -253,6 +253,7 @@ export default function SettingsPage() {
   const [filterTeamId, setFilterTeamId] = useState("");
   const [filterRegionId, setFilterRegionId] = useState("");
   const [productSearch, setProductSearch] = useState("");
+  const [savingAllSchemas, setSavingAllSchemas] = useState(false);
 
   const [ruleRegionIds, setRuleRegionIds] = useState<string[]>([]);
   const [ruleProductIds, setRuleProductIds] = useState<string[]>([]);
@@ -592,6 +593,27 @@ export default function SettingsPage() {
   };
 
   // === SCHEMAS DE QUALIFICAÇÃO POR PRODUTO ===
+  async function saveAllSchemas() {
+    setSavingAllSchemas(true);
+    try {
+      const promises = products.map(p =>
+        supabase.from("products").update({ qualification_schema: p.qualification_schema }).eq("id", p.id)
+      );
+      const results = await Promise.all(promises);
+      const hasError = results.some(r => r.error);
+      if (hasError) {
+        flash("⚠️ Alguns schemas apresentaram erro ao salvar.");
+      } else {
+        flash(`✅ Todos os ${products.length} Schemas B2B foram salvos com sucesso no Supabase!`);
+      }
+      loadAll();
+    } catch (e: any) {
+      flash("❌ Erro ao salvar schemas em lote: " + e.message);
+    } finally {
+      setSavingAllSchemas(false);
+    }
+  }
+
   async function updateProductSchema(productId: string, schema: any) {
     const { error } = await supabase.from("products").update({ qualification_schema: schema }).eq("id", productId);
     if (error) { flash("❌ Erro ao salvar: " + error.message); } else { flash("✅ Schema salvo!"); loadAll(); }
@@ -1215,8 +1237,8 @@ export default function SettingsPage() {
               {/* ROTEAMENTO - SCHEMAS B2B */}
               {routingSubTab === 'schemas' && (
                 <div className="space-y-6">
-                  {/* Cabeçalho explicativo */}
-                  <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white p-5 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  {/* Cabeçalho explicativo com Botão de Salvar Global */}
+                  <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white p-5 rounded-xl flex flex-col lg:flex-row justify-between lg:items-center gap-4 shadow-sm">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg">📋</span>
@@ -1226,14 +1248,23 @@ export default function SettingsPage() {
                         O Lino exige que os <strong className="text-white">Campos Obrigatórios</strong> sejam preenchidos antes de liberar o roteamento comercial. Os <strong className="text-white">Campos Opcionais</strong> serão tentados até o limite de vezes configurado.
                       </p>
                     </div>
-                    <div className="shrink-0">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
                       <input 
                         type="text" 
                         value={productSearch} 
                         onChange={e => setProductSearch(e.target.value)} 
                         placeholder="🔍 Buscar produto..." 
-                        className="input-clean w-56 h-9 bg-white text-neutral-900 text-xs shadow-sm" 
+                        className="input-clean w-48 h-10 bg-white text-neutral-900 text-xs shadow-sm font-medium" 
                       />
+                      <button
+                        type="button"
+                        onClick={saveAllSchemas}
+                        disabled={savingAllSchemas}
+                        className="h-10 px-5 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs rounded-lg transition-all shadow-md flex items-center gap-2 whitespace-nowrap cursor-pointer disabled:opacity-50"
+                      >
+                        <span>💾</span>
+                        {savingAllSchemas ? "Salvando Todos..." : `Salvar Todos os Schemas (${products.length})`}
+                      </button>
                     </div>
                   </div>
 
