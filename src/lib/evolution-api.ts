@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isPhoneAuthorized } from './test-guard';
 
 /**
  * Helper para interagir com a Evolution API.
@@ -81,6 +82,14 @@ export async function sendTextMessage(
   toNumber: string,
   text: string
 ): Promise<boolean> {
+  // ── GUARD DE MODO DE TESTE ──────────────────────────────────────────────
+  // Nunca envia para número não autorizado, independentemente de como chegou.
+  if (!isPhoneAuthorized(toNumber)) {
+    console.log(`[Evolution Guard] Envio bloqueado em modo de teste para: ${toNumber}`);
+    return false;
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   try {
     // Garante formato correto do número
     const jid = toNumber.includes('@') ? toNumber : `${toNumber.replace(/\D/g, '')}@s.whatsapp.net`;

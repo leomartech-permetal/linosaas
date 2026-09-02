@@ -1,9 +1,9 @@
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
-import { 
-  extractTechnicalAttributes, 
-  getFacetedCatalogOptions, 
-  formatFacetedContextForPrompt 
+import {
+  extractTechnicalAttributes,
+  getFacetedCatalogOptions,
+  formatFacetedContextForPrompt
 } from './catalog-faceted';
 
 const supabase = createClient(

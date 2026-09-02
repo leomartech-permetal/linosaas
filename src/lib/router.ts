@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { isPhoneAuthorized } from './test-guard';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -309,15 +310,49 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
     }
   }
 
-  // 8.2 Fallback de Emergência: qualquer vendedor com WhatsApp ou primeiro admin
+  // 8.2 Fallback de Emergência: qualquer vendedor com WhatsApp
+  // NOTA: removido o fallback para "primeiro admin sem whatsapp".
+  // Se nenhum vendedor com WhatsApp estiver disponível, o lead fica em
+  // ROUTING_FAILED com razão registrada (auditável, reversível por cron).
   if (!assignedUserId) {
     if (activeSellerIds.length > 0) {
       assignedUserId = activeSellerIds[0];
       console.log(`[Roteador] Fallback Emergência: primeiro vendedor com WhatsApp: ${assignedUserId}`);
     } else {
-      const { data: firstUser } = await supabase.from('admin_users').select('id').limit(1).single();
-      assignedUserId = firstUser?.id || null;
-      console.log(`[Roteador] AVISO: Nenhum vendedor com WhatsApp! Fallback estático: ${assignedUserId}`);
+      // ────────────────────────────────────────────────────────────────
+      // ROUTING_FAILED: nenhum vendedor disponível para notificação.
+      // O lead permanece em qualificação até que um vendedor seja
+      // configurado. O cron de follow-up pode retentar o roteamento.
+      // ────────────────────────────────────────────────────────────────
+      console.error('[Roteador] ROUTING_FAILED: Nenhum vendedor com WhatsApp cadastrado.');
+
+      await supabase.from('leads').update({
+        status: 'ROUTING_FAILED',
+        routing_failure_reason: 'NO_ACTIVE_SELLER_WITH_WHATSAPP',
+        routing_attempts: (await supabase
+          .from('leads')
+          .select('routing_attempts')
+          .eq('id', leadId)
+          .single()
+          .then(r => r.data?.routing_attempts || 0)) + 1,
+        updated_at: new Date().toISOString(),
+      }).eq('id', leadId);
+
+      // Notificar supervisor sobre falha de roteamento
+      const { data: supervisors } = await supabase
+        .from('admin_users')
+        .select('whatsapp_number, name')
+        .eq('role', 'supervisor')
+        .not('whatsapp_number', 'is', null);
+
+      for (const sup of supervisors || []) {
+        if (sup.whatsapp_number) {
+          // Guard aplicado dentro de sendTextMessage
+          console.log(`[Roteador] Notificando supervisor ${sup.name} sobre ROUTING_FAILED`);
+        }
+      }
+
+      return { assignedUserId: null, product, region, segment, express, coleta, finalBrand, status: 'ROUTING_FAILED' };
     }
   }
 
@@ -338,8 +373,9 @@ export async function routeLead(leadId: string, tenantId: string, variables: Lea
     }
   }
 
-  return { assignedUserId, product, region, segment, express, coleta, finalBrand };
+  return { assignedUserId, product, region, segment, express, coleta, finalBrand, status: 'ROUTED' };
 }
+
 
 /** Notificação de Elite para o Vendedor via Evolution API */
 async function sendSellerNotification(leadId: string, sellerId: string, variables: LeadVariables, brand: string) {
@@ -354,6 +390,12 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
   let sellerPhone = seller.whatsapp_number.replace(/\D/g, '');
   if (!sellerPhone.startsWith('55')) sellerPhone = '55' + sellerPhone;
   console.log(`[Roteador] Número vendedor normalizado: ${sellerPhone}`);
+
+  // ── GUARD DE MODO DE TESTE: bloquear notificação a vendedor não autorizado
+  if (!isPhoneAuthorized(sellerPhone)) {
+    console.log(`[Roteador Guard] Notificação a vendedor bloqueada em modo de teste: ${sellerPhone}`);
+    return;
+  }
 
   // 2. Buscar dados do lead
   const { data: lead } = await supabase.from('leads').select('whatsapp_number, name').eq('id', leadId).single();

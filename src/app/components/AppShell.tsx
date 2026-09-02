@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { usePathname } from "next/navigation";
 
+// Modo de teste ativo quando variável de ambiente não for 'production'.
+// Lido no lado do cliente para exibição do banner.
+const IS_TEST_MODE = process.env.NEXT_PUBLIC_LINO_RUNTIME_MODE !== 'production';
+
 const menuGroups = [
   {
     title: "Plataforma Lino",
@@ -169,8 +173,43 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
+      {/* ── BANNER MODO DE TESTE ─────────────────────────────────────────────── */}
+      {IS_TEST_MODE && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            background: 'linear-gradient(90deg, #f59e0b, #d97706)',
+            color: '#111',
+            textAlign: 'center',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            padding: '5px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          <span style={{ fontSize: '14px' }}>⚠️</span>
+          MODO DE TESTE ATIVO — Apenas o número{' '}
+          <code style={{ background: 'rgba(0,0,0,0.12)', padding: '1px 5px', borderRadius: '3px', fontFamily: 'monospace' }}>
+            5516991415319
+          </code>
+          {' '}está autorizado para automações.
+          <span style={{ fontSize: '14px' }}>⚠️</span>
+        </div>
+      )}
+
       {/* Área de Conteúdo Principal */}
-      <main className={pathname === "/" ? "flex-1 h-screen overflow-hidden relative bg-white" : "main-content"}>
+      <main className={pathname === "/" ? "flex-1 h-screen overflow-hidden relative bg-white" : "main-content"}
+        style={IS_TEST_MODE ? { paddingTop: '28px' } : undefined}
+      >
         {children}
       </main>
     </div>

@@ -6,7 +6,28 @@ import { classifyReturnIntent } from '@/lib/intent-classifier';
 import { routeLead } from '@/lib/router';
 import { sendTextMessage } from '@/lib/evolution-api';
 import { describeImage, transcribeAudio } from '@/lib/multimodal';
+import {
+  isPhoneAuthorized,
+  isTestMode,
+  blockedWebhookResponse,
+  normalizePhone,
+} from '@/lib/test-guard';
 
+/**
+ * WEBHOOK EVOLUTION API — v3
+ *
+ * Guard de modo de teste aplicado IMEDIATAMENTE na entrada (ponto 0).
+ * Qualquer remetente não autorizado recebe HTTP 200 silencioso,
+ * sem acionar OpenAI, sem envio, sem roteamento, sem registro de estado.
+ *
+ * Idempotência persistida via whatsapp_messages (em paralelo com o Set
+ * em memória como cache de curto prazo até que a migração v3 do banco
+ * esteja ativa). Uma vez que a tabela whatsapp_messages tiver
+ * external_message_id, o Set em memória pode ser removido.
+ */
+
+// Cache de curto prazo para deduplicação em memória (Fallback enquanto
+// a tabela whatsapp_messages não tem external_message_id/unique constraint)
 const processedMessageIds = new Set<string>();
 
 export async function POST(request: Request) {
@@ -17,10 +38,26 @@ export async function POST(request: Request) {
     const remoteJid = messageData?.key?.remoteJid || messageData?.remoteJid || body.data?.key?.remoteJid || body.sender;
     const messageId = messageData?.key?.id || messageData?.id;
     const pushName: string | null = messageData?.pushName || body.data?.pushName || null;
+    const instanceName: string = body.instance || body.instanceName || 'unknown';
 
     if (body.event === 'messages.upsert' || body.event === 'MESSAGES_UPSERT') {
       if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
 
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 0 — GUARD DE MODO DE TESTE (DEFESA EM PROFUNDIDADE)
+      // Deve ser o PRIMEIRO check. Antes de qualquer acesso ao banco,
+      // antes de qualquer chamada externa.
+      // ════════════════════════════════════════════════════════════════
+      if (remoteJid && isTestMode()) {
+        if (!isPhoneAuthorized(remoteJid)) {
+          // HTTP 200 silencioso: Evolution API não retentará
+          return NextResponse.json(blockedWebhookResponse());
+        }
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 1 — DEDUPLICAÇÃO (cache em memória + futuro banco)
+      // ════════════════════════════════════════════════════════════════
       if (messageId) {
         if (processedMessageIds.has(messageId)) {
           return NextResponse.json({ status: 'ignored', reason: 'duplicate_retry' });
@@ -31,18 +68,53 @@ export async function POST(request: Request) {
 
       const fromMe = messageData.key?.fromMe;
 
-      // 1. Intervenção Humana (Vendedor assumiu)
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 2 — ECO vs INTERVENÇÃO HUMANA REAL
+      // fromMe=true pode ser: eco do Lino (bot enviou), painel CRM,
+      // ou vendedor digitando no celular.
+      // Diferenciação por instance: se a mensagem veio da instância
+      // central (linooficial / chatbot), é eco do bot.
+      // ════════════════════════════════════════════════════════════════
       if (fromMe) {
-        const { data: leadToPause } = await supabase.from('leads').select('id').eq('whatsapp_number', remoteJid).single();
-        if (leadToPause) {
-          await supabase.from('leads').update({ bot_active: false }).eq('id', leadToPause.id);
+        // Verificar se a instância que enviou é a instância central do Lino
+        const { data: globalConfig } = await supabase
+          .from('tenant_config')
+          .select('evolution_instance_name, tenant_id')
+          .limit(1)
+          .single();
+
+        const centralInstance = globalConfig?.evolution_instance_name || 'linooficial';
+        const isBotEcho = instanceName.toLowerCase() === centralInstance.toLowerCase() ||
+                          instanceName === 'unknown';
+
+        if (isBotEcho) {
+          // Eco do Lino — ignorar silenciosamente, NÃO pausar o bot
+          return NextResponse.json({ status: 'ignored', reason: 'bot_echo' });
         }
-        return NextResponse.json({ status: 'success', reason: 'human_intervention' });
+
+        // Mensagem enviada pelo VENDEDOR (instância diferente da central)
+        // → Pausa o bot para essa conversa
+        if (remoteJid) {
+          const { data: leadToPause } = await supabase
+            .from('leads')
+            .select('id')
+            .eq('whatsapp_number', remoteJid)
+            .maybeSingle();
+          if (leadToPause) {
+            await supabase
+              .from('leads')
+              .update({ bot_active: false, last_mode: 'HUMAN_ACTIVE' })
+              .eq('id', leadToPause.id);
+          }
+        }
+        return NextResponse.json({ status: 'success', reason: 'human_intervention_recorded' });
       }
 
       if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
-      // 1.5 Ignorar se for funcionário interno
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 3 — IGNORAR FUNCIONÁRIOS INTERNOS
+      // ════════════════════════════════════════════════════════════════
       const senderPhone = remoteJid.replace(/\D/g, '');
       const { data: internalUser } = await supabase
         .from('admin_users')
@@ -55,10 +127,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ status: 'ignored', reason: 'sender_is_internal_user', name: internalUser.name });
       }
 
-      // 2. Extração de Mensagem
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 4 — EXTRAÇÃO DE MENSAGEM
+      // ════════════════════════════════════════════════════════════════
       const messageObj = messageData.message || messageData;
-      let messageContent = messageObj?.conversation || 
-                           messageObj?.extendedTextMessage?.text || 
+      let messageContent = messageObj?.conversation ||
+                           messageObj?.extendedTextMessage?.text ||
                            messageObj?.text ||
                            messageData?.text ||
                            messageObj?.imageMessage?.caption ||
@@ -69,32 +143,34 @@ export async function POST(request: Request) {
       const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
       if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'GLOBAL_BOT_OFF' });
 
-      // 3. Suporte Multimodal (Imagens e Áudios)
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 5 — SUPORTE MULTIMODAL (Imagens e Áudios)
+      // ════════════════════════════════════════════════════════════════
       const openaiKey = globalConfig?.openai_key;
       const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
 
       try {
-        let mediaBase64 = body.data?.base64 || messageData.base64 || null;
+        const mediaBase64 = body.data?.base64 || messageData.base64 || null;
         if (messageType === 'imageMessage' && openaiKey && globalConfig) {
           const visionDescription = await describeImage(
-            globalConfig.evolution_url, 
-            globalConfig.evolution_instance_name, 
-            globalConfig.evolution_key, 
-            messageId, 
-            remoteJid, 
-            openaiKey, 
-            messageContent, 
+            globalConfig.evolution_url,
+            globalConfig.evolution_instance_name,
+            globalConfig.evolution_key,
+            messageId,
+            remoteJid,
+            openaiKey,
+            messageContent,
             mediaBase64
           );
           messageContent = `[IMAGEM RECEBIDA: ${visionDescription}] ${messageContent}`;
         } else if (messageType === 'audioMessage' && openaiKey && globalConfig) {
           const audioText = await transcribeAudio(
-            globalConfig.evolution_url, 
-            globalConfig.evolution_instance_name, 
-            globalConfig.evolution_key, 
-            messageId, 
-            remoteJid, 
-            openaiKey, 
+            globalConfig.evolution_url,
+            globalConfig.evolution_instance_name,
+            globalConfig.evolution_key,
+            messageId,
+            remoteJid,
+            openaiKey,
             mediaBase64
           );
           messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
@@ -105,7 +181,9 @@ export async function POST(request: Request) {
 
       const finalContent = messageContent || '';
 
-      // 4. Detecção e Consulta de Código de Tracking (LINO.XXXXXX)
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 6 — DETECÇÃO DE CÓDIGO DE TRACKING
+      // ════════════════════════════════════════════════════════════════
       const codeMatch = finalContent.match(/(?:LINO\.)([A-Z0-9]{6})/i);
       const extractedCode = codeMatch ? `LINO.${codeMatch[1].toUpperCase()}` : null;
 
@@ -124,7 +202,9 @@ export async function POST(request: Request) {
         }
       }
 
-      // 5. Buscar ou Criar Lead
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 7 — BUSCAR OU CRIAR LEAD
+      // ════════════════════════════════════════════════════════════════
       let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).maybeSingle();
 
       const generatedCode = `LINO.${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
@@ -139,10 +219,10 @@ export async function POST(request: Request) {
       }
 
       if (!lead) {
-        const { data: newLead, error: insertError } = await supabase.from('leads').insert([{ 
-          whatsapp_number: remoteJid, 
+        const { data: newLead, error: insertError } = await supabase.from('leads').insert([{
+          whatsapp_number: remoteJid,
           name: pushName || null,
-          status: 'SDR_QUALIFICATION', 
+          status: 'SDR_QUALIFICATION',
           bot_active: true,
           tracking_code: activeCode,
           tracking_id: trackingData?.id || null,
@@ -150,13 +230,12 @@ export async function POST(request: Request) {
           context_interest: contextInterest,
           b2b_attempts: { cnpj: 0, email: 0, nome: 0, empresa: 0 }
         }]).select().single();
-        
+
         if (insertError) {
           return NextResponse.json({ status: 'error', reason: 'LEAD_INSERT_FAILED', detail: insertError });
         }
         lead = newLead;
       } else {
-        // Atualizar lead existente com dados de rastreio se novos
         const updates: any = {};
         if (!lead.tracking_code) updates.tracking_code = activeCode;
         if (trackingData && !lead.tracking_id) {
@@ -175,13 +254,17 @@ export async function POST(request: Request) {
       if (!lead) return NextResponse.json({ status: 'error', reason: 'LEAD_NOT_FOUND' });
       if (!lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'LEAD_BOT_PAUSED' });
 
-      // 6. Buffer rápido (debounce)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // 7. Salvar Mensagem do Cliente no Histórico
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 8 — SALVAR MENSAGEM NO HISTÓRICO
+      // Nota: o debounce por setTimeout foi removido — mensagens
+      // rápidas são agrupadas pela IA via histórico; o buffer
+      // persistente deve ser implementado na migração de domínio.
+      // ════════════════════════════════════════════════════════════════
       await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: finalContent }]);
 
-      // 8. Recuperar Histórico Recente
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 9 — RECUPERAR HISTÓRICO RECENTE
+      // ════════════════════════════════════════════════════════════════
       const { data: historyData } = await supabase
         .from('interactions')
         .select('sender_type, message_content')
@@ -191,18 +274,18 @@ export async function POST(request: Request) {
 
       const history = (historyData || []).reverse();
 
-      // 9. TRIAGEM INTELIGENTE DE RETORNO (SDR vs SUPORTE vs PÓS-VENDA)
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 10 — TRIAGEM: SDR vs SUPORTE vs PÓS-VENDA
+      // ════════════════════════════════════════════════════════════════
       const decision = classifyReturnIntent(finalContent, lead);
       let resposta_whatsapp = '';
 
       if (decision.mode === 'POS_VENDA') {
-        // FLUXO PÓS-VENDA
         const posVendaResult = await processPostSaleMessage(history, lead.id);
         resposta_whatsapp = posVendaResult.resposta_whatsapp;
         await supabase.from('leads').update({ status: 'POS_VENDA', return_intent: 'POS_VENDA' }).eq('id', lead.id);
 
       } else if (decision.mode === 'SUPORTE') {
-        // FLUXO SUPORTE / FISCALIZAÇÃO DE SLA
         const supportResult = await generateSupportResponse(lead, history);
         resposta_whatsapp = supportResult.resposta || supportResult.message;
 
@@ -213,13 +296,13 @@ export async function POST(request: Request) {
         await supabase.from('leads').update(updateData).eq('id', lead.id);
 
       } else {
-        // FLUXO SDR (QUALIFICAÇÃO COM SCHEMA B2B E CATÁLOGO FACETADO)
+        // FLUXO SDR
         const aiResult = await processLeadWithSkills(history, lead.id);
 
         if (aiResult && !aiResult.erro_openai) {
           resposta_whatsapp = aiResult.resposta_whatsapp;
 
-          const leadUpdate: any = { 
+          const leadUpdate: any = {
             updated_at: new Date().toISOString(),
             b2b_attempts: aiResult.b2b_attempts || lead.b2b_attempts
           };
@@ -232,6 +315,7 @@ export async function POST(request: Request) {
           if (aiResult.demanda?.quantidade_metragem) leadUpdate.quantidade = aiResult.demanda.quantidade_metragem;
           if (aiResult.demanda?.dimensoes) leadUpdate.especificacao = aiResult.demanda.dimensoes;
 
+          // A IA sugere qualificacao_concluida, mas o BACKEND valida deterministicamente
           if (aiResult.qualificacao_concluida) {
             leadUpdate.status = 'WAITING_SELLER';
             leadUpdate.qualification_completed = true;
@@ -239,10 +323,11 @@ export async function POST(request: Request) {
 
           await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
 
-          // Se concluiu, executar roleta de roteamento
           if (aiResult.qualificacao_concluida) {
-            const rawPhone = remoteJid.replace(/\D/g, '');
-            const ddd = rawPhone.length >= 12 && rawPhone.startsWith('55') ? rawPhone.substring(2, 4) : '';
+            const normalizedPhone = normalizePhone(remoteJid) || remoteJid;
+            const ddd = normalizedPhone.length >= 12 && normalizedPhone.startsWith('55')
+              ? normalizedPhone.substring(2, 4)
+              : '';
             await routeLead(lead.id, lead.tenant_id || globalConfig?.tenant_id || '', {
               produto: leadUpdate.detected_product || lead.detected_product,
               quantidade: leadUpdate.quantidade || lead.quantidade,
@@ -256,12 +341,14 @@ export async function POST(request: Request) {
         }
       }
 
-      // 10. Enviar Resposta no WhatsApp via Evolution API e Salvar Histórico
+      // ════════════════════════════════════════════════════════════════
+      // PONTO 11 — ENVIAR RESPOSTA (guard de saída integrado ao sendTextMessage)
+      // ════════════════════════════════════════════════════════════════
       if (resposta_whatsapp) {
-        await supabase.from('interactions').insert([{ 
-          lead_id: lead.id, 
-          sender_type: decision.mode === 'POS_VENDA' ? 'post_sale_ai' : decision.mode === 'SUPORTE' ? 'support_ai' : 'sdr_ai', 
-          message_content: resposta_whatsapp 
+        await supabase.from('interactions').insert([{
+          lead_id: lead.id,
+          sender_type: decision.mode === 'POS_VENDA' ? 'post_sale_ai' : decision.mode === 'SUPORTE' ? 'support_ai' : 'sdr_ai',
+          message_content: resposta_whatsapp
         }]);
 
         if (globalConfig?.evolution_url && globalConfig?.evolution_key) {

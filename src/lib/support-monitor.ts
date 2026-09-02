@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { generateSupportResponse } from './openai';
+import { isPhoneAuthorized } from './test-guard';
 import {
   notifySellerAboutLead,
   notifySupervisor,
@@ -301,6 +302,11 @@ async function notifySellerUrgent(lead: any, returnCount: number): Promise<void>
 
   const sellerPhone = await getSellerPhone(lead.current_owner_id);
   if (sellerPhone) {
+    // Guard: bloquear notificação em modo de teste
+    if (!isPhoneAuthorized(sellerPhone)) {
+      console.log(`[Support Guard] Notificação urgente ao vendedor bloqueada: ${sellerPhone}`);
+      return;
+    }
     await notifySellerAboutLead(
       sellerPhone,
       lead.name || 'Lead',
@@ -313,6 +319,12 @@ async function notifySellerUrgent(lead: any, returnCount: number): Promise<void>
 async function notifySupervisorUrgent(lead: any): Promise<void> {
   const supervisor = await getTeamSupervisor(lead.current_owner?.team_id);
   if (!supervisor?.phone) return;
+
+  // Guard: bloquear escalada em modo de teste
+  if (!isPhoneAuthorized(supervisor.phone)) {
+    console.log(`[Support Guard] Escalada para supervisor bloqueada em modo de teste: ${supervisor.phone}`);
+    return;
+  }
 
   await notifySupervisor(
     supervisor.phone,
