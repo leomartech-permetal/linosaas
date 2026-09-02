@@ -253,6 +253,7 @@ Responda EXCLUSIVAMENTE em formato JSON com a estrutura:
   "demanda": {
     "produto_normalizado": "Nome do produto ou null",
     "quantidade_metragem": "Quantidade ou null",
+    "especificacao_tecnica_completa": "Especificação técnica detalhada completa (incluindo malha, fio/arame, espessura, dimensões, pilares, etc., exatamente idêntica à linha '- Especificação:' do seu resumo)",
     "material": "Material identificado ou null",
     "acabamento": "Acabamento ou null",
     "dimensoes": "Dimensões ou null",

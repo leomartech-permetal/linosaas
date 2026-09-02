@@ -429,12 +429,14 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
 *E-mail:* ${variables.email || lead?.email_corporativo || 'Não informado'}
 
 *Produto:* ${variables.produto || lead?.detected_product || 'Não informado'}
+*Especificação Técnica:* ${variables.especificacao || lead?.especificacao || 'Não informada'}
+*Quantidade:* ${variables.quantidade || lead?.quantidade || 'Não informada'}
 *Segmento:* ${variables.segmento_detectado || lead?.segmento || 'Indústria'}
 *Localização:* ${variables.cidade || lead?.cidade_empresa || 'Não informado'} (DDD ${variables.ddd || '?'})
 *Marca:* ${brand.toUpperCase()}
 ━━━━━━━━━━━━━━━━━━━━
 
-📝 *Resumo do Projeto:*
+📝 *Resumo do Projeto / Aplicação:*
 ${resumoExecutivo}
 
 ⏰ ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`;

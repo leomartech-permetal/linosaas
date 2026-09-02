@@ -320,8 +320,35 @@ export async function POST(request: Request) {
             leadUpdate.produto = aiResult.demanda.produto_normalizado;
           }
           if (aiResult.demanda?.quantidade_metragem) leadUpdate.quantidade = aiResult.demanda.quantidade_metragem;
-          if (aiResult.demanda?.dimensoes) leadUpdate.especificacao = aiResult.demanda.dimensoes;
+
+          // Capturar especificação técnica completa (prioriza campo completo sobre dimensões)
+          if ((aiResult.demanda as any)?.especificacao_tecnica_completa) {
+            leadUpdate.especificacao = (aiResult.demanda as any).especificacao_tecnica_completa;
+          } else if (aiResult.demanda?.dimensoes) {
+            leadUpdate.especificacao = aiResult.demanda.dimensoes;
+          }
           if (aiResult.demanda?.resumo_executivo) leadUpdate.observacao = aiResult.demanda.resumo_executivo;
+
+          // Extração direta do resumo oficial apresentado pelo Lino na conversa (garante 100% de fidelidade)
+          const allMsgs = [...history, { sender_type: 'lead', message_content: finalContent }, { sender_type: 'sdr_ai', message_content: resposta_whatsapp }];
+          const summaryMessage = allMsgs.slice().reverse().find(m => m.message_content && m.message_content.includes('Aqui está o resumo das informações do seu projeto:'));
+          if (summaryMessage) {
+            const specMatch = summaryMessage.message_content.match(/-\s*Especificação:\s*([^\n\r]+)/i);
+            if (specMatch && specMatch[1]) {
+              const fullSpec = specMatch[1].trim();
+              if (!leadUpdate.especificacao || fullSpec.length > leadUpdate.especificacao.length) {
+                leadUpdate.especificacao = fullSpec;
+              }
+            }
+            const qtyMatch = summaryMessage.message_content.match(/-\s*Quantidade:\s*([^\n\r]+)/i);
+            if (qtyMatch && qtyMatch[1] && (!leadUpdate.quantidade || qtyMatch[1].trim().length > (leadUpdate.quantidade || '').length)) {
+              leadUpdate.quantidade = qtyMatch[1].trim();
+            }
+            const appMatch = summaryMessage.message_content.match(/-\s*Resumo da Aplicação:\s*([^\n\r]+)/i);
+            if (appMatch && appMatch[1] && !leadUpdate.observacao) {
+              leadUpdate.observacao = appMatch[1].trim();
+            }
+          }
 
           // Salvar segmento com segurança no qualification_state (já que a coluna 'segmento' não existe na tabela)
           if (aiResult.demanda?.segmento_detectado) {
