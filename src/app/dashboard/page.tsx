@@ -1,873 +1,424 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
-} from "recharts";
+import { useEffect, useState, useMemo } from "react";
+import {
+  BarChart3,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  PhoneCall,
+  Package,
+  Layers,
+  Users,
+  Search,
+  ArrowRight,
+  ShieldAlert,
+} from "lucide-react";
 
-const STATUS_LABELS: Record<string, string> = {
-  SDR_QUALIFICATION: "Qualificando",
-  WAITING_SELLER: "Aguardando",
-  IN_NEGOTIATION: "Negociando",
-  CLOSED_WON: "Fechado",
-  CLOSED_LOST: "Perdido",
-};
-
-export default function UnifiedDashboardPage() {
-  const [activeSubTab, setActiveSubTab] = useState<'metrics' | 'support' | 'logs'>('metrics');
-  const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState("");
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  // Estados de Dados
+export default function RelatoriosPage() {
+  const [activeTab, setActiveTab] = useState<"comercial" | "atendimento" | "pos_venda">("comercial");
   const [leads, setLeads] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
-  const [bottlenecks, setBottlenecks] = useState<any[]>([]);
-  const [escalations, setEscalations] = useState<any[]>([]);
-  const [logs, setLogs] = useState<any[]>([]);
-  const [selectedLead, setSelectedLead] = useState<any | null>(null);
-  const [leadHistory, setLeadHistory] = useState<any[]>([]);
-  const [justificativa, setJustificativa] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<"7d" | "30d" | "all">("30d");
 
-  // Estados calculados de Suporte
-  const [supportStats, setSupportStats] = useState({
-    avgResponseMinutes: 0,
-    bottlenecksByType: [] as any[],
-    sellerPerformance: [] as any[],
-    criticalLeads: [] as any[],
-  });
+  useEffect(() => {
+    carregarRelatorios();
+  }, []);
 
-  const flash = (t: string) => { 
-    setMsg(t); 
-    setTimeout(() => setMsg(""), 4000); 
-  };
-
-  const loadAllData = async () => {
+  async function carregarRelatorios() {
     setLoading(true);
     try {
-      // 1. Busca leads brutos
-      const { data: leadsData } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
-      // 2. Busca vendedores
-      const { data: users } = await supabase.from("admin_users").select("id, name");
-      // 3. Busca gargalos de suporte
-      const { data: bts } = await supabase.from("attendance_bottlenecks").select("*, leads(name)").order("created_at", { ascending: false });
-      // 4. Busca escalações
-      const { data: esc } = await supabase.from("supervisor_escalations").select("*, leads(name), admin_users:user_id(name)").order("created_at", { ascending: false });
-      // 5. Busca logs de debug
-      const { data: logsData } = await supabase.from("debug_logs").select("*").order("created_at", { ascending: false }).limit(100);
-      // 6. Busca histórico de status para cálculo de SLA
-      const { data: statusHistory } = await supabase.from('lead_status_history').select('lead_id, to_status, created_at').order('created_at', { ascending: true });
+      // Carregar via API segura (nunca direct browser supabase sem token)
+      const [leadsRes, usersRes] = await Promise.all([
+        fetch("/api/leads?limit=200"),
+        fetch("/api/admin-users"),
+      ]);
 
-      const mappedUsers = users || [];
-      const mappedLeads = (leadsData || []).map(l => ({
-        ...l,
-        vendedor_nome: mappedUsers.find(u => u.id === l.current_owner_id)?.name || "Não atribuído"
-      }));
-
-      setLeads(mappedLeads);
-      setAdminUsers(mappedUsers);
-      setBottlenecks(bts || []);
-      setEscalations(esc || []);
-      
-      const mappedLogs = (logsData || []).map(log => ({
-        ...log,
-        leads: leadsData?.find(l => l.id === log.lead_id)
-      }));
-      setLogs(mappedLogs);
-
-      // Cálculos de SLA e Métricas de Suporte
-      const waitingLeads = mappedLeads.filter(l => l.status === 'WAITING_SELLER');
-      const criticalWaiting = waitingLeads.filter(l => {
-        const waitTime = (new Date().getTime() - new Date(l.updated_at).getTime()) / (1000 * 60);
-        return waitTime > 40; // Estagnado > 40 minutos
-      });
-
-      // Agrupar gargalos por tipo para o gráfico
-      const btGroups = (bts || []).reduce((acc: any, curr) => {
-        acc[curr.bottleneck_type] = (acc[curr.bottleneck_type] || 0) + 1;
-        return acc;
-      }, {});
-      const chartData = Object.keys(btGroups).map(key => ({ name: key, value: btGroups[key] }));
-
-      // Performance de Vendedores
-      const sellerPerf = mappedUsers.map(u => ({
-        name: u.name,
-        leads: mappedLeads.filter(l => l.current_owner_id === u.id).length,
-        escalations: (esc || []).filter(e => e.user_id === u.id).length
-      })).sort((a, b) => b.leads - a.leads).slice(0, 5);
-
-      // Calcular Tempo Médio de Resposta
-      let avgResponse = 0;
-      if (statusHistory && statusHistory.length > 0) {
-        const waitStarts: Record<string, number> = {};
-        const responseTimes: number[] = [];
-
-        statusHistory.forEach(h => {
-          if (h.to_status === 'WAITING_SELLER' || h.to_status === 'SENT_TO_SELLER') {
-            waitStarts[h.lead_id] = new Date(h.created_at).getTime();
-          } else if (h.to_status === 'IN_NEGOTIATION' || h.to_status === 'ATTENDANCE_STARTED' || h.to_status === 'SELLER_RECEIVED') {
-            if (waitStarts[h.lead_id]) {
-              const diffMin = (new Date(h.created_at).getTime() - waitStarts[h.lead_id]) / (1000 * 60);
-              if (diffMin >= 0) responseTimes.push(diffMin);
-              delete waitStarts[h.lead_id];
-            }
-          }
-        });
-
-        if (responseTimes.length > 0) {
-          const sum = responseTimes.reduce((acc, val) => acc + val, 0);
-          avgResponse = Math.round(sum / responseTimes.length);
-        }
+      if (leadsRes.ok) {
+        const json = await leadsRes.json();
+        setLeads(Array.isArray(json) ? json : json.data || []);
       }
-
-      setSupportStats({
-        avgResponseMinutes: avgResponse,
-        bottlenecksByType: chartData,
-        sellerPerformance: sellerPerf,
-        criticalLeads: waitingLeads.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()).slice(0, 10),
-      });
-
+      if (usersRes.ok) {
+        const users = await usersRes.json();
+        setAdminUsers(users || []);
+      }
     } catch (e) {
-      console.error("Erro ao carregar dados do dashboard:", e);
+      console.error("[Relatorios] Erro ao carregar dados:", e);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadAllData();
-
-    // Inscreve no canal de alterações de gargalos e logs para tempo real
-    const btChannel = supabase.channel('dashboard_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_bottlenecks' }, loadAllData)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'debug_logs' }, (payload) => {
-        setLogs(prev => [payload.new, ...prev].slice(0, 100));
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(btChannel);
-    };
-  }, []);
-
-  // Monitora seleção de lead para o histórico
-  useEffect(() => {
-    if (selectedLead) {
-      setJustificativa(selectedLead.qualification_state?.valores?.justificativa_sla || "");
-      supabase.from("interactions")
-        .select("*")
-        .eq("lead_id", selectedLead.id)
-        .order("created_at", { ascending: true })
-        .then(({ data }) => {
-          if (data) setLeadHistory(data);
-        });
-    }
-  }, [selectedLead]);
-
-  // Ações de Suporte (Notificar e Escalar)
-  async function handleNotify(leadId: string) {
-    setActionLoading(`notify-${leadId}`);
-    try {
-      const res = await fetch('/api/support/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leadId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert('Erro: ' + (data.error || 'Falha ao notificar'));
-      } else {
-        flash('✔ Vendedor notificado com sucesso!');
-        loadAllData();
-      }
-    } catch (err: any) {
-      alert('Erro de conexão: ' + err.message);
-    } finally {
-      setActionLoading(null);
-    }
   }
 
-  async function handleEscalate(leadId: string) {
-    if (!confirm('Deseja realmente escalar este lead para o supervisor?')) return;
-    setActionLoading(`escalate-${leadId}`);
-    try {
-      const res = await fetch('/api/support/escalate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leadId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert('Erro: ' + (data.error || 'Falha ao escalar'));
-      } else {
-        flash('✔ Lead escalado para supervisor com sucesso!');
-        loadAllData();
-      }
-    } catch (err: any) {
-      alert('Erro de conexão: ' + err.message);
-    } finally {
-      setActionLoading(null);
-    }
-  }
+  // ── MÉTRICAS COMERCIAIS ───────────────────────────────────────────
+  const metricasComerciais = useMemo(() => {
+    const total = leads.length;
+    const qualificados = leads.filter((l) => l.qualification_completed || l.status !== "SDR_QUALIFICATION").length;
+    const emNegociacao = leads.filter((l) => l.status === "IN_NEGOTIATION").length;
+    const fechados = leads.filter((l) => l.status === "CLOSED_WON").length;
+    const perdidos = leads.filter((l) => l.status === "CLOSED_LOST").length;
+    const taxaConversao = total > 0 ? Math.round((fechados / total) * 100) : 0;
+    const taxaQualificacao = total > 0 ? Math.round((qualificados / total) * 100) : 0;
 
-  async function handleSaveJustificativa() {
-    if (!selectedLead) return;
-    setActionLoading('save-justificativa');
-    try {
-      const qState = selectedLead.qualification_state || { valores: {}, tentativas: {} };
-      if (!qState.valores) qState.valores = {};
-      qState.valores.justificativa_sla = justificativa;
+    return { total, qualificados, emNegociacao, fechados, perdidos, taxaConversao, taxaQualificacao };
+  }, [leads]);
 
-      // Atualiza o state e salva
-      await supabase.from('leads').update({ qualification_state: qState }).eq('id', selectedLead.id);
-      
-      // Registra como nota no histórico
-      await supabase.from('interactions').insert([{
-        lead_id: selectedLead.id,
-        sender_type: 'system',
-        message_content: `[JUSTIFICATIVA VENDEDOR]: ${justificativa}`
-      }]);
+  // ── MÉTRICAS DE ATENDIMENTO & SLA ────────────────────────────────
+  const metricasAtendimento = useMemo(() => {
+    const aguardando = leads.filter((l) => l.status === "WAITING_SELLER").length;
+    const slaViolado = leads.filter((l) => l.sla_breached === true).length;
+    const slaEmDia = leads.filter((l) => !l.sla_breached && l.status === "WAITING_SELLER").length;
 
-      flash('✔ Justificativa salva e SLA documentado!');
-      loadAllData();
-    } catch (err: any) {
-      alert('Erro ao salvar: ' + err.message);
-    } finally {
-      setActionLoading(null);
-    }
-  }
+    return { aguardando, slaViolado, slaEmDia };
+  }, [leads]);
 
-  // Estatísticas e Cálculos
-  const totalLeadsCount = leads.length;
-  const fechadosCount = leads.filter((l) => l.status === "CLOSED_WON").length;
-  const conversionRate = totalLeadsCount > 0 ? Math.round((fechadosCount / totalLeadsCount) * 100) : 0;
-  const porStatus: Record<string, number> = {};
-  leads.forEach((l) => { porStatus[l.status] = (porStatus[l.status] || 0) + 1; });
+  // ── MÉTRICAS DE PÓS-VENDA ─────────────────────────────────────────
+  const metricasPosVenda = useMemo(() => {
+    const totalPosVenda = leads.filter((l) => l.status === "POST_SALE" || l.return_intent === "POS_VENDA").length;
+    const entregas = leads.filter((l) => (l.observacao || "").includes("DELIVERY")).length;
+    const financeiro = leads.filter((l) => (l.observacao || "").includes("INVOICE") || (l.observacao || "").includes("BOLETO")).length;
 
-  const waitingSellerCount = leads.filter(l => l.status === 'WAITING_SELLER').length;
-  const criticalSLACount = leads.filter(l => {
-    if (l.status !== 'WAITING_SELLER') return false;
-    const waitTime = (new Date().getTime() - new Date(l.updated_at).getTime()) / (1000 * 60);
-    return waitTime > 40;
-  }).length;
+    return { totalPosVenda, entregas, financeiro };
+  }, [leads]);
 
-  const hoje = new Date();
-  const porDia: { label: string; count: number }[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(hoje);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    const count = leads.filter((l) => (l.created_at || "").slice(0, 10) === key).length;
-    porDia.push({ label: `${d.getDate()}/${d.getMonth() + 1}`, count });
-  }
-  const maxDia = Math.max(...porDia.map((d) => d.count), 1);
-
-  // Auxiliares de Estilo
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'ERROR': return 'text-red-600 bg-red-50 border-red-200';
-      case 'WARN': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'DEBUG': return 'text-blue-600 bg-blue-50 border-blue-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
-
-  const getSeverityColor = (severity: string) => {
-    if (severity === 'critical') return 'text-[var(--status-critical-text)] bg-[var(--status-critical-bg)] border-[var(--status-critical-border)]';
-    if (severity === 'high') return 'text-neutral-900 bg-neutral-50 border-neutral-300';
-    return 'text-neutral-600 bg-neutral-50 border-neutral-200';
-  };
+  const filteredLeads = useMemo(() => {
+    return leads.filter((l) => {
+      const q = searchQuery.toLowerCase();
+      return (
+        !q ||
+        (l.name && l.name.toLowerCase().includes(q)) ||
+        (l.company && l.company.toLowerCase().includes(q)) ||
+        (l.whatsapp_number && l.whatsapp_number.includes(q)) ||
+        (l.tracking_code && l.tracking_code.toLowerCase().includes(q))
+      );
+    });
+  }, [leads, searchQuery]);
 
   return (
-    <div className="w-full h-full text-[var(--text-primary)] bg-white overflow-y-auto select-none">
-      {msg && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#111111] text-white text-xs px-4 py-3 rounded-md border border-[var(--border-strong)] shadow-md animate-fade-in">
-          {msg}
+    <div className="flex flex-col p-6 max-w-[1500px] mx-auto gap-6 min-h-full">
+      {/* ── TOPO / CABEÇALHO COMPACTO ───────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#eaeaea]">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-[#111111]">
+            Relatórios & Auditoria
+          </h1>
+          <p className="text-xs text-[#666666] mt-0.5">
+            Análise de conversão comercial, tempos de SLA e ocorrências
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Seletor de Período */}
+          <div className="flex items-center p-0.5 rounded-md bg-[#f0f0f0] border border-[#eaeaea] text-xs font-medium">
+            {[
+              { id: "7d", label: "7 dias" },
+              { id: "30d", label: "30 dias" },
+              { id: "all", label: "Histórico todo" },
+            ].map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSelectedPeriod(p.id as any)}
+                className={`px-2.5 py-1 rounded transition-colors ${
+                  selectedPeriod === p.id
+                    ? "bg-white text-[#111111] shadow-2xs font-semibold"
+                    : "text-[#666666] hover:text-[#111111]"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={carregarRelatorios}
+            disabled={loading}
+            className="p-1.5 rounded-md border border-[#eaeaea] bg-white text-[#666666] hover:text-[#111111] hover:border-[#999999] transition-colors shadow-2xs"
+            title="Atualizar relatórios"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── TRÊS ABAS OBRIGATÓRIAS (COMERCIAL, ATENDIMENTO, PÓS-VENDA) ─ */}
+      <div className="flex items-center gap-2 border-b border-[#eaeaea] pb-2 text-xs font-medium">
+        {[
+          { key: "comercial", label: "Desempenho Comercial", icon: TrendingUp },
+          { key: "atendimento", label: "SLA & Atendimento", icon: Clock },
+          { key: "pos_venda", label: "Pós-Venda & Chamados", icon: Package },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+                isActive
+                  ? "bg-[#111111] text-white font-semibold"
+                  : "bg-white border border-[#eaeaea] text-[#666666] hover:text-[#111111]"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── CONTEÚDO DA ABA: COMERCIAL ──────────────────────────────── */}
+      {activeTab === "comercial" && (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-[11px] text-[#666666] block">Total de Leads</span>
+              <span className="text-2xl font-bold text-[#111111] mt-1 block">{metricasComerciais.total}</span>
+            </div>
+            <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-[11px] text-[#666666] block">Qualificados (SDR)</span>
+              <span className="text-2xl font-bold text-blue-600 mt-1 block">{metricasComerciais.qualificados}</span>
+            </div>
+            <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-[11px] text-[#666666] block">Em Negociação</span>
+              <span className="text-2xl font-bold text-purple-600 mt-1 block">{metricasComerciais.emNegociacao}</span>
+            </div>
+            <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-[11px] text-[#666666] block">Vendas Ganhas</span>
+              <span className="text-2xl font-bold text-emerald-600 mt-1 block">{metricasComerciais.fechados}</span>
+            </div>
+            <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-[11px] text-[#666666] block">Taxa de Qualificação</span>
+              <span className="text-2xl font-bold text-[#111111] mt-1 block">{metricasComerciais.taxaQualificacao}%</span>
+            </div>
+            <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-[11px] text-[#666666] block">Conversão Final</span>
+              <span className="text-2xl font-bold text-emerald-700 mt-1 block">{metricasComerciais.taxaConversao}%</span>
+            </div>
+          </div>
+
+          {/* Funil Visual Limpo */}
+          <div className="p-5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs flex flex-col gap-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
+              Conversão de Etapas do Pipeline
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <span className="text-[#666666] block text-[11px]">Entrada</span>
+                <span className="text-lg font-bold text-[#111111]">{metricasComerciais.total}</span>
+                <div className="w-full bg-[#eaeaea] h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div className="bg-blue-600 h-full w-full" />
+                </div>
+              </div>
+
+              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <span className="text-[#666666] block text-[11px]">SDR Qualificado</span>
+                <span className="text-lg font-bold text-blue-600">{metricasComerciais.qualificados}</span>
+                <div className="w-full bg-[#eaeaea] h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div className="bg-blue-600 h-full" style={{ width: `${metricasComerciais.taxaQualificacao}%` }} />
+                </div>
+              </div>
+
+              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <span className="text-[#666666] block text-[11px]">Em Negociação</span>
+                <span className="text-lg font-bold text-purple-600">{metricasComerciais.emNegociacao}</span>
+                <div className="w-full bg-[#eaeaea] h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div className="bg-purple-600 h-full" style={{ width: `${metricasComerciais.total > 0 ? (metricasComerciais.emNegociacao / metricasComerciais.total) * 100 : 0}%` }} />
+                </div>
+              </div>
+
+              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <span className="text-[#666666] block text-[11px]">Venda Fechada</span>
+                <span className="text-lg font-bold text-emerald-600">{metricasComerciais.fechados}</span>
+                <div className="w-full bg-[#eaeaea] h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div className="bg-emerald-600 h-full" style={{ width: `${metricasComerciais.taxaConversao}%` }} />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Conteúdo Principal */}
-      <div className={`p-8 md:p-10 transition-all duration-300 ${selectedLead ? 'pr-[470px]' : ''}`}>
-        
-        {/* Cabeçalho do Painel com Abas de Roteamento Internas */}
-        <header className="page-header flex flex-col sm:flex-row justify-between sm:items-end gap-6 mb-8">
-          <div className="flex items-center gap-6">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">Central de Métricas</h1>
-              <p className="text-[var(--text-muted)] mt-0.5 text-[10px] font-medium uppercase tracking-wider">Visão macro, SLA e auditoria operacional</p>
+      {/* ── CONTEÚDO DA ABA: ATENDIMENTO & SLA ──────────────────────── */}
+      {activeTab === "atendimento" && (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-xs text-[#666666] block">Aguardando 1º Contato</span>
+              <span className="text-2xl font-bold text-amber-600 mt-1 block">{metricasAtendimento.aguardando}</span>
+              <span className="text-[11px] text-[#888888] mt-1 block">Leads distribuídos sem resposta</span>
             </div>
 
-            {/* Controle Segmentado das Sub-abas */}
-            <div className="tabs-container-clean">
-              <button 
-                onClick={() => setActiveSubTab('metrics')} 
-                className={`tab-item-clean ${activeSubTab === 'metrics' ? 'active' : ''}`}
-              >
-                Indicadores
-              </button>
-              <button 
-                onClick={() => setActiveSubTab('support')} 
-                className={`tab-item-clean ${activeSubTab === 'support' ? 'active' : ''}`}
-              >
-                SLA & Suporte
-              </button>
-              <button 
-                onClick={() => setActiveSubTab('logs')} 
-                className={`tab-item-clean ${activeSubTab === 'logs' ? 'active' : ''}`}
-              >
-                Logs do Sistema
-              </button>
+            <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-xs text-[#666666] block">SLA em Atraso (&gt;30 min úteis)</span>
+              <span className="text-2xl font-bold text-red-600 mt-1 block">{metricasAtendimento.slaViolado}</span>
+              <span className="text-[11px] text-red-700 font-medium mt-1 block">Exigem ação imediata</span>
+            </div>
+
+            <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-xs text-[#666666] block">Atendimentos no Prazo</span>
+              <span className="text-2xl font-bold text-emerald-600 mt-1 block">{metricasAtendimento.slaEmDia}</span>
+              <span className="text-[11px] text-[#888888] mt-1 block">Dentro da janela comercial</span>
             </div>
           </div>
 
-          <button onClick={loadAllData} className="btn-secondary h-9 px-4 text-xs font-bold self-start sm:self-auto">
-            Recarregar Dados
-          </button>
-        </header>
+          <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs flex flex-col gap-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
+              Regras do Calendário Útil Lino v4 (Permetal)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-[#444444]">
+              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <span className="font-bold text-[#111111] block mb-1">Horário de Expediente</span>
+                <p>Segunda a Quinta: 07:00–12:00 e 13:00–17:00 (9h úteis/dia)</p>
+                <p>Sexta-feira: 07:00–12:00 e 13:00–16:00 (8h úteis/dia)</p>
+                <p className="text-[11px] text-[#666666] mt-1">Almoço (12h–13h), fins de semana e feriados são ignorados no cálculo de SLA.</p>
+              </div>
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-40">
-            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-[var(--text-muted)] mt-3 text-xs animate-pulse">Buscando indicadores operacionais...</p>
+              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <span className="font-bold text-[#111111] block mb-1">Prazos e Escalada</span>
+                <p>1º Contato do Vendedor: <strong>30 minutos úteis</strong></p>
+                <p>Janela de Agrupamento de Retornos: <strong>15 minutos corridos</strong></p>
+                <p>Escalada para Coordenação: <strong>4 horas úteis</strong> ou <strong>5 cobranças</strong></p>
+              </div>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* 1. ABA INDICADORES DE VENDAS */}
-            {activeSubTab === 'metrics' && (
-              <div className="space-y-8 animate-fade-in">
-                {/* KPIs Superiores */}
-                <div className="metrics-grid">
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">Total de Leads</span>
-                    <span className="metric-value">{totalLeadsCount}</span>
-                    <span className="metric-subtext">Registrados no CRM</span>
-                  </div>
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">Vendas Concluídas</span>
-                    <span className="metric-value">{fechadosCount}</span>
-                    <span className="metric-subtext">Fase CLOSED_WON</span>
-                  </div>
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">Taxa de Conversão</span>
-                    <span className="metric-value">{conversionRate}%</span>
-                    <span className="metric-subtext">Leads fechados</span>
-                  </div>
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">SDR Qualificando</span>
-                    <span className="metric-value">{porStatus["SDR_QUALIFICATION"] || 0}</span>
-                    <span className="metric-subtext">Triagem inicial IA</span>
-                  </div>
-                  <div className={`metric-card bg-white border p-5 rounded-lg ${waitingSellerCount > 0 ? 'critical' : 'border-[var(--border-light)]'}`}>
-                    <span className="metric-label">Aguardando Vendedor</span>
-                    <span className="metric-value">{waitingSellerCount}</span>
-                    <span className="metric-subtext">{criticalSLACount} leads com SLA em risco</span>
-                  </div>
-                </div>
+        </div>
+      )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Gargalos Recentes */}
-                  <div className="lg:col-span-1 content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Gargalos Recentes</h3>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      {bottlenecks.slice(0, 4).map(b => (
-                        <div key={b.id} className="p-3 bg-gray-50 border border-[var(--border-light)] rounded text-xs">
-                          <div className="flex justify-between font-bold mb-1">
-                            <span className="text-[var(--text-primary)]">{b.leads?.name || "Lead"}</span>
-                            <span className={b.severity === 'critical' ? 'text-[var(--status-critical-text)] uppercase font-bold text-[9px]' : 'text-[var(--text-muted)] uppercase text-[9px]'}>
-                              {b.severity}
-                            </span>
-                          </div>
-                          <p className="text-[var(--text-muted)] mt-1 text-[11px] leading-relaxed">{b.description}</p>
-                        </div>
-                      ))}
-                      {bottlenecks.length === 0 && (
-                        <p className="text-xs text-[var(--text-soft)] text-center py-8">Nenhum gargalo detectado na operação.</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Fluxo Semanal */}
-                  <div className="lg:col-span-2 content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Novos Leads (Últimos 7 dias)</h3>
-                    </div>
-                    <div className="p-6 flex items-end gap-4 h-56 bg-white">
-                      {porDia.map((d, i) => (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                          <div 
-                            className="w-full bg-[#111111] hover:bg-neutral-800 transition-colors rounded-t" 
-                            style={{ height: `${(d.count / maxDia) * 100}%`, minHeight: '4px' }}
-                            title={`${d.count} novos leads`}
-                          ></div>
-                          <span className="text-[10px] font-bold text-[var(--text-muted)]">{d.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tabela de Atividade Recente */}
-                <div className="content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                  <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50 flex justify-between items-center">
-                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Central de Todos os Leads</h3>
-                    <span className="text-[10px] text-[var(--text-muted)] font-bold">{leads.length} registros</span>
-                  </div>
-                  <div className="overflow-x-auto max-h-[500px] overflow-y-auto scrollbar-hide">
-                    <table className="w-full text-left border-collapse">
-                      <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm">
-                        <tr className="border-b border-[var(--border-light)] text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
-                          <th className="p-4">Lead</th>
-                          <th className="p-4">Produto Interesse</th>
-                          <th className="p-4">Etapa Atual</th>
-                          <th className="p-4">Responsável</th>
-                          <th className="p-4 text-right">Criado em</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[var(--border-light)]">
-                        {leads.map((lead) => (
-                          <tr key={lead.id} onClick={() => setSelectedLead(lead)} className="hover:bg-gray-50 cursor-pointer transition-colors bg-white">
-                            <td className="p-4">
-                              <div className="font-bold text-sm text-[var(--text-primary)]">{lead.name || "Interesse Anônimo"}</div>
-                              <div className="text-[10px] text-[var(--text-soft)] font-mono mt-0.5">{lead.whatsapp_number.replace('@s.whatsapp.net','')}</div>
-                            </td>
-                            <td className="p-4 text-xs font-semibold text-neutral-800">
-                              {lead.detected_product || lead.produto || "—"}
-                            </td>
-                            <td className="p-4">
-                              <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-[var(--border-light)] bg-gray-100/80 text-neutral-700">
-                                {STATUS_LABELS[lead.status] || lead.status}
-                              </span>
-                            </td>
-                            <td className="p-4 text-xs font-semibold text-neutral-800">{lead.vendedor_nome}</td>
-                            <td className="p-4 text-right text-[10px] text-[var(--text-soft)] font-mono">
-                              {new Date(lead.created_at).toLocaleDateString("pt-BR")}
-                            </td>
-                          </tr>
-                        ))}
-                        {leads.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="p-10 text-center text-xs text-[var(--text-soft)] font-bold uppercase">
-                              Nenhum lead encontrado no banco de dados.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 2. ABA SLA & SUPORTE */}
-            {activeSubTab === 'support' && (
-              <div className="space-y-8 animate-fade-in">
-                {/* KPIs Suporte */}
-                <div className="metrics-grid">
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">Leads em Espera</span>
-                    <span className="metric-value">{supportStats.criticalLeads.length}</span>
-                    <span className="metric-subtext">Aguardando vendedor</span>
-                  </div>
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">Meta de Resposta B2B</span>
-                    <span className="metric-value">40 min</span>
-                    <span className="metric-subtext">Acordo de nível de serviço</span>
-                  </div>
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">Média Resposta (SLA)</span>
-                    <span className="metric-value">{supportStats.avgResponseMinutes} min</span>
-                    <span className="metric-subtext">Fase WAITING_SELLER</span>
-                  </div>
-                  <div className="metric-card bg-white border border-[var(--border-light)] p-5 rounded-lg">
-                    <span className="metric-label">Incidentes Gravados</span>
-                    <span className="metric-value">{bottlenecks.length}</span>
-                    <span className="metric-subtext">Histórico total de gargalos</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                  {/* Gráfico de Tipos de Gargalos */}
-                  <div className="xl:col-span-2 content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Tipos de Gargalos Detectados</h3>
-                    </div>
-                    <div className="p-6 h-[300px] bg-white">
-                      {supportStats.bottlenecksByType.length === 0 ? (
-                        <div className="flex items-center justify-center h-full text-xs text-[var(--text-soft)]">
-                          Nenhum gargalo com dados suficientes para gerar o gráfico.
-                        </div>
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={supportStats.bottlenecksByType}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f3f3" vertical={false} />
-                            <XAxis dataKey="name" stroke="#888888" fontSize={10} axisLine={false} tickLine={false} />
-                            <YAxis stroke="#888888" fontSize={10} axisLine={false} tickLine={false} />
-                            <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid var(--border-light)', borderRadius: '6px', fontSize: '11px' }} />
-                            <Bar dataKey="value" fill="#111111" radius={[4, 4, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Performance Recente */}
-                  <div className="content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Carga de Vendedores & Falhas</h3>
-                    </div>
-                    <div className="p-4 space-y-3 bg-white">
-                      {supportStats.sellerPerformance.map((s: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-gray-50 border border-[var(--border-light)] rounded text-xs">
-                          <span className="font-bold text-[var(--text-primary)]">{s.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] bg-white text-neutral-700 border border-[var(--border-light)] px-2 py-0.5 rounded font-mono font-semibold">Leads: {s.leads}</span>
-                            {s.escalations > 0 && (
-                              <span className="text-[10px] bg-[var(--status-critical-bg)] text-[var(--status-critical-text)] border border-[var(--status-critical-border)] px-2 py-0.5 rounded font-mono font-bold">
-                                Falhas: {s.escalations}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Monitoramento de Leads Estagnados */}
-                <div className="content-block border border-[var(--border-light)] rounded-lg overflow-hidden bg-white">
-                  <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Monitoramento de SLA em Tempo Real</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-[var(--border-light)] text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
-                          <th className="p-4">Lead Estagnado</th>
-                          <th className="p-4">Etapa</th>
-                          <th className="p-4">Vendedor Atribuído</th>
-                          <th className="p-4">Espera Ininterrupta</th>
-                          <th className="p-4 text-right">Ações Rápidas</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[var(--border-light)]">
-                        {supportStats.criticalLeads.map((l: any, i: number) => {
-                          const waitMin = Math.round((new Date().getTime() - new Date(l.updated_at).getTime()) / (1000 * 60));
-                          const isCritical = waitMin > 40;
-                          return (
-                            <tr key={i} className="hover:bg-gray-50 transition-colors">
-                              <td className="p-4">
-                                <div className="font-bold text-sm text-[var(--text-primary)]">{l.name}</div>
-                                <div className="text-[10px] text-[var(--text-soft)] font-mono mt-0.5">{l.whatsapp_number}</div>
-                              </td>
-                              <td className="p-4">
-                                <span className={`text-[9px] px-2.5 py-0.5 rounded font-bold uppercase border ${
-                                  isCritical ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-50 text-gray-700 border-gray-200'
-                                }`}>
-                                  {l.status}
-                                </span>
-                              </td>
-                              <td className="p-4 text-xs font-semibold text-neutral-800">{l.admin_users?.name || 'Não atribuído'}</td>
-                              <td className="p-4 font-mono font-bold text-xs">
-                                <span className={isCritical ? 'text-red-600' : 'text-neutral-700'}>{waitMin} min</span>
-                              </td>
-                              <td className="p-4 text-right space-x-2">
-                                <button 
-                                  onClick={() => handleNotify(l.id)} 
-                                  disabled={actionLoading === `notify-${l.id}` || actionLoading === `escalate-${l.id}`}
-                                  className="btn-secondary h-8 text-[11px] font-bold"
-                                >
-                                  {actionLoading === `notify-${l.id}` ? 'Notificando...' : 'WhatsApp Alert'}
-                                </button>
-                                <button 
-                                  onClick={() => handleEscalate(l.id)} 
-                                  disabled={actionLoading === `notify-${l.id}` || actionLoading === `escalate-${l.id}`}
-                                  className="btn-primary h-8 text-[11px] font-bold"
-                                >
-                                  {actionLoading === `escalate-${l.id}` ? 'Escalando...' : 'Escalar Supervisor'}
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {supportStats.criticalLeads.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="p-12 text-center text-xs text-[var(--text-soft)] uppercase font-bold bg-gray-50/35">
-                              Nenhum lead estagnado aguardando vendedor no momento.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Logs e Escalações de Suporte */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Auditoria de Gargalos */}
-                  <div className="content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Histórico de Incidentes Operacionais</h3>
-                    </div>
-                    <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto bg-white scrollbar-hide">
-                      {bottlenecks.map((b, i) => (
-                        <div key={i} className={`p-4 rounded border text-xs ${getSeverityColor(b.severity)}`}>
-                          <div className="flex justify-between items-start mb-2 font-bold text-[9px] uppercase tracking-wider">
-                            <span>{b.bottleneck_type}</span>
-                            <span className="text-[var(--text-soft)]">{new Date(b.created_at).toLocaleString('pt-BR')}</span>
-                          </div>
-                          <p className="font-bold text-sm text-neutral-800 mb-1">Lead: {b.leads?.name || 'N/A'}</p>
-                          <p className="text-[11px] text-neutral-600 leading-relaxed">{b.description}</p>
-                          <div className="mt-3 text-[10px] font-bold font-mono">Tempo de Espera Acumulado: {b.hours_waited}h</div>
-                        </div>
-                      ))}
-                      {bottlenecks.length === 0 && (
-                        <p className="text-xs text-[var(--text-soft)] text-center py-10 uppercase font-bold">Nenhum incidente registrado.</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Escalações de Supervisão */}
-                  <div className="content-block border border-[var(--border-light)] rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-[var(--border-light)] bg-gray-50/50">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Incidentes Escalados para Supervisor</h3>
-                    </div>
-                    <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto bg-white scrollbar-hide">
-                      {escalations.map((e, i) => (
-                        <div key={i} className="p-4 bg-gray-50 rounded border border-[var(--border-light)] text-xs">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="text-sm font-bold text-neutral-800">{e.leads?.name}</h4>
-                            <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${
-                              e.resolved ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-                            }`}>
-                              {e.resolved ? 'Resolvido' : 'Pendente'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-neutral-600 mt-1 font-semibold">Vendedor Inoperante: {e.admin_users?.name}</p>
-                          <p className="text-[10px] text-neutral-600 mt-3 bg-white p-3 rounded border border-[var(--border-light)] italic leading-relaxed">
-                            "{e.escalation_reason}"
-                          </p>
-                        </div>
-                      ))}
-                      {escalations.length === 0 && (
-                        <p className="text-xs text-[var(--text-soft)] text-center py-10 uppercase font-bold">Nenhuma escalação ativa.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 3. ABA LOGS DO SISTEMA */}
-            {activeSubTab === 'logs' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex justify-between items-center border-b border-[var(--border-light)] pb-4">
-                  <div>
-                    <h3 className="text-base font-bold">Debug & Audit Logs</h3>
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5">Rastreio em tempo real de webhooks, OpenAI e roteamento</p>
-                  </div>
-                </div>
-
-                <div className="list-container-clean border border-[var(--border-light)] bg-white rounded-lg overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-[var(--border-light)] text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
-                          <th className="p-4 w-40">Data/Hora</th>
-                          <th className="p-4 w-24">Nível</th>
-                          <th className="p-4 w-32">Módulo</th>
-                          <th className="p-4">Ação / Resumo</th>
-                          <th className="p-4">Contexto Lead</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[var(--border-light)]">
-                        {logs.map((log) => (
-                          <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="p-4 text-[10px] font-mono text-[var(--text-muted)]">
-                              {new Date(log.created_at).toLocaleString('pt-BR')}
-                            </td>
-                            <td className="p-4">
-                              <span className={`text-[8px] px-2 py-0.5 rounded font-bold border ${getLevelColor(log.level)}`}>
-                                {log.level}
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              <span className="text-[9px] font-bold uppercase text-[var(--text-muted)]">{log.module}</span>
-                            </td>
-                            <td className="p-4">
-                              <div className="text-xs font-bold text-[var(--text-primary)] mb-1">{log.action}</div>
-                              <pre className="text-[9px] font-mono text-neutral-600 bg-neutral-50 border border-neutral-200 p-3 rounded max-h-24 overflow-y-auto scrollbar-hide">
-                                {JSON.stringify(log.details, null, 2)}
-                              </pre>
-                            </td>
-                            <td className="p-4">
-                              {log.leads ? (
-                                <div>
-                                  <div className="text-xs font-bold text-[var(--text-primary)]">{log.leads.name}</div>
-                                  <div className="text-[9px] text-[var(--text-soft)] font-mono mt-0.5">{log.leads.whatsapp_number}</div>
-                                </div>
-                              ) : (
-                                <span className="text-[10px] text-[var(--text-soft)] italic">—</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                        {logs.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="p-20 text-center text-xs text-[var(--text-soft)] uppercase font-bold">
-                              Nenhum log registrado no banco de dados.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* COMPILADOR DE DADOS (Drawer lateral unificado) */}
-      <div className={`fixed top-0 right-0 h-screen w-[450px] bg-white border-l border-[var(--border-strong)] transition-transform duration-300 transform z-50 flex flex-col ${selectedLead ? 'translate-x-0' : 'translate-x-full'}`}>
-        {selectedLead && (
-          <>
-            <div className="p-6 border-b border-[var(--border-light)] flex justify-between items-center bg-[var(--bg-sidebar)]">
-              <h3 className="font-bold text-sm text-[var(--text-primary)]">Compilador do Lead</h3>
-              <button onClick={() => setSelectedLead(null)} className="text-[var(--text-muted)] hover:text-black cursor-pointer text-sm">✕</button>
+      {/* ── CONTEÚDO DA ABA: PÓS-VENDA ──────────────────────────────── */}
+      {activeTab === "pos_venda" && (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-xs text-[#666666] block">Ocorrências de Pós-Venda</span>
+              <span className="text-2xl font-bold text-[#111111] mt-1 block">{metricasPosVenda.totalPosVenda}</span>
+              <span className="text-[11px] text-[#888888] mt-1 block">Chamados abertos</span>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide text-xs bg-white">
-              <section className="bg-gray-50 p-4 rounded border border-[var(--border-light)]">
-                <h5 className="text-[9px] text-[var(--text-soft)] font-bold uppercase mb-4 tracking-wider">Informações Extraídas pela IA</h5>
-                <div className="grid grid-cols-1 gap-4 text-xs">
-                  <div><span className="text-[var(--text-soft)] text-[9px] uppercase">Nome:</span> <p className="font-bold text-[var(--text-primary)]">{selectedLead.name || "—"}</p></div>
-                  <div><span className="text-[var(--text-soft)] text-[9px] uppercase">Empresa:</span> <p className="font-bold text-[var(--text-primary)]">{selectedLead.empresa || selectedLead.company || "—"}</p></div>
-                  <div><span className="text-[var(--text-soft)] text-[9px] uppercase">CNPJ:</span> <p className="font-bold text-[var(--text-primary)]">{selectedLead.cnpj || "—"}</p></div>
-                  <div><span className="text-[var(--text-soft)] text-[9px] uppercase">E-mail:</span> <p className="font-bold text-[var(--text-primary)]">{selectedLead.email_corporativo || selectedLead.email || "—"}</p></div>
-                  <div className="pt-4 border-t border-[var(--border-light)]">
-                    <span className="text-[var(--text-soft)] text-[9px] uppercase">Produto Comercial:</span> 
-                    <p className="font-bold text-[var(--text-primary)]">{selectedLead.produto || selectedLead.detected_product || "—"}</p>
-                    <p className="text-[var(--text-muted)] mt-1.5 leading-relaxed">{selectedLead.especificacao || "Sem detalhes adicionais fornecidos."}</p>
-                  </div>
-                  <div className="pt-4 border-t border-[var(--border-light)] flex justify-between items-center">
-                    <span className="text-[var(--text-soft)] text-[9px] uppercase">Habilidade de Roteamento:</span> 
-                    <span className="px-2 py-0.5 bg-white text-[var(--text-primary)] text-[9px] font-bold rounded border border-[var(--border-light)]">
-                      {selectedLead.last_skill_used || "SDR General"}
-                    </span>
-                  </div>
-                </div>
-              </section>
 
-              <section className="space-y-3">
-                <h5 className="text-[9px] text-[var(--text-soft)] font-bold uppercase tracking-wider">Metadados e SLA</h5>
-                
-                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-[var(--border-light)]">
-                  <span className="text-[9px] text-[var(--text-soft)] uppercase w-1/3">Status:</span>
-                  <select 
-                    value={selectedLead.status} 
-                    onChange={async (e) => {
-                      const newStatus = e.target.value;
-                      await supabase.from('leads').update({ status: newStatus }).eq('id', selectedLead.id);
-                      setSelectedLead({...selectedLead, status: newStatus});
-                      loadAllData();
-                    }}
-                    className="w-2/3 bg-white border border-[var(--border-light)] rounded px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
-                  >
-                    {Object.keys(STATUS_LABELS).map(k => (
-                      <option key={k} value={k}>{STATUS_LABELS[k]}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between p-2 bg-gray-50 rounded border border-[var(--border-light)]">
-                  <span className="text-[9px] text-[var(--text-soft)] uppercase w-1/3">Vendedor:</span>
-                  <select 
-                    value={selectedLead.current_owner_id || ""} 
-                    onChange={async (e) => {
-                      const newOwner = e.target.value || null;
-                      await supabase.from('leads').update({ current_owner_id: newOwner }).eq('id', selectedLead.id);
-                      setSelectedLead({...selectedLead, current_owner_id: newOwner});
-                      loadAllData();
-                    }}
-                    className="w-2/3 bg-white border border-[var(--border-light)] rounded px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
-                  >
-                    <option value="">Não atribuído (SDR)</option>
-                    {adminUsers.map(u => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex justify-between p-3 bg-gray-50 rounded border border-[var(--border-light)] mt-2">
-                  <span className="text-[9px] text-[var(--text-soft)] uppercase">WhatsApp Notificado:</span>
-                  <span className={`text-[9px] font-bold ${selectedLead.sent_to_seller_at ? 'text-green-600' : 'text-red-600'}`}>
-                    {selectedLead.sent_to_seller_at ? 'SIM' : 'NÃO'}
-                  </span>
-                </div>
-                
-                <div className="pt-2">
-                  <label className="text-[9px] text-[var(--text-soft)] font-bold uppercase tracking-wider block mb-1">Justificativa de SLA</label>
-                  <textarea 
-                    rows={2} 
-                    value={justificativa} 
-                    onChange={(e) => setJustificativa(e.target.value)} 
-                    placeholder="Se o lead não responde ou o orçamento travou, justifique aqui..."
-                    className="w-full bg-white border border-[var(--border-light)] rounded p-2 text-xs text-[var(--text-primary)] outline-none focus:border-[var(--border-strong)] transition-all resize-none mb-2" 
-                  />
-                  <button 
-                    onClick={handleSaveJustificativa}
-                    disabled={actionLoading === 'save-justificativa'}
-                    className="btn-secondary w-full py-1.5 text-[10px] font-bold"
-                  >
-                    {actionLoading === 'save-justificativa' ? 'Salvando...' : 'Salvar Justificativa'}
-                  </button>
-                </div>
-              </section>
-
-              <section className="space-y-3">
-                <h5 className="text-[9px] text-[var(--text-soft)] font-bold uppercase tracking-wider text-red-600">ZONA DE PERIGO (Ações Administrativas)</h5>
-                <button 
-                  onClick={async () => {
-                    if (!confirm('ATENÇÃO: Deseja excluir este lead permanentemente? Todo o histórico de conversas e SLA será apagado e não poderá ser desfeito.')) return;
-                    try {
-                      await supabase.from('leads').delete().eq('id', selectedLead.id);
-                      setSelectedLead(null);
-                      loadAllData();
-                    } catch (e) {
-                      alert('Erro ao excluir: ' + e);
-                    }
-                  }}
-                  className="btn-secondary w-full py-2 text-[10px] font-bold text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-colors"
-                >
-                  🗑 Excluir Lead Permanentemente
-                </button>
-              </section>
-
-              <section className="space-y-3">
-                <h5 className="text-[9px] text-[var(--text-soft)] font-bold uppercase tracking-wider">Histórico de Mensagens</h5>
-                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
-                  {leadHistory.map((msg, i) => (
-                    <div key={i} className={`p-3 rounded text-xs border ${msg.sender_type === 'lead' ? 'bg-white text-neutral-700 border-neutral-200' : 'bg-neutral-50 text-neutral-800 border-neutral-200'}`}>
-                      <div className="text-[9px] text-[var(--text-soft)] uppercase font-bold mb-1 font-mono">{msg.sender_type === 'lead' ? 'Cliente' : 'IA Lino'}</div>
-                      <p className="leading-relaxed">{msg.message_content}</p>
-                    </div>
-                  ))}
-                  {leadHistory.length === 0 && (
-                    <p className="text-xs text-[var(--text-soft)] italic text-center py-4">Nenhuma mensagem registrada.</p>
-                  )}
-                </div>
-              </section>
+            <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-xs text-[#666666] block">Rastreio e Entrega</span>
+              <span className="text-2xl font-bold text-blue-600 mt-1 block">{metricasPosVenda.entregas}</span>
+              <span className="text-[11px] text-[#888888] mt-1 block">Previsão logística</span>
             </div>
-            
-            <div className="p-6 bg-[var(--bg-sidebar)] border-t border-[var(--border-light)]">
-              <button onClick={() => setSelectedLead(null)} className="btn-primary w-full py-4 text-xs font-bold cursor-pointer">Fechar Drawer</button>
+
+            <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-xs text-[#666666] block">Notas Fiscais e Boletos</span>
+              <span className="text-2xl font-bold text-purple-600 mt-1 block">{metricasPosVenda.financeiro}</span>
+              <span className="text-[11px] text-[#888888] mt-1 block">2ª via de faturamento</span>
             </div>
-          </>
-        )}
+          </div>
+        </div>
+      )}
+
+      {/* ── TABELA AUDITÁVEL DE LEADS (COM DADOS REAIS VIA API) ──────── */}
+      <div className="bg-white rounded-lg border border-[#eaeaea] overflow-hidden shadow-2xs flex-1">
+        <div className="p-3 border-b border-[#eaeaea] flex flex-wrap items-center justify-between gap-3 bg-[#fafafa]">
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
+              Registros da Operação ({filteredLeads.length})
+            </h3>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888888]" />
+            <input
+              type="text"
+              placeholder="Filtrar por nome, fone, código..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1 text-xs rounded border border-[#eaeaea] bg-white text-[#111111] outline-none focus:border-[#111111]"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-[#eaeaea] bg-white text-[#666666] font-medium">
+                <th className="py-2.5 px-4 font-semibold">Código / Lead</th>
+                <th className="py-2.5 px-4 font-semibold">Empresa / WhatsApp</th>
+                <th className="py-2.5 px-4 font-semibold">Etapa</th>
+                <th className="py-2.5 px-4 font-semibold">Responsável</th>
+                <th className="py-2.5 px-4 font-semibold">Produto / Demanda</th>
+                <th className="py-2.5 px-4 font-semibold">Data de Criação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eaeaea]">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-[#888888]">
+                    Carregando atendimentos da API segura...
+                  </td>
+                </tr>
+              ) : filteredLeads.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-[#888888]">
+                    Nenhum registro encontrado.
+                  </td>
+                </tr>
+              ) : (
+                filteredLeads.map((l) => {
+                  const owner = adminUsers.find((u) => u.id === l.current_owner_id);
+
+                  return (
+                    <tr
+                      key={l.id}
+                      onClick={() => (window.location.href = `/atendimentos?leadId=${l.id}`)}
+                      className="hover:bg-[#fafafa] cursor-pointer transition-colors"
+                    >
+                      <td className="py-2.5 px-4">
+                        <div className="font-mono text-[11px] font-semibold text-blue-700">
+                          {l.tracking_code || `LINO.${l.id.slice(0, 6).toUpperCase()}`}
+                        </div>
+                        <div className="font-semibold text-[#111111] mt-0.5">{l.name || "Cliente sem nome"}</div>
+                      </td>
+
+                      <td className="py-2.5 px-4">
+                        <div className="text-[#111111]">{l.company || l.empresa || "Sem empresa"}</div>
+                        <div className="text-[11px] text-[#666666] font-mono">{l.whatsapp_number}</div>
+                      </td>
+
+                      <td className="py-2.5 px-4">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                            l.status === "WAITING_SELLER"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : l.status === "IN_NEGOTIATION"
+                              ? "bg-blue-50 text-blue-800 border-blue-200"
+                              : l.status === "CLOSED_WON"
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : "bg-neutral-100 text-neutral-800 border-neutral-200"
+                          }`}
+                        >
+                          {l.status || "Ativo"}
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-4 text-[#111111] font-medium">
+                        {owner?.name || l.seller?.name || "Não atribuído"}
+                      </td>
+
+                      <td className="py-2.5 px-4">
+                        <div className="font-medium text-[#111111] truncate max-w-[200px]">
+                          {l.detected_product || l.produto || "Pendente"}
+                        </div>
+                        <div className="text-[11px] text-[#666666] truncate max-w-[200px]">
+                          {l.quantidade || ""}
+                        </div>
+                      </td>
+
+                      <td className="py-2.5 px-4 text-[#666666]">
+                        {l.created_at ? new Date(l.created_at).toLocaleDateString("pt-BR") : "N/D"}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
