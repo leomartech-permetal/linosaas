@@ -68,6 +68,19 @@ const COBRANCA_SUPORTE_KEYWORDS = [
 export function classifyReturnIntent(message: string, lead: LeadState): IntentDecision {
   const clean = (message || '').toLowerCase();
 
+  // 0. Se enviou código de rastreio LINO ou solicitou orçamento novo -> Sempre SDR (nova demanda)
+  const hasTrackingCode = /(?:lino\.)([a-z0-9]{6})/i.test(clean);
+  const isQuoteRequest = clean.includes('orçamento') || clean.includes('orcamento') || clean.includes('cotação') || clean.includes('cotacao') || clean.includes('cotar') || clean.includes('projeto');
+  const isSupportComplaint = COBRANCA_SUPORTE_KEYWORDS.some(kw => clean.includes(kw));
+
+  if (hasTrackingCode || (isQuoteRequest && !isSupportComplaint)) {
+    return {
+      mode: 'SDR',
+      reason: hasTrackingCode ? 'Código de rastreio detectado — nova demanda comercial' : 'Solicitação de orçamento — qualificação SDR',
+      shouldAlertSla: false
+    };
+  }
+
   // 1. Detecção de Pós-Venda (independente do status, se menciona pedido já existente)
   const isPosVenda = POS_VENDA_KEYWORDS.some(kw => clean.includes(kw));
   if (isPosVenda || lead.status === 'FECHADO' || lead.status === 'CONVERTIDO' || lead.status === 'POS_VENDA') {

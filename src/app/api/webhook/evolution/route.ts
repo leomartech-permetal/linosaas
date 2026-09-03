@@ -231,15 +231,37 @@ export async function POST(request: Request) {
         lead = newLead;
       } else {
         const updates: any = {};
-        if (!lead.tracking_code) updates.tracking_code = activeCode;
-        if (trackingData && !lead.tracking_id) {
-          updates.tracking_id = trackingData.id;
-          updates.context_source = contextSource;
-          updates.context_interest = contextInterest;
+        if (extractedCode) {
+          updates.tracking_code = extractedCode;
+          if (trackingData) {
+            updates.tracking_id = trackingData.id;
+            updates.context_source = trackingData.origem || trackingData.utm_source || 'Site';
+            updates.context_interest = trackingData.page_title || trackingData.page_path || 'Gradis e Pisos';
+          }
+          // Resetar para nova qualificação SDR
+          updates.status = 'SDR_QUALIFICATION';
+          updates.qualification_completed = false;
+          updates.return_intent = 'SDR';
+          updates.last_mode = 'SDR';
+          updates.b2b_attempts = { cnpj: 0, email: 0, nome: 0, empresa: 0 };
+          updates.produto = null;
+          updates.detected_product = null;
+          updates.quantidade = null;
+          updates.especificacao = null;
+          updates.current_owner_id = null;
+          updates.sent_to_seller_at = null;
+        } else {
+          if (!lead.tracking_code) updates.tracking_code = activeCode;
+          if (trackingData && !lead.tracking_id) {
+            updates.tracking_id = trackingData.id;
+            updates.context_source = contextSource;
+            updates.context_interest = contextInterest;
+          }
         }
         if (!lead.name && pushName) updates.name = pushName;
         if (Object.keys(updates).length > 0) {
           await supabase.from('leads').update(updates).eq('id', lead.id);
+          lead = { ...lead, ...updates };
         }
       }
 
