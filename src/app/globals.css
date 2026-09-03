@@ -155,6 +155,12 @@ button[class*="bg-white"] {
   border-color: var(--text-primary);
 }
 
+/* Espaçamento garantido para ícone de busca / lupa à esquerda em todos os inputs */
+.relative input[placeholder*="Buscar"],
+.relative input[placeholder*="Filtrar"] {
+  padding-left: 2.5rem !important;
+}
+
 .search-shortcut {
   position: absolute;
   right: 10px;

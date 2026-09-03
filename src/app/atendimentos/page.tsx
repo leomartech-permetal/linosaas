@@ -209,13 +209,14 @@ export default function AtendimentosPage() {
           </div>
 
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888888]" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Buscar cliente, empresa..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#fafafa] border border-[#eaeaea] rounded-md outline-none focus:border-[#111111] transition-colors"
+              className="w-full pl-10 pr-3 py-2 text-xs bg-white border border-neutral-300 rounded-lg outline-none focus:border-black transition-colors text-black font-medium"
+              style={{ paddingLeft: "2.5rem" }}
             />
           </div>
 

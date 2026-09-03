@@ -279,13 +279,14 @@ export default function OportunidadesPage() {
       {/* ── BARRA DE BUSCA E FILTROS ÚNICA COM ALTO CONTRASTE E PADDING ── */}
       <div className="flex flex-wrap items-center justify-between gap-4 py-1.5">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Buscar código LINO, cliente, empresa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-white border border-neutral-300 text-black shadow-2xs placeholder:text-neutral-500 outline-none focus:border-black transition-colors font-medium"
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-lg bg-white border border-neutral-300 text-black shadow-2xs placeholder:text-neutral-500 outline-none focus:border-black transition-colors font-medium"
+            style={{ paddingLeft: "2.5rem" }}
           />
         </div>
 
