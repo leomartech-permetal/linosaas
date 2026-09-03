@@ -231,8 +231,11 @@ export async function POST(request: Request) {
         lead = newLead;
       } else {
         const updates: any = {};
-        if (extractedCode) {
-          updates.tracking_code = extractedCode;
+        const isNewQuoteRequest = /(?:quero|preciso|solicito|gostaria|cotar|cota[çc][aã]o|or[çc]amento|projeto|metro\s*linear|metros\s*lineares|gradil|chapa)/i.test(finalContent);
+        const hasNewCompanyMention = /(?:empresa|construtora|ind[uú]stria|engenharia|metal[uú]rgica)/i.test(finalContent);
+
+        if (extractedCode || isNewQuoteRequest || (lead.qualification_completed && !lead.current_owner_id)) {
+          if (extractedCode) updates.tracking_code = extractedCode;
           if (trackingData) {
             updates.tracking_id = trackingData.id;
             updates.context_source = trackingData.origem || trackingData.utm_source || 'Site';
@@ -248,8 +251,16 @@ export async function POST(request: Request) {
           updates.detected_product = null;
           updates.quantidade = null;
           updates.especificacao = null;
+          updates.observacao = null;
+          updates.qualification_state = null;
           updates.current_owner_id = null;
           updates.sent_to_seller_at = null;
+
+          // Se a mensagem apresenta uma nova empresa ou é uma nova cotação, não herdar CNPJ e e-mail antigos
+          if (hasNewCompanyMention || isNewQuoteRequest) {
+            updates.cnpj = null;
+            updates.email_corporativo = null;
+          }
         } else {
           if (!lead.tracking_code) updates.tracking_code = activeCode;
           if (trackingData && !lead.tracking_id) {

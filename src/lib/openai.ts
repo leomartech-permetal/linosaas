@@ -129,6 +129,7 @@ export async function processLeadWithSkills(
   }
 
   // 3. RAG E-COMMERCE FACETADO
+  // 3. RAG E-COMMERCE FACETADO
   const ultimaMsg = history[history.length - 1]?.message_content || '';
   const todoHistoricoTexto = history.map(h => h.message_content).join(' ');
   const technicalDetected = extractTechnicalAttributes(todoHistoricoTexto);
@@ -141,8 +142,19 @@ export async function processLeadWithSkills(
     else if (textoCompletoLower.includes('perfurad')) targetFamilia = 'chapa_perfurada';
   }
 
+  let targetModelo = technicalDetected.modelo;
+  if (!targetModelo) {
+    if (textoCompletoLower.includes('stadium')) targetModelo = 'stadium';
+    else if (textoCompletoLower.includes('artis')) targetModelo = 'artis';
+    else if (textoCompletoLower.includes('sigma')) targetModelo = 'sigma';
+    else if (textoCompletoLower.includes('omega')) targetModelo = 'omega';
+    else if (textoCompletoLower.includes('leone')) targetModelo = 'leone';
+    else if (textoCompletoLower.includes('parque')) targetModelo = 'parque';
+  }
+
   const facetCriteria = {
     familia: targetFamilia,
+    modelo: targetModelo,
     malha_a: technicalDetected.malha_a,
     malha_b: technicalDetected.malha_b,
     material: technicalDetected.material,
@@ -150,18 +162,31 @@ export async function processLeadWithSkills(
   };
 
   const catalogFacets = await getFacetedCatalogOptions(facetCriteria);
-  const catalogoEcommerceContexto = formatFacetedContextForPrompt(catalogFacets, technicalDetected);
+  const catalogoEcommerceContexto = formatFacetedContextForPrompt(catalogFacets, {
+    ...technicalDetected,
+    familia: targetFamilia,
+    modelo: targetModelo
+  });
 
   // 4. Preparar Regras de Persistência do Schema B2B
   const qStateValores = leadData?.qualification_state?.valores || {};
+
+  // Verificar o que realmente foi dito no histórico desta conversa
+  const cnpjNoHistorico = history.some(h => (h.sender_type === 'CUSTOMER' || h.sender_type === 'user') && /(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\bcnpj\b)/i.test(h.message_content));
+  const emailNoHistorico = history.some(h => (h.sender_type === 'CUSTOMER' || h.sender_type === 'user') && /[\w.-]+@[\w.-]+\.\w+/.test(h.message_content));
+
+  // Só travar como preenchido o CNPJ e Email se foram ditos nesta conversa ou se estão no qualification_state desta sessão
+  const cnpjAtual = cnpjNoHistorico ? (leadData?.cnpj || qStateValores.cnpj) : (qStateValores.cnpj || null);
+  const emailAtual = emailNoHistorico ? (leadData?.email_corporativo || qStateValores.email) : (qStateValores.email || null);
+
   const dadosCadastrados: Record<string, any> = {
     nome_cliente: leadData?.name || qStateValores.nome_cliente || null,
     name: leadData?.name || qStateValores.nome_cliente || null,
     empresa: leadData?.company || qStateValores.empresa || null,
     company: leadData?.company || qStateValores.empresa || null,
-    cnpj: leadData?.cnpj || qStateValores.cnpj || null,
-    email: leadData?.email_corporativo || qStateValores.email || null,
-    email_corporativo: leadData?.email_corporativo || qStateValores.email || null,
+    cnpj: cnpjAtual,
+    email: emailAtual,
+    email_corporativo: emailAtual,
     produto: detectedProduct || qStateValores.produto || technicalDetected.familia || null,
     quantidade: leadData?.quantidade || qStateValores.quantidade || technicalDetected.quantidade || null,
     especificacao: leadData?.especificacao || technicalDetected.dimensoes || null,
@@ -192,6 +217,29 @@ export async function processLeadWithSkills(
     }
   });
 
+  if (leadData?.cnpj && !cnpjAtual) {
+    instrucoesB2B += `- [DADO DE HISTÓRICO ANTERIOR] CNPJ no histórico: "${leadData.cnpj}". Se for o momento de pedir o CNPJ, pergunte ao cliente se o faturamento será nesse CNPJ ou se deseja informar outro.\n`;
+  }
+  if (leadData?.email_corporativo && !emailAtual) {
+    instrucoesB2B += `- [DADO DE HISTÓRICO ANTERIOR] E-mail no histórico: "${leadData.email_corporativo}". Se for o momento de pedir o e-mail, confirme se o envio pode ser para este e-mail ou outro.\n`;
+  }
+
+  // Contexto de lead que já comprou/cotou antes
+  let contextoRetorno = '';
+  const isLeadRetornante = (leadData?.qualification_completed || leadData?.produto) && history.length <= 2;
+  if (isLeadRetornante) {
+    const produtoAnt = leadData?.produto || 'gradil';
+    const empresaAnt = leadData?.company || leadData?.empresa || '';
+    contextoRetorno = `\n=== RECONHECIMENTO DE HISTÓRICO ANTERIOR ===
+O cliente já realizou cotação anterior de "${produtoAnt}"${empresaAnt ? ` (Empresa: ${empresaAnt})` : ''}.
+Se a última mensagem do cliente for apenas uma saudação inicial ("Oi", "Olá", "Bom dia") sem especificar produto novo:
+Aja de forma inteligente e acolhedora:
+"Olá ${leadData?.name || ''}! Que bom falar com você novamente. Vi em nosso histórico que você solicitou anteriormente um orçamento de ${produtoAnt}.
+Você gostaria de:
+1. Dar continuidade ou acrescentar algo naquele orçamento anterior?
+2. Fazer uma **nova cotação** para outro produto ou projeto?"\n`;
+  }
+
   // Contexto de anúncio / página navegada (se disponível)
   let contextoAnuncio = '';
   if (leadData?.context_source || leadData?.context_interest) {
@@ -204,6 +252,8 @@ Interesse/Página: ${leadData.context_interest || 'Catálogo Geral'}
   const masterPrompt = config?.master_prompt || 'Você é o Lino, atendente SDR comercial B2B da Permetal e Metalgrade.';
 
   const systemInstructions = `${masterPrompt}
+
+${contextoRetorno}
 
 ${contextoAnuncio}
 

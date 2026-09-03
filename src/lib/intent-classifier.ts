@@ -70,7 +70,7 @@ export function classifyReturnIntent(message: string, lead: LeadState): IntentDe
 
   // 0. Se enviou código de rastreio LINO ou solicitou orçamento novo -> Sempre SDR (nova demanda)
   const hasTrackingCode = /(?:lino\.)([a-z0-9]{6})/i.test(clean);
-  const isQuoteRequest = clean.includes('orçamento') || clean.includes('orcamento') || clean.includes('cotação') || clean.includes('cotacao') || clean.includes('cotar') || clean.includes('projeto');
+  const isQuoteRequest = clean.includes('orçamento') || clean.includes('orcamento') || clean.includes('cotação') || clean.includes('cotacao') || clean.includes('cotar') || clean.includes('projeto') || clean.includes('metro linear') || clean.includes('metros lineares') || clean.includes('gradil') || clean.includes('chapa') || clean.includes('nova cotação') || clean.includes('novo orçamento');
   const isSupportComplaint = COBRANCA_SUPORTE_KEYWORDS.some(kw => clean.includes(kw));
 
   if (hasTrackingCode || (isQuoteRequest && !isSupportComplaint)) {
@@ -91,7 +91,17 @@ export function classifyReturnIntent(message: string, lead: LeadState): IntentDe
     };
   }
 
-  // 2. Lead em fila de espera do vendedor (WAITING_SELLER ou EM_ATENDIMENTO)
+  // 2. Lead que já concluiu cotação anterior e mandou saudação inicial -> SDR (apresentar escolha de continuar ou nova cotação)
+  const isGreeting = /^(oi|ola|olá|bom dia|boa tarde|boa noite|opa|tudo bem|fala lino)[!.\s]*$/i.test(clean.trim());
+  if (isGreeting && (lead.qualification_completed || lead.status === 'WAITING_SELLER')) {
+    return {
+      mode: 'SDR',
+      reason: 'Lead retornante com saudação — apresentar opções de continuar orçamento anterior ou nova cotação',
+      shouldAlertSla: false
+    };
+  }
+
+  // 3. Lead em fila de espera do vendedor (WAITING_SELLER ou EM_ATENDIMENTO)
   const isWaitingSeller = lead.status === 'WAITING_SELLER' || 
                           lead.status === 'EM_ATENDIMENTO' || 
                           lead.qualification_completed === true;
