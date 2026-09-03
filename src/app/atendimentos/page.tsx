@@ -395,34 +395,38 @@ export default function AtendimentosPage() {
               <div ref={chatBottomRef} />
             </div>
 
-            {/* Compositor com Alternância Explícita */}
-            <div className="p-3 border-t border-[#eaeaea] bg-white flex flex-col gap-2">
-              <div className="flex items-center gap-2">
+            {/* Compositor com Alternância Explícita e Alto Contraste */}
+            <div className="p-4 border-t border-[#eaeaea] bg-white flex flex-col gap-3">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setComposerMode("client")}
-                  className={`text-xs px-2.5 py-1 rounded font-medium transition-colors flex items-center gap-1 ${
+                  className={`text-xs px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 border cursor-pointer ${
                     composerMode === "client"
-                      ? "bg-[#111111] text-white"
-                      : "text-[#666666] hover:bg-[#f5f5f5]"
+                      ? "bg-black text-white border-black shadow-xs"
+                      : "bg-white text-neutral-800 border-neutral-300 hover:border-black"
                   }`}
+                  style={composerMode === "client" ? { color: "#ffffff", backgroundColor: "#000000" } : { color: "#111111" }}
                 >
-                  <MessageSquare className="w-3 h-3" /> Responder cliente
+                  <MessageSquare className="w-3.5 h-3.5" style={composerMode === "client" ? { color: "#ffffff", stroke: "#ffffff" } : { color: "#333333" }} />
+                  <span style={composerMode === "client" ? { color: "#ffffff" } : { color: "#111111" }}>Responder cliente</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setComposerMode("internal")}
-                  className={`text-xs px-2.5 py-1 rounded font-medium transition-colors flex items-center gap-1 ${
+                  className={`text-xs px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 border cursor-pointer ${
                     composerMode === "internal"
-                      ? "bg-amber-600 text-white"
-                      : "text-[#666666] hover:bg-[#f5f5f5]"
+                      ? "bg-amber-700 text-white border-amber-700 shadow-xs"
+                      : "bg-white text-neutral-800 border-neutral-300 hover:border-amber-700"
                   }`}
+                  style={composerMode === "internal" ? { color: "#ffffff", backgroundColor: "#b45309" } : { color: "#111111" }}
                 >
-                  <Lock className="w-3 h-3" /> Nota interna
+                  <Lock className="w-3.5 h-3.5" style={composerMode === "internal" ? { color: "#ffffff", stroke: "#ffffff" } : { color: "#b45309" }} />
+                  <span style={composerMode === "internal" ? { color: "#ffffff" } : { color: "#111111" }}>Nota interna</span>
                 </button>
               </div>
 
-              <div className="flex items-end gap-2">
+              <div className="flex items-end gap-3">
                 <textarea
                   rows={2}
                   value={inputText}
@@ -438,23 +442,21 @@ export default function AtendimentosPage() {
                       ? "Escreva uma nota interna para a equipe (não visível ao cliente)..."
                       : "Digite a resposta ao cliente (Enter para enviar)..."
                   }
-                  className={`flex-1 text-xs p-2.5 rounded-md border outline-none resize-none transition-colors ${
-                    composerMode === "internal"
-                      ? "border-amber-300 bg-amber-50/40 focus:border-amber-600"
-                      : "border-[#eaeaea] bg-[#fafafa] focus:border-[#111111]"
-                  }`}
+                  className="flex-1 p-3 text-xs rounded-lg border border-neutral-300 bg-white text-black outline-none focus:border-black resize-none font-medium leading-relaxed"
                 />
+
                 <button
                   onClick={handleSendMessage}
                   disabled={sending || !inputText.trim()}
-                  className={`px-3.5 py-2.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 ${
+                  className={`px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-2 disabled:opacity-40 cursor-pointer ${
                     composerMode === "internal"
-                      ? "bg-amber-600 text-white hover:bg-amber-700"
-                      : "bg-[#111111] text-white hover:bg-black"
+                      ? "bg-amber-700 text-white hover:bg-amber-800"
+                      : "bg-black text-white hover:bg-neutral-800"
                   }`}
+                  style={{ color: "#ffffff" }}
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Enviar</span>
+                  <Send className="w-3.5 h-3.5 text-white" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                  <span style={{ color: "#ffffff" }}>{composerMode === "internal" ? "Gravar nota" : "Enviar"}</span>
                 </button>
               </div>
             </div>

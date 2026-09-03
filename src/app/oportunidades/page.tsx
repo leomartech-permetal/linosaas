@@ -268,15 +268,16 @@ export default function OportunidadesPage() {
           <button
             onClick={() => setShowNewLeadModal(true)}
             className="flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-black text-white hover:bg-neutral-800 transition-all shadow-xs cursor-pointer"
+            style={{ color: "#ffffff", backgroundColor: "#000000" }}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Novo lead</span>
+            <Plus className="w-4 h-4 text-white" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+            <span style={{ color: "#ffffff" }} className="text-white font-bold">Novo lead</span>
           </button>
         </div>
       </div>
 
       {/* ── BARRA DE BUSCA E FILTROS ÚNICA COM ALTO CONTRASTE E PADDING ── */}
-      <div className="flex flex-wrap items-center justify-between gap-4 py-1">
+      <div className="flex flex-wrap items-center justify-between gap-4 py-1.5">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
           <input
@@ -284,34 +285,39 @@ export default function OportunidadesPage() {
             placeholder="Buscar código LINO, cliente, empresa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-white border border-neutral-300 text-black shadow-2xs placeholder:text-neutral-500 outline-none focus:border-black transition-colors"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-white border border-neutral-300 text-black shadow-2xs placeholder:text-neutral-500 outline-none focus:border-black transition-colors font-medium"
           />
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto py-1">
+        <div className="flex items-center gap-2.5 overflow-x-auto py-1">
           <button
             onClick={() => setStageFilter("ALL")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border whitespace-nowrap cursor-pointer ${
               stageFilter === "ALL"
-                ? "bg-black text-white border-black shadow-xs font-bold"
-                : "bg-white text-neutral-700 border-neutral-300 hover:border-black hover:text-black shadow-2xs"
+                ? "bg-black text-white border-black shadow-xs"
+                : "bg-white text-neutral-800 border-neutral-300 hover:border-black hover:text-black shadow-2xs"
             }`}
+            style={stageFilter === "ALL" ? { color: "#ffffff", backgroundColor: "#000000" } : { color: "#111111" }}
           >
-            Todas as etapas
+            <span style={stageFilter === "ALL" ? { color: "#ffffff" } : { color: "#111111" }}>Todas as etapas</span>
           </button>
-          {STAGES.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setStageFilter(s.key)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap cursor-pointer ${
-                stageFilter === s.key
-                  ? "bg-black text-white border-black shadow-xs font-bold"
-                  : "bg-white text-neutral-700 border-neutral-300 hover:border-black hover:text-black shadow-2xs"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
+          {STAGES.map((s) => {
+            const isStageActive = stageFilter === s.key;
+            return (
+              <button
+                key={s.key}
+                onClick={() => setStageFilter(s.key)}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border whitespace-nowrap cursor-pointer ${
+                  isStageActive
+                    ? "bg-black text-white border-black shadow-xs"
+                    : "bg-white text-neutral-800 border-neutral-300 hover:border-black hover:text-black shadow-2xs"
+                }`}
+                style={isStageActive ? { color: "#ffffff", backgroundColor: "#000000" } : { color: "#111111" }}
+              >
+                <span style={isStageActive ? { color: "#ffffff" } : { color: "#111111" }}>{s.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

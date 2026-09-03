@@ -160,40 +160,44 @@ export default function RelatoriosPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Seletor de Período */}
-          <div className="flex items-center p-0.5 rounded-md bg-[#f0f0f0] border border-[#eaeaea] text-xs font-medium">
+          {/* Seletor de Período com alto contraste e respiro */}
+          <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-neutral-100 border border-neutral-300 text-xs font-semibold">
             {[
               { id: "7d", label: "7 dias" },
               { id: "30d", label: "30 dias" },
               { id: "all", label: "Histórico todo" },
-            ].map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setSelectedPeriod(p.id as any)}
-                className={`px-2.5 py-1 rounded transition-colors ${
-                  selectedPeriod === p.id
-                    ? "bg-white text-[#111111] shadow-2xs font-semibold"
-                    : "text-[#666666] hover:text-[#111111]"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            ].map((p) => {
+              const isSelected = selectedPeriod === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPeriod(p.id as any)}
+                  className={`px-3.5 py-1.5 rounded-md transition-all font-bold cursor-pointer ${
+                    isSelected
+                      ? "bg-black text-white shadow-xs"
+                      : "bg-white text-neutral-800 border border-neutral-300 hover:bg-neutral-50"
+                  }`}
+                  style={isSelected ? { color: "#ffffff", backgroundColor: "#000000" } : { color: "#111111" }}
+                >
+                  <span style={isSelected ? { color: "#ffffff" } : { color: "#111111" }}>{p.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           <button
             onClick={carregarRelatorios}
             disabled={loading}
-            className="p-1.5 rounded-md border border-[#eaeaea] bg-white text-[#666666] hover:text-[#111111] hover:border-[#999999] transition-colors shadow-2xs"
+            className="p-2 rounded-lg border border-neutral-300 bg-white text-neutral-800 hover:text-black hover:border-black transition-all shadow-xs cursor-pointer"
             title="Atualizar relatórios"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* ── SELETOR DE ABAS PRINCIPAIS ────────────────────────────── */}
-      <div className="flex items-center gap-2 border-b border-[#eaeaea] pb-2 text-xs font-medium">
+      {/* ── SELETOR DE ABAS PRINCIPAIS COM ESPAÇAMENTO E CONTRASTE REAL ─ */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-neutral-200 pb-3 mb-2">
         {[
           { key: "comercial", label: "Desempenho Comercial", icon: TrendingUp },
           { key: "atendimento", label: "SLA & Atendimento", icon: Clock },
@@ -205,14 +209,15 @@ export default function RelatoriosPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                 isActive
-                  ? "bg-[#111111] text-white font-semibold"
-                  : "bg-white border border-[#eaeaea] text-[#666666] hover:text-[#111111]"
+                  ? "bg-black text-white border-black shadow-sm"
+                  : "bg-white text-neutral-800 border-neutral-300 hover:border-black shadow-2xs"
               }`}
+              style={isActive ? { color: "#ffffff", backgroundColor: "#000000" } : { color: "#111111" }}
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
+              <Icon className="w-4 h-4" style={isActive ? { color: "#ffffff", stroke: "#ffffff" } : { color: "#333333" }} />
+              <span style={isActive ? { color: "#ffffff" } : { color: "#111111" }}>{tab.label}</span>
             </button>
           );
         })}
@@ -335,10 +340,11 @@ export default function RelatoriosPage() {
                   setEditingSla({ ...slaPolicy });
                   setShowEditSlaModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#111111] text-white hover:bg-black transition-colors text-xs font-semibold shadow-2xs"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-black text-white hover:bg-neutral-800 transition-all text-xs font-bold shadow-sm border border-black cursor-pointer"
+                style={{ color: "#ffffff", backgroundColor: "#000000" }}
               >
-                <Settings className="w-3.5 h-3.5" />
-                <span>Editar Prazos e Escalada</span>
+                <Settings className="w-4 h-4 text-white" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                <span style={{ color: "#ffffff" }} className="text-white font-bold">Editar Prazos e Escalada</span>
               </button>
             </div>
 

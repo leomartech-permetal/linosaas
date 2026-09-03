@@ -78,8 +78,38 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
-p, span, div, li, th, td, label, select, input, textarea {
+p, li, th, td, label {
   color: var(--text-secondary);
+}
+
+/* ── REGRAS GLOBAIS DE ALTO CONTRASTE PARA BOTÕES ──────────────────── */
+button, [role="button"], .btn {
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Qualquer botão ou badge com fundo preto/escuro TEM QUE TER texto 100% branco */
+button.bg-black,
+button.bg-black *,
+button[class*="bg-black"],
+button[class*="bg-black"] *,
+button[class*="bg-[#111111]"],
+button[class*="bg-[#111111]"] *,
+button[class*="bg-neutral-900"],
+button[class*="bg-neutral-900"] *,
+button[class*="bg-neutral-800"],
+button[class*="bg-neutral-800"] *,
+.btn-primary,
+.btn-primary * {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Botões claros com alto contraste */
+button.bg-white,
+button[class*="bg-white"] {
+  color: #111111 !important;
 }
 
 /* Layout Estrutural Mestre */
