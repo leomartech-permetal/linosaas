@@ -180,12 +180,19 @@ async function processInboundMessage(
 
     const history = (historyData || []).reverse();
 
-    // ── Gravar mensagem do cliente no histórico ───────────────────────────────
+    // ── Gravar mensagem do cliente no histórico e incluir no payload de IA ───
     await supabase.from('interactions').insert([{
       lead_id: lead.id,
       sender_type: 'CUSTOMER',
       message_content: event.body,
     }]);
+
+    // Anexar mensagem atual ao histórico para que a IA processe a fala do cliente
+    history.push({
+      sender_type: 'CUSTOMER',
+      message_content: event.body,
+      created_at: new Date().toISOString(),
+    });
 
     // ── Verificar janela de agrupamento de retornos (15 min) ──────────────────
     const lastCustomerMsg = history.slice().reverse().find(m =>

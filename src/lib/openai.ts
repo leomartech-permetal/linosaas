@@ -270,8 +270,14 @@ Responda EXCLUSIVAMENTE em formato JSON com a estrutura:
   ];
 
   history.forEach((m) => {
+    const isCustomer =
+      m.sender_type === 'lead' ||
+      m.sender_type === 'user' ||
+      m.sender_type === 'CUSTOMER' ||
+      m.sender_type === 'customer';
+
     messagesPayload.push({
-      role: m.sender_type === 'lead' || m.sender_type === 'user' ? 'user' : 'assistant',
+      role: isCustomer ? 'user' : 'assistant',
       content: m.message_content
     });
   });
