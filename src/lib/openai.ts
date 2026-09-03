@@ -346,9 +346,21 @@ export async function generateSupportResponse(
   }
 
   const openai = new OpenAI({ apiKey });
-  const sellerName = typeof leadOrMessage === 'object' ? leadOrMessage?.current_owner?.name : modeOrSeller;
+  const isContextObj = typeof modeOrSeller === 'object' && modeOrSeller !== null;
+  const ctx: any = isContextObj ? modeOrSeller : {};
+  const sellerName = typeof leadOrMessage === 'object' ? leadOrMessage?.current_owner?.name : (typeof modeOrSeller === 'string' ? modeOrSeller : null);
+
+  let situationalGuidance = '';
+  if (ctx.escalation_executed) {
+    situationalGuidance = `\n- SITUAÇÃO CRÍTICA: O cliente já cobrou atendimento ${ctx.return_count || 3} vezes sem retorno. A COORDENAÇÃO GERAL DA PERMETAL JÁ FOI NOTIFICADA DIRETAMENTE para intervir com urgência máxima. Tranquilize o cliente informando que a coordenação já está no caso.`;
+  } else if (ctx.charge_throttled) {
+    situationalGuidance = `\n- ATENÇÃO: O cliente entrou em contato há poucos minutos desde a última notificação ao consultor (menos de 10 minutos de intervalo). O consultor já está com a solicitação na fila prioritária, mas pode estar em alinhamento técnico ou conferência de medidas. Não prometa cobrança repetida imediata; explique com simpatia que o caso já está com ele e logo ele responderá.`;
+  } else if (ctx.seller_notified) {
+    situationalGuidance = `\n- O consultor ${sellerName || 'responsável'} acabou de ser notificado com prioridade para fazer o contato imediato.`;
+  }
+
   const supportPrompt = config?.support_prompt || `Você é o Lino Suporte da Permetal. O cliente já foi qualificado e está aguardando o consultor ${sellerName || 'responsável'}.
-Seja cordial, seguro e acolhedor. Informe que nossa equipe já está com a solicitação em tela e acionamos o consultor para dar prioridade. Mantenha a resposta curta (1 a 2 frases).`;
+Seja cordial, profissional e acolhedor. Mantenha a resposta curta (1 a 2 frases no máximo).${situationalGuidance}`;
 
   try {
     const formattedHistory = (history || []).map((m: any) => ({
@@ -369,7 +381,7 @@ Seja cordial, seguro e acolhedor. Informe que nossa equipe já está com a solic
       resposta: text,
       message: text,
       numero_pedido: null,
-      escalar_urgente: true,
+      escalar_urgente: Boolean(ctx.escalation_executed),
       intencao_pos_venda: 'atendimento',
       nova_informacao: null
     };

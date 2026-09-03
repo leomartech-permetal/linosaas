@@ -13,13 +13,14 @@
  */
 
 export interface SlaPolicy {
-  first_contact_minutes: number;    // minutos úteis para primeiro contato
-  grouping_window_minutes: number;  // janela de agrupamento de retornos (corridos)
-  escalate_after_returns: number;   // número de retornos para escalada
-  hard_escalate_minutes: number;    // minutos úteis para escalada dura
+  first_contact_minutes: number;       // minutos úteis para primeiro contato
+  grouping_window_minutes: number;     // janela de agrupamento de retornos (corridos)
+  escalate_after_returns: number;      // número de retornos/cobranças para escalada (default 3x)
+  hard_escalate_minutes: number;       // minutos úteis para escalada dura (default 240 min)
+  min_minutes_between_charges: number; // intervalo mínimo entre cobranças ao vendedor (default 10 min)
   timezone: string;
   work_schedule: WorkSchedule;
-  holidays: string[];               // datas no formato 'YYYY-MM-DD'
+  holidays: string[];                  // datas no formato 'YYYY-MM-DD'
 }
 
 export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
@@ -39,8 +40,9 @@ const DAY_KEYS: DayKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 export const DEFAULT_SLA_POLICY: SlaPolicy = {
   first_contact_minutes: 30,
   grouping_window_minutes: 15,
-  escalate_after_returns: 5,
+  escalate_after_returns: 3,         // Máximo de 3 cobranças antes de escalar
   hard_escalate_minutes: 240,
+  min_minutes_between_charges: 10,   // Mínimo de 10 minutos entre notificações ao vendedor
   timezone: 'America/Sao_Paulo',
   work_schedule: {
     mon: [['07:00', '12:00'], ['13:00', '17:00']],

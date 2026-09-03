@@ -66,8 +66,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ── ÁREA DE TRABALHO: SIDEBAR + MAIN ──────────────────────────── */}
       <div className="flex flex-1 overflow-hidden w-full">
-        {/* Sidebar fixa (232px) */}
-        <aside className="w-[232px] flex-shrink-0 border-r border-[#eaeaea] bg-white flex flex-col justify-between z-20">
+        {/* Sidebar fixa (240px) */}
+        <aside className="w-60 min-w-[240px] max-w-[240px] flex-shrink-0 border-r border-[#eaeaea] bg-white flex flex-col justify-between z-20">
           <div className="p-3.5 flex flex-col gap-3">
             {/* Logo / Header Lino */}
             <div className="flex items-center justify-between px-1.5 py-1 mb-1">
@@ -163,7 +163,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Área Principal de Conteúdo */}
-        <main className="flex-1 h-full overflow-y-auto bg-[#fafafa]">
+        <main className="flex-1 min-w-0 h-full overflow-y-auto bg-[#fafafa]">
           {children}
         </main>
       </div>

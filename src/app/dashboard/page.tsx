@@ -2,19 +2,19 @@
 
 import { useEffect, useState, useMemo } from "react";
 import {
-  BarChart3,
   TrendingUp,
   Clock,
+  Package,
+  RefreshCw,
+  Search,
+  Settings,
+  X,
+  Check,
   CheckCircle2,
   AlertTriangle,
-  RefreshCw,
-  PhoneCall,
-  Package,
-  Layers,
-  Users,
-  Search,
-  ArrowRight,
-  ShieldAlert,
+  BellRing,
+  UserCheck,
+  MessageSquare,
 } from "lucide-react";
 
 export default function RelatoriosPage() {
@@ -25,6 +25,19 @@ export default function RelatoriosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState<"7d" | "30d" | "all">("30d");
 
+  // ── POLÍTICA DE SLA & ESCALADA EDITÁVEL ────────────────────────────
+  const [slaPolicy, setSlaPolicy] = useState<any>({
+    first_contact_minutes: 30,
+    min_minutes_between_charges: 10,
+    escalate_after_returns: 3,
+    hard_escalate_minutes: 240,
+    grouping_window_minutes: 15,
+  });
+  const [showEditSlaModal, setShowEditSlaModal] = useState(false);
+  const [editingSla, setEditingSla] = useState<any>({});
+  const [savingSla, setSavingSla] = useState(false);
+  const [slaSuccessMsg, setSlaSuccessMsg] = useState("");
+
   useEffect(() => {
     carregarRelatorios();
   }, []);
@@ -32,10 +45,10 @@ export default function RelatoriosPage() {
   async function carregarRelatorios() {
     setLoading(true);
     try {
-      // Carregar via API segura (nunca direct browser supabase sem token)
-      const [leadsRes, usersRes] = await Promise.all([
+      const [leadsRes, usersRes, slaRes] = await Promise.all([
         fetch("/api/leads?limit=200"),
         fetch("/api/admin-users"),
+        fetch("/api/settings/sla"),
       ]);
 
       if (leadsRes.ok) {
@@ -46,12 +59,45 @@ export default function RelatoriosPage() {
         const users = await usersRes.json();
         setAdminUsers(users || []);
       }
+      if (slaRes.ok) {
+        const slaData = await slaRes.json();
+        setSlaPolicy(slaData);
+        setEditingSla(slaData);
+      }
     } catch (e) {
       console.error("[Relatorios] Erro ao carregar dados:", e);
     } finally {
       setLoading(false);
     }
   }
+
+  const handleSaveSla = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSla(true);
+    setSlaSuccessMsg("");
+
+    try {
+      const res = await fetch("/api/settings/sla", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingSla),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setSlaPolicy(updated);
+        setSlaSuccessMsg("Regras de prazos e escalada salvas com sucesso!");
+        setTimeout(() => {
+          setShowEditSlaModal(false);
+          setSlaSuccessMsg("");
+        }, 1500);
+      }
+    } catch (err) {
+      console.error("Erro ao salvar SLA:", err);
+    } finally {
+      setSavingSla(false);
+    }
+  };
 
   // ── MÉTRICAS COMERCIAIS ───────────────────────────────────────────
   const metricasComerciais = useMemo(() => {
@@ -66,13 +112,16 @@ export default function RelatoriosPage() {
     return { total, qualificados, emNegociacao, fechados, perdidos, taxaConversao, taxaQualificacao };
   }, [leads]);
 
-  // ── MÉTRICAS DE ATENDIMENTO & SLA ────────────────────────────────
+  // ── MÉTRICAS DE ATENDIMENTO & ESCALADA ────────────────────────────
   const metricasAtendimento = useMemo(() => {
     const aguardando = leads.filter((l) => l.status === "WAITING_SELLER").length;
     const slaViolado = leads.filter((l) => l.sla_breached === true).length;
+    const escalados = leads.filter(
+      (l) => l.status === "ESCALATED_TO_SUPERVISOR" || (l.observacao || "").includes("Escalação")
+    ).length;
     const slaEmDia = leads.filter((l) => !l.sla_breached && l.status === "WAITING_SELLER").length;
 
-    return { aguardando, slaViolado, slaEmDia };
+    return { aguardando, slaViolado, escalados, slaEmDia };
   }, [leads]);
 
   // ── MÉTRICAS DE PÓS-VENDA ─────────────────────────────────────────
@@ -99,14 +148,14 @@ export default function RelatoriosPage() {
 
   return (
     <div className="flex flex-col p-6 max-w-[1500px] mx-auto gap-6 min-h-full">
-      {/* ── TOPO / CABEÇALHO COMPACTO ───────────────────────────────── */}
+      {/* ── TOPO DA PÁGINA ────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#eaeaea]">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-[#111111]">
             Relatórios & Auditoria
           </h1>
           <p className="text-xs text-[#666666] mt-0.5">
-            Análise de conversão comercial, tempos de SLA e ocorrências
+            Análise de conversão comercial, tempos de SLA e escalações da coordenação
           </p>
         </div>
 
@@ -143,7 +192,7 @@ export default function RelatoriosPage() {
         </div>
       </div>
 
-      {/* ── TRÊS ABAS OBRIGATÓRIAS (COMERCIAL, ATENDIMENTO, PÓS-VENDA) ─ */}
+      {/* ── SELETOR DE ABAS PRINCIPAIS ────────────────────────────── */}
       <div className="flex items-center gap-2 border-b border-[#eaeaea] pb-2 text-xs font-medium">
         {[
           { key: "comercial", label: "Desempenho Comercial", icon: TrendingUp },
@@ -169,7 +218,7 @@ export default function RelatoriosPage() {
         })}
       </div>
 
-      {/* ── CONTEÚDO DA ABA: COMERCIAL ──────────────────────────────── */}
+      {/* ── CONTEÚDO: ABA COMERCIAL ───────────────────────────────── */}
       {activeTab === "comercial" && (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -190,7 +239,7 @@ export default function RelatoriosPage() {
               <span className="text-2xl font-bold text-emerald-600 mt-1 block">{metricasComerciais.fechados}</span>
             </div>
             <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
-              <span className="text-[11px] text-[#666666] block">Taxa de Qualificação</span>
+              <span className="text-[11px] text-[#666666] block">Taxa Qualificação</span>
               <span className="text-2xl font-bold text-[#111111] mt-1 block">{metricasComerciais.taxaQualificacao}%</span>
             </div>
             <div className="p-3.5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
@@ -199,7 +248,6 @@ export default function RelatoriosPage() {
             </div>
           </div>
 
-          {/* Funil Visual Limpo */}
           <div className="p-5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs flex flex-col gap-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
               Conversão de Etapas do Pipeline
@@ -241,14 +289,14 @@ export default function RelatoriosPage() {
         </div>
       )}
 
-      {/* ── CONTEÚDO DA ABA: ATENDIMENTO & SLA ──────────────────────── */}
+      {/* ── CONTEÚDO: ABA SLA & ATENDIMENTO (COM REGRAS EDITÁVEIS) ──── */}
       {activeTab === "atendimento" && (
         <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
               <span className="text-xs text-[#666666] block">Aguardando 1º Contato</span>
               <span className="text-2xl font-bold text-amber-600 mt-1 block">{metricasAtendimento.aguardando}</span>
-              <span className="text-[11px] text-[#888888] mt-1 block">Leads distribuídos sem resposta</span>
+              <span className="text-[11px] text-[#888888] mt-1 block">Leads distribuídos</span>
             </div>
 
             <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
@@ -258,36 +306,67 @@ export default function RelatoriosPage() {
             </div>
 
             <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
+              <span className="text-xs text-[#666666] block">Escalados para Coordenação</span>
+              <span className="text-2xl font-bold text-purple-700 mt-1 block">{metricasAtendimento.escalados}</span>
+              <span className="text-[11px] text-purple-700 font-medium mt-1 block">Cobrança limite atingida</span>
+            </div>
+
+            <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs">
               <span className="text-xs text-[#666666] block">Atendimentos no Prazo</span>
               <span className="text-2xl font-bold text-emerald-600 mt-1 block">{metricasAtendimento.slaEmDia}</span>
               <span className="text-[11px] text-[#888888] mt-1 block">Dentro da janela comercial</span>
             </div>
           </div>
 
-          <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-2xs flex flex-col gap-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
-              Regras do Calendário Útil Lino v4 (Permetal)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-[#444444]">
-              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
-                <span className="font-bold text-[#111111] block mb-1">Horário de Expediente</span>
-                <p>Segunda a Quinta: 07:00–12:00 e 13:00–17:00 (9h úteis/dia)</p>
-                <p>Sexta-feira: 07:00–12:00 e 13:00–16:00 (8h úteis/dia)</p>
-                <p className="text-[11px] text-[#666666] mt-1">Almoço (12h–13h), fins de semana e feriados são ignorados no cálculo de SLA.</p>
+          {/* Card de Regras de Prazos e Escalada com Botão de Edição */}
+          <div className="p-5 rounded-lg bg-white border border-[#eaeaea] shadow-2xs flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
+                  Regras do Calendário Útil Lino v4 (Permetal)
+                </h3>
+                <p className="text-[11px] text-[#666666] mt-0.5">
+                  A IA consulta essas diretrizes ativamente antes de formular respostas e cobrar a equipe
+                </p>
               </div>
 
-              <div className="p-3 rounded bg-[#fafafa] border border-[#eaeaea]">
-                <span className="font-bold text-[#111111] block mb-1">Prazos e Escalada</span>
-                <p>1º Contato do Vendedor: <strong>30 minutos úteis</strong></p>
-                <p>Janela de Agrupamento de Retornos: <strong>15 minutos corridos</strong></p>
-                <p>Escalada para Coordenação: <strong>4 horas úteis</strong> ou <strong>5 cobranças</strong></p>
+              <button
+                onClick={() => {
+                  setEditingSla({ ...slaPolicy });
+                  setShowEditSlaModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#111111] text-white hover:bg-black transition-colors text-xs font-semibold shadow-2xs"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Editar Prazos e Escalada</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-[#444444]">
+              <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#eaeaea] flex flex-col gap-1.5">
+                <span className="font-bold text-[#111111] block mb-1">Horário de Expediente</span>
+                <p>Segunda a Quinta: <strong>07:00–12:00 e 13:00–17:00</strong> (9h úteis/dia)</p>
+                <p>Sexta-feira: <strong>07:00–12:00 e 13:00–16:00</strong> (8h úteis/dia)</p>
+                <p className="text-[11px] text-[#666666] pt-1 border-t border-[#eaeaea] mt-1">
+                  Almoço (12h–13h), fins de semana e feriados são ignorados no cálculo de SLA.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-md bg-[#fafafa] border border-[#eaeaea] flex flex-col gap-1.5">
+                <span className="font-bold text-[#111111] block mb-1">Prazos, Intervalo e Escalada Ativos</span>
+                <p>1º Contato do Vendedor: <strong>{slaPolicy.first_contact_minutes || 30} minutos úteis</strong></p>
+                <p>Intervalo Mínimo entre Cobranças: <strong>{slaPolicy.min_minutes_between_charges || 10} minutos</strong> (evita repetição em saídas breves)</p>
+                <p>Escalada para a Coordenação: <strong>{slaPolicy.escalate_after_returns || 3} cobranças</strong> ou <strong>{Math.round((slaPolicy.hard_escalate_minutes || 240) / 60)}h úteis</strong></p>
+                <p className="text-[11px] text-purple-700 font-medium pt-1 border-t border-[#eaeaea] mt-1">
+                  Ao atingir o limite, o coordenador é notificado no WhatsApp e o chamado entra na auditoria.
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── CONTEÚDO DA ABA: PÓS-VENDA ──────────────────────────────── */}
+      {/* ── CONTEÚDO: ABA PÓS-VENDA ────────────────────────────────── */}
       {activeTab === "pos_venda" && (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -312,7 +391,7 @@ export default function RelatoriosPage() {
         </div>
       )}
 
-      {/* ── TABELA AUDITÁVEL DE LEADS (COM DADOS REAIS VIA API) ──────── */}
+      {/* ── TABELA AUDITÁVEL DE LEADS E OPERAÇÃO ────────────────────── */}
       <div className="bg-white rounded-lg border border-[#eaeaea] overflow-hidden shadow-2xs flex-1">
         <div className="p-3 border-b border-[#eaeaea] flex flex-wrap items-center justify-between gap-3 bg-[#fafafa]">
           <div className="flex items-center gap-2">
@@ -349,7 +428,7 @@ export default function RelatoriosPage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-[#888888]">
-                    Carregando atendimentos da API segura...
+                    Carregando atendimentos...
                   </td>
                 </tr>
               ) : filteredLeads.length === 0 ? (
@@ -420,6 +499,134 @@ export default function RelatoriosPage() {
           </table>
         </div>
       </div>
+
+      {/* ── MODAL DE EDIÇÃO DE PRAZOS E ESCALADA ───────────────────── */}
+      {showEditSlaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-2xs p-4">
+          <div className="bg-white rounded-lg border border-[#eaeaea] shadow-2xl w-full max-w-md p-5 flex flex-col gap-4 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-[#111111]" />
+                <h3 className="font-bold text-sm text-[#111111]">
+                  Editar Prazos e Escalada de Atendimento
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowEditSlaModal(false)}
+                className="p-1 rounded text-[#888888] hover:text-[#111111]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSla} className="flex flex-col gap-3.5">
+              <div>
+                <label className="text-[#555555] block mb-1 font-semibold">
+                  Prazo para 1º Contato do Vendedor (minutos úteis)
+                </label>
+                <input
+                  type="number"
+                  min="5"
+                  max="480"
+                  required
+                  value={editingSla.first_contact_minutes ?? 30}
+                  onChange={(e) =>
+                    setEditingSla({ ...editingSla, first_contact_minutes: parseInt(e.target.value) })
+                  }
+                  className="w-full p-2 border border-[#eaeaea] rounded bg-white text-[#111111] outline-none focus:border-[#111111]"
+                />
+                <span className="text-[10px] text-[#888888] mt-0.5 block">
+                  Tempo máximo durante o expediente para o vendedor chamar o lead.
+                </span>
+              </div>
+
+              <div>
+                <label className="text-[#555555] block mb-1 font-semibold">
+                  Intervalo Mínimo entre Cobranças ao Vendedor (minutos)
+                </label>
+                <input
+                  type="number"
+                  min="5"
+                  max="120"
+                  required
+                  value={editingSla.min_minutes_between_charges ?? 10}
+                  onChange={(e) =>
+                    setEditingSla({ ...editingSla, min_minutes_between_charges: parseInt(e.target.value) })
+                  }
+                  className="w-full p-2 border border-[#eaeaea] rounded bg-white text-[#111111] outline-none focus:border-[#111111]"
+                />
+                <span className="text-[10px] text-[#888888] mt-0.5 block">
+                  Se o cliente mandar nova mensagem antes desse intervalo, o Lino acolhe mas não sobrecarrega o vendedor.
+                </span>
+              </div>
+
+              <div>
+                <label className="text-[#555555] block mb-1 font-semibold">
+                  Limite de Cobranças antes de Escalar para Coordenação
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  required
+                  value={editingSla.escalate_after_returns ?? 3}
+                  onChange={(e) =>
+                    setEditingSla({ ...editingSla, escalate_after_returns: parseInt(e.target.value) })
+                  }
+                  className="w-full p-2 border border-[#eaeaea] rounded bg-white text-[#111111] outline-none focus:border-[#111111]"
+                />
+                <span className="text-[10px] text-[#888888] mt-0.5 block">
+                  Atingindo esse número (ex: 3x), o coordenador geral é acionado no WhatsApp.
+                </span>
+              </div>
+
+              <div>
+                <label className="text-[#555555] block mb-1 font-semibold">
+                  Escalada Dura por Tempo (minutos úteis)
+                </label>
+                <input
+                  type="number"
+                  min="30"
+                  max="1440"
+                  required
+                  value={editingSla.hard_escalate_minutes ?? 240}
+                  onChange={(e) =>
+                    setEditingSla({ ...editingSla, hard_escalate_minutes: parseInt(e.target.value) })
+                  }
+                  className="w-full p-2 border border-[#eaeaea] rounded bg-white text-[#111111] outline-none focus:border-[#111111]"
+                />
+                <span className="text-[10px] text-[#888888] mt-0.5 block">
+                  Ex: 240 minutos úteis = 4 horas de expediente sem contato.
+                </span>
+              </div>
+
+              {slaSuccessMsg && (
+                <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{slaSuccessMsg}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#eaeaea]">
+                <button
+                  type="button"
+                  onClick={() => setShowEditSlaModal(false)}
+                  className="px-3 py-1.5 rounded border border-[#eaeaea] text-[#666666] hover:bg-[#fafafa]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingSla}
+                  className="px-3.5 py-1.5 rounded bg-[#111111] text-white font-semibold hover:bg-black disabled:opacity-50"
+                >
+                  {savingSla ? "Salvando..." : "Salvar Regras de SLA"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

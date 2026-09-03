@@ -326,34 +326,38 @@ async function processSellerResponse(
   message: string,
   tenantId?: string
 ): Promise<void> {
-  // Buscar vendedor pelo telefone
-  const { data: seller } = await supabase
+  // Buscar vendedor ou coordenador pelo telefone
+  const { data: collaborator } = await supabase
     .from('admin_users')
-    .select('id, name')
+    .select('id, name, role')
     .or(`whatsapp_number.eq.${sellerPhone},whatsapp_number.eq.${sellerPhone.slice(2)}`)
     .limit(1)
     .maybeSingle();
 
-  if (!seller) return;
+  if (!collaborator) return;
 
-  // Buscar lead ativo atribuído a este vendedor
+  // Buscar lead ativo atribuído ou escalado
   const { data: lead } = await supabase
     .from('leads')
     .select('id, name, tracking_code')
-    .eq('current_owner_id', seller.id)
-    .in('status', ['WAITING_SELLER', 'IN_NEGOTIATION'])
+    .or(`current_owner_id.eq.${collaborator.id},status.eq.ESCALATED_TO_SUPERVISOR,status.eq.WAITING_SELLER`)
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (!lead) return;
 
-  // Registrar evento de resposta do vendedor
-  const responseUpper = message.trim().toUpperCase();
-  let eventType = 'seller.message_received';
+  const isCoordinator =
+    collaborator.role === 'supervisor' ||
+    collaborator.role === 'manager' ||
+    collaborator.role === 'admin';
 
-  if (/recebi|acknowledged/i.test(message)) {
-    eventType = 'assignment.accepted';
+  // Registrar evento de resposta do colaborador
+  const responseUpper = message.trim().toUpperCase();
+  let eventType = isCoordinator ? 'coordinator.response_received' : 'seller.message_received';
+
+  if (/recebi|acknowledged|ciente/i.test(message)) {
+    eventType = isCoordinator ? 'coordinator.acknowledged' : 'assignment.accepted';
     await supabase.from('leads').update({ seller_acknowledged_at: new Date().toISOString() }).eq('id', lead.id);
   } else if (/contato realizado|entrei em contato|já falei|liguei/i.test(message)) {
     eventType = 'seller.contact_recorded';
@@ -366,19 +370,41 @@ async function processSellerResponse(
     }).eq('id', lead.id);
   }
 
+  // Atualizar supervisor_escalations se for resposta da coordenação
+  if (isCoordinator) {
+    try {
+      await supabase
+        .from('supervisor_escalations')
+        .update({
+          coordinator_reply: message,
+          resolved_at: new Date().toISOString(),
+        })
+        .eq('lead_id', lead.id);
+    } catch {}
+  }
+
+  // Gravar no histórico de interações internas
+  try {
+    await supabase.from('interactions').insert([{
+      lead_id: lead.id,
+      sender_type: 'SYSTEM',
+      message_content: `[RESPOSTA DO ${isCoordinator ? 'COORDENADOR' : 'CONSULTOR'} ${collaborator.name}]: "${message}"`,
+    }]);
+  } catch {}
+
   // Registrar na timeline de eventos
   try {
     await supabase.from('conversation_events').insert([{
       tenant_id: tenantId,
       lead_id: lead.id,
       event_type: eventType,
-      actor_type: 'SELLER',
-      actor_id: seller.id,
-      payload: { message, raw: responseUpper },
+      actor_type: isCoordinator ? 'SUPERVISOR' : 'SELLER',
+      actor_id: collaborator.id,
+      payload: { message, raw: responseUpper, is_coordinator: isCoordinator },
     }]);
   } catch {}
 
-  console.log(`[Orchestrator] Resposta do vendedor ${seller.name} registrada: ${eventType}`);
+  console.log(`[Orchestrator] Resposta de ${collaborator.name} (${collaborator.role}) registrada: ${eventType}`);
 }
 
 /**
@@ -476,7 +502,7 @@ async function handleSupportReturn(
     } catch {}
   }
 
-  // Verificar escalada dura
+  // Verificar escalada dura (3 retornos ou 4h úteis)
   const shouldHardEscalate = slaStatus && (
     slaStatus.business_minutes_elapsed >= slaPolicy.hard_escalate_minutes ||
     currentReturnCount >= slaPolicy.escalate_after_returns
@@ -514,13 +540,21 @@ async function handleSupportReturn(
         if (escalateResult.sent || escalateResult.blocked) {
           escalationExecuted = true;
           try {
+            await supabase.from('supervisor_escalations').insert([{
+              tenant_id: event.tenantId,
+              lead_id: lead.id,
+              user_id: lead.current_owner_id,
+              team_id: owner.team_id,
+              escalation_reason: `Cliente cobrou ${currentReturnCount}x sem resposta (${slaStatus.business_minutes_elapsed} min úteis decorridos).`,
+            }]);
+
             await supabase.from('conversation_events').insert([{
               tenant_id: event.tenantId,
               lead_id: lead.id,
               ticket_id: ticketId,
               event_type: 'ticket.escalated',
               actor_type: 'LINO',
-              payload: { return_count: currentReturnCount, minutes_elapsed: slaStatus.business_minutes_elapsed },
+              payload: { return_count: currentReturnCount, minutes_elapsed: slaStatus.business_minutes_elapsed, supervisor_notified: true },
             }]);
           } catch {}
         }
@@ -528,30 +562,51 @@ async function handleSupportReturn(
     }
   }
 
-  // Notificar vendedor (se ainda não escalou definitivamente)
+  // Notificar vendedor (se ainda não escalou e respeitando intervalo mínimo entre cobranças)
   let sellerNotified = false;
+  let chargeThrottled = false;
+
   if (!shouldHardEscalate && lead.current_owner_id) {
-    const { data: seller } = await supabase
-      .from('admin_users')
-      .select('name, whatsapp_number')
-      .eq('id', lead.current_owner_id)
+    const minMinutes = slaPolicy.min_minutes_between_charges || 10;
+    const { data: lastNotif } = await supabase
+      .from('outbound_messages')
+      .select('created_at')
+      .eq('correlation_lead_id', lead.id)
+      .eq('logical_role', 'SELLER')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (seller?.whatsapp_number) {
-      const ticketCode = lead.tracking_code || `LINO.${lead.id.split('-')[0].toUpperCase()}`;
-      const urgencyNote = isUrgent ? '\n⚡ *URGENTE — cliente tem prazo para hoje.*' : '';
-      const slaNote = isSlaBreach ? `\n⚠️ SLA violado: ${slaStatus.business_minutes_elapsed} min úteis decorridos.` : '';
+    const minutesSinceLastNotif = lastNotif
+      ? (now.getTime() - new Date(lastNotif.created_at).getTime()) / 60000
+      : 999;
 
-      const notifResult = await dispatch({
-        toPhone: seller.whatsapp_number,
-        logicalRole: 'SELLER',
-        logicalName: seller.name,
-        body: `🔔 *LINO — Retorno de Cliente*\n\nAtendimento ${ticketCode}${slaNote}${urgencyNote}\nCliente: ${lead.name || 'N/D'}\n\nO cliente voltou a cobrar atendimento (${currentReturnCount}ª vez).\n\nResponda: *Contato realizado* | *Orçamento enviado* | *Transferir* | *Informar impedimento*`,
-        eventType: 'SELLER_RETURN_NOTIFICATION',
-        idempotencyKey: `seller-return-${lead.id}-${currentReturnCount}`,
-        correlationLeadId: lead.id,
-      });
-      sellerNotified = notifResult.sent || notifResult.blocked;
+    if (minutesSinceLastNotif < minMinutes) {
+      chargeThrottled = true;
+      console.log(`[Orchestrator] Cobrança retida: última notificação foi há ${minutesSinceLastNotif.toFixed(1)} min (< ${minMinutes} min).`);
+    } else {
+      const { data: seller } = await supabase
+        .from('admin_users')
+        .select('name, whatsapp_number')
+        .eq('id', lead.current_owner_id)
+        .maybeSingle();
+
+      if (seller?.whatsapp_number) {
+        const ticketCode = lead.tracking_code || `LINO.${lead.id.split('-')[0].toUpperCase()}`;
+        const urgencyNote = isUrgent ? '\n⚡ *URGENTE — cliente tem prazo para hoje.*' : '';
+        const slaNote = isSlaBreach ? `\n⚠️ SLA violado: ${slaStatus.business_minutes_elapsed} min úteis decorridos.` : '';
+
+        const notifResult = await dispatch({
+          toPhone: seller.whatsapp_number,
+          logicalRole: 'SELLER',
+          logicalName: seller.name,
+          body: `🔔 *LINO — Retorno de Cliente*\n\nAtendimento ${ticketCode}${slaNote}${urgencyNote}\nCliente: ${lead.name || 'N/D'}\n\nO cliente voltou a cobrar atendimento (${currentReturnCount}ª vez).\n\nResponda: *Contato realizado* | *Orçamento enviado* | *Transferir* | *Informar impedimento*`,
+          eventType: 'SELLER_RETURN_NOTIFICATION',
+          idempotencyKey: `seller-return-${lead.id}-${currentReturnCount}`,
+          correlationLeadId: lead.id,
+        });
+        sellerNotified = notifResult.sent || notifResult.blocked;
+      }
     }
   }
 
@@ -569,6 +624,7 @@ async function handleSupportReturn(
     return_count: currentReturnCount,
     seller_notified: sellerNotified,
     escalation_executed: escalationExecuted,
+    charge_throttled: chargeThrottled,
     is_urgent: isUrgent,
   } as any);
 
