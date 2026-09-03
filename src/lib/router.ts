@@ -1,5 +1,6 @@
 import { supabaseServer as supabase } from './supabase-server';
-import { isPhoneAuthorized, isTestMode } from './test-guard';
+import { dispatch } from './dispatcher';
+import { normalizePhone } from './test-guard';
 
 export interface LeadVariables {
   produto?: string;
@@ -383,23 +384,21 @@ async function sendSellerNotification(leadId: string, sellerId: string, variable
     return;
   }
 
-  // Normalizar número: garantir que começa com 55 (DDI Brasil)
-  let sellerPhone = seller.whatsapp_number.replace(/\D/g, '');
-  if (!sellerPhone.startsWith('55')) sellerPhone = '55' + sellerPhone;
-  console.log(`[Roteador] Número vendedor normalizado: ${sellerPhone}`);
+  // Normalizar número para E.164
+  const sellerPhone = normalizePhone(seller.whatsapp_number);
+  if (!sellerPhone) {
+    console.warn(`[Roteador] Número do vendedor ${seller.name} inválido: "${seller.whatsapp_number}"`);
+    return;
+  }
+  // Log com máscara de PII (exibe apenas últimos 4 dígitos)
+  const maskedPhone = sellerPhone.slice(0, -4).replace(/\d/g, '*') + sellerPhone.slice(-4);
+  console.log(`[Roteador] Notificando vendedor ${seller.name} (${maskedPhone})`);
 
   // 2. Buscar dados completos do lead
   const { data: lead } = await supabase.from('leads').select('*').eq('id', leadId).single();
-  
-  // 3. Buscar configurações da Evolution API
-  const { data: config } = await supabase.from('tenant_config').select('evolution_url, evolution_key, evolution_instance_name').limit(1).single();
-  if (!config?.evolution_url || !config?.evolution_key) {
-    console.log('[Roteador] Evolution API não configurada. Notificação cancelada.');
-    return;
-  }
 
   const ticketCode = lead?.tracking_code || `LINO.${leadId.split('-')[0].toUpperCase()}`;
-  
+
   // Construir resumo sintetizado executivo
   let resumoExecutivo = variables.resumo || lead?.observacao || '';
   if (!resumoExecutivo) {
@@ -441,59 +440,29 @@ ${resumoExecutivo}
 
 ⏰ ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`;
 
-  // 4. Envio via HTTP POST direto na Evolution API para o vendedor
-  const url = `${config.evolution_url}message/sendText/${config.evolution_instance_name}`;
-  
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'apikey': config.evolution_key,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        number: sellerPhone,
-        text
-      })
-    });
-    
-    const responseData = await response.json().catch(() => ({}));
-    console.log(`[Roteador] Notificação enviada para o vendedor ${seller.name} (${sellerPhone}):`, response.status, responseData);
-    
-    // Registrar no log de auditoria
+  // 4. Envio via Dispatcher centralizado (aplica test guard, outbox, redirect em teste)
+  const result = await dispatch({
+    toPhone: sellerPhone,
+    logicalRole: 'SELLER',
+    logicalName: seller.name,
+    body: text,
+    eventType: 'SELLER_LEAD_NOTIFICATION',
+    idempotencyKey: `seller-notif-${leadId}-${sellerId}`,
+    correlationLeadId: leadId,
+  });
+
+  if (result.sent) {
+    console.log(`[Roteador] Notificação enviada para ${seller.name} via dispatcher.`);
     await supabase.from('debug_logs').insert([{
       lead_id: leadId,
       level: 'INFO',
       module: 'ROUTER',
       action: `Notificação enviada para ${seller.name}`,
-      details: { seller_whatsapp: sellerPhone, status: response.status, ticket: ticketCode }
+      details: { ticket: ticketCode, outbox_id: result.externalMessageId }
     }]).then(() => {});
-    
-  } catch (err: any) {
-    console.error(`[Roteador] Erro ao enviar notificação para ${seller.name}:`, err.message);
-  }
-
-  // 5. Se em modo de teste e o testador for diferente do vendedor, enviar também uma cópia informativa ao testador
-  if (isTestMode()) {
-    const testPhones = (process.env.LINO_TEST_ALLOWLIST || '').split(',').map(p => p.trim().replace(/\D/g, '')).filter(Boolean);
-    const primaryTestPhone = testPhones[0];
-    if (primaryTestPhone) {
-      const testerNumber = primaryTestPhone.startsWith('55') ? primaryTestPhone : '55' + primaryTestPhone;
-      if (testerNumber !== sellerPhone) {
-        try {
-          await fetch(url, {
-            method: 'POST',
-            headers: {
-              'apikey': config.evolution_key,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              number: testerNumber,
-              text: `ℹ️ *[CÓPIA DE AUDITORIA — NOTIFICAÇÃO DO VENDEDOR]*\n*(Vendedor Atribuído: ${seller.name})*\n\n${text}`
-            })
-          });
-        } catch (e) {}
-      }
-    }
+  } else if (result.blocked) {
+    console.log(`[Roteador] Notificação a ${seller.name} redirecionada ao sink de teste pelo dispatcher.`);
+  } else {
+    console.error(`[Roteador] Falha ao notificar ${seller.name}: ${result.error}`);
   }
 }

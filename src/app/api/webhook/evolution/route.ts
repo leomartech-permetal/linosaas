@@ -1,33 +1,33 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer as supabase } from '@/lib/supabase-server';
-import { processLeadWithSkills, generateSupportResponse } from '@/lib/openai';
-import { processPostSaleMessage } from '@/lib/postsale';
-import { classifyReturnIntent } from '@/lib/intent-classifier';
-import { routeLead } from '@/lib/router';
-import { sendTextMessage } from '@/lib/evolution-api';
 import { describeImage, transcribeAudio } from '@/lib/multimodal';
+import { sendTextMessage } from '@/lib/evolution-api';
 import {
   isPhoneAuthorized,
   isTestMode,
   blockedWebhookResponse,
   normalizePhone,
 } from '@/lib/test-guard';
+import { receiveInbound } from '@/lib/orchestrator';
 
 /**
- * WEBHOOK EVOLUTION API — v3
+ * WEBHOOK EVOLUTION API — v4
  *
- * Guard de modo de teste aplicado IMEDIATAMENTE na entrada (ponto 0).
- * Qualquer remetente não autorizado recebe HTTP 200 silencioso,
- * sem acionar OpenAI, sem envio, sem roteamento, sem registro de estado.
+ * Responsabilidades neste handler:
+ *   1. Validar estrutura e instância/tenant
+ *   2. Aplicar test guard (P0) antes de qualquer acesso ao banco
+ *   3. Deduplicação rápida em memória
+ *   4. Tratar fromMe: distinguir eco do bot vs intervenção humana real
+ *   5. Ignorar colaboradores internos que respondem (feito no orquestrador)
+ *   6. Processar mídia (imagem/áudio) antes de encaminhar
+ *   7. Encaminhar ao orquestrador via receiveInbound()
+ *   8. Devolver 200 rapidamente
  *
- * Idempotência persistida via whatsapp_messages (em paralelo com o Set
- * em memória como cache de curto prazo até que a migração v3 do banco
- * esteja ativa). Uma vez que a tabela whatsapp_messages tiver
- * external_message_id, o Set em memória pode ser removido.
+ * Todo o processamento de estado, SLA, tickets, notificações e resposta
+ * acontece dentro do orquestrador e seus módulos filhos.
  */
 
-// Cache de curto prazo para deduplicação em memória (Fallback enquanto
-// a tabela whatsapp_messages não tem external_message_id/unique constraint)
+// Cache de curto prazo para deduplicação (fallback em memória)
 const processedMessageIds = new Set<string>();
 
 export async function POST(request: Request) {
@@ -35,8 +35,8 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const messageData = body.data?.messages?.[0] || body.data;
-    const remoteJid = messageData?.key?.remoteJid || messageData?.remoteJid || body.data?.key?.remoteJid || body.sender;
-    const messageId = messageData?.key?.id || messageData?.id;
+    const remoteJid: string = messageData?.key?.remoteJid || messageData?.remoteJid || body.data?.key?.remoteJid || body.sender || '';
+    const messageId: string | undefined = messageData?.key?.id || messageData?.id;
     const pushName: string | null = messageData?.pushName || body.data?.pushName || null;
     const instanceName: string = body.instance || body.instanceName || 'unknown';
 
@@ -44,19 +44,18 @@ export async function POST(request: Request) {
       if (!messageData) return NextResponse.json({ status: 'ignored', reason: 'no_data' });
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 0 — GUARD DE MODO DE TESTE (DEFESA EM PROFUNDIDADE)
-      // Deve ser o PRIMEIRO check. Antes de qualquer acesso ao banco,
-      // antes de qualquer chamada externa.
+      // P0 — GUARD DE MODO DE TESTE
+      // Primeiro check absoluto. Qualquer número não autorizado recebe
+      // HTTP 200 silencioso, sem acionar banco, OpenAI ou dispatcher.
       // ════════════════════════════════════════════════════════════════
       if (remoteJid && isTestMode()) {
         if (!isPhoneAuthorized(remoteJid)) {
-          // HTTP 200 silencioso: Evolution API não retentará
           return NextResponse.json(blockedWebhookResponse());
         }
       }
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 1 — DEDUPLICAÇÃO (cache em memória + futuro banco)
+      // P1 — DEDUPLICAÇÃO em memória (fallback)
       // ════════════════════════════════════════════════════════════════
       if (messageId) {
         if (processedMessageIds.has(messageId)) {
@@ -69,14 +68,10 @@ export async function POST(request: Request) {
       const fromMe = messageData.key?.fromMe;
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 2 — ECO vs INTERVENÇÃO HUMANA REAL
-      // fromMe=true pode ser: eco do Lino (bot enviou), painel CRM,
-      // ou vendedor digitando no celular.
-      // Diferenciação por instance: se a mensagem veio da instância
-      // central (linooficial / chatbot), é eco do bot.
+      // P2 — ECO vs INTERVENÇÃO HUMANA REAL
+      // fromMe=true pode ser eco do bot ou vendedor digitando no celular.
       // ════════════════════════════════════════════════════════════════
       if (fromMe) {
-        // Verificar se a instância que enviou é a instância central do Lino
         const { data: globalConfig } = await supabase
           .from('tenant_config')
           .select('evolution_instance_name, tenant_id')
@@ -84,16 +79,15 @@ export async function POST(request: Request) {
           .single();
 
         const centralInstance = globalConfig?.evolution_instance_name || 'linooficial';
-        const isBotEcho = instanceName.toLowerCase() === centralInstance.toLowerCase() ||
-                          instanceName === 'unknown';
+        const isBotEcho =
+          instanceName.toLowerCase() === centralInstance.toLowerCase() ||
+          instanceName === 'unknown';
 
         if (isBotEcho) {
-          // Eco do Lino — ignorar silenciosamente, NÃO pausar o bot
           return NextResponse.json({ status: 'ignored', reason: 'bot_echo' });
         }
 
-        // Mensagem enviada pelo VENDEDOR (instância diferente da central)
-        // → Pausa o bot para essa conversa
+        // Mensagem enviada pelo VENDEDOR (instância diferente) — pausar bot
         if (remoteJid) {
           const { data: leadToPause } = await supabase
             .from('leads')
@@ -113,41 +107,40 @@ export async function POST(request: Request) {
       if (!remoteJid) return NextResponse.json({ status: 'ignored', reason: 'no_remoteJid' });
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 3 — IGNORAR FUNCIONÁRIOS INTERNOS
+      // P3 — CONFIG GLOBAL E BOT STATUS
       // ════════════════════════════════════════════════════════════════
-      const senderPhone = remoteJid.replace(/\D/g, '');
-      const { data: internalUser } = await supabase
-        .from('admin_users')
-        .select('id, name')
-        .or(`whatsapp_number.ilike.%${senderPhone}%,whatsapp_number.ilike.%${senderPhone.substring(2)}%`)
+      const { data: globalConfig } = await supabase
+        .from('tenant_config')
+        .select('*')
         .limit(1)
-        .maybeSingle();
+        .single();
 
-      if (internalUser) {
-        return NextResponse.json({ status: 'ignored', reason: 'sender_is_internal_user', name: internalUser.name });
+      if (globalConfig?.bot_active === false) {
+        return NextResponse.json({ status: 'ignored', reason: 'GLOBAL_BOT_OFF' });
       }
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 4 — EXTRAÇÃO DE MENSAGEM
+      // P4 — EXTRAÇÃO DE MENSAGEM
       // ════════════════════════════════════════════════════════════════
       const messageObj = messageData.message || messageData;
-      let messageContent = messageObj?.conversation ||
-                           messageObj?.extendedTextMessage?.text ||
-                           messageObj?.text ||
-                           messageData?.text ||
-                           messageObj?.imageMessage?.caption ||
-                           messageObj?.videoMessage?.caption ||
-                           messageObj?.documentMessage?.caption ||
-                           '';
-
-      const { data: globalConfig } = await supabase.from('tenant_config').select('*').limit(1).single();
-      if (globalConfig?.bot_active === false) return NextResponse.json({ status: 'ignored', reason: 'GLOBAL_BOT_OFF' });
+      let messageContent =
+        messageObj?.conversation ||
+        messageObj?.extendedTextMessage?.text ||
+        messageObj?.text ||
+        messageData?.text ||
+        messageObj?.imageMessage?.caption ||
+        messageObj?.videoMessage?.caption ||
+        messageObj?.documentMessage?.caption ||
+        '';
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 5 — SUPORTE MULTIMODAL (Imagens e Áudios)
+      // P5 — PROCESSAMENTO DE MÍDIA (imagem/áudio)
       // ════════════════════════════════════════════════════════════════
       const openaiKey = globalConfig?.openai_key;
-      const messageType = messageData.messageType || Object.keys(messageObj || {}).find(k => k.endsWith('Message')) || '';
+      const messageType =
+        messageData.messageType ||
+        Object.keys(messageObj || {}).find(k => k.endsWith('Message')) ||
+        '';
 
       try {
         const mediaBase64 = body.data?.base64 || messageData.base64 || null;
@@ -156,7 +149,7 @@ export async function POST(request: Request) {
             globalConfig.evolution_url,
             globalConfig.evolution_instance_name,
             globalConfig.evolution_key,
-            messageId,
+            messageId || '',
             remoteJid,
             openaiKey,
             messageContent,
@@ -168,7 +161,7 @@ export async function POST(request: Request) {
             globalConfig.evolution_url,
             globalConfig.evolution_instance_name,
             globalConfig.evolution_key,
-            messageId,
+            messageId || '',
             remoteJid,
             openaiKey,
             mediaBase64
@@ -176,13 +169,13 @@ export async function POST(request: Request) {
           messageContent = `[ÁUDIO RECEBIDO: ${audioText}] ${messageContent}`;
         }
       } catch (mediaError) {
-        console.error('[Media Error]', mediaError);
+        console.error('[Webhook Media Error]', mediaError);
       }
 
       const finalContent = messageContent || '';
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 6 — DETECÇÃO DE CÓDIGO DE TRACKING
+      // P6 — DETECÇÃO DE CÓDIGO DE TRACKING
       // ════════════════════════════════════════════════════════════════
       const codeMatch = finalContent.match(/(?:LINO\.)([A-Z0-9]{6})/i);
       const extractedCode = codeMatch ? `LINO.${codeMatch[1].toUpperCase()}` : null;
@@ -196,43 +189,44 @@ export async function POST(request: Request) {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-
-        if (clickRecord) {
-          trackingData = clickRecord;
-        }
+        if (clickRecord) trackingData = clickRecord;
       }
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 7 — BUSCAR OU CRIAR LEAD
+      // P7 — BUSCAR OU CRIAR LEAD
       // ════════════════════════════════════════════════════════════════
-      let { data: lead } = await supabase.from('leads').select('*').eq('whatsapp_number', remoteJid).maybeSingle();
+      let { data: lead } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('whatsapp_number', remoteJid)
+        .maybeSingle();
 
       const generatedCode = `LINO.${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const activeCode = extractedCode || lead?.tracking_code || generatedCode;
 
-      let contextSource = lead?.context_source || null;
-      let contextInterest = lead?.context_interest || null;
-
-      if (trackingData) {
-        contextSource = trackingData.origem || trackingData.utm_source || 'Google Ads';
-        contextInterest = trackingData.page_title || trackingData.page_path || 'Produtos Permetal';
-      }
+      const contextSource = trackingData?.origem || trackingData?.utm_source || lead?.context_source || null;
+      const contextInterest = trackingData?.page_title || trackingData?.page_path || lead?.context_interest || null;
 
       if (!lead) {
-        const { data: newLead, error: insertError } = await supabase.from('leads').insert([{
-          whatsapp_number: remoteJid,
-          name: pushName || null,
-          status: 'SDR_QUALIFICATION',
-          bot_active: true,
-          tracking_code: activeCode,
-          tracking_id: trackingData?.id || null,
-          context_source: contextSource,
-          context_interest: contextInterest,
-          b2b_attempts: { cnpj: 0, email: 0, nome: 0, empresa: 0 }
-        }]).select().single();
+        const { data: newLead, error: insertError } = await supabase
+          .from('leads')
+          .insert([{
+            whatsapp_number: remoteJid,
+            name: pushName || null,
+            status: 'SDR_QUALIFICATION',
+            bot_active: true,
+            tracking_code: activeCode,
+            tracking_id: trackingData?.id || null,
+            context_source: contextSource,
+            context_interest: contextInterest,
+            b2b_attempts: { cnpj: 0, email: 0, nome: 0, empresa: 0 },
+            tenant_id: globalConfig?.tenant_id || null,
+          }])
+          .select()
+          .single();
 
         if (insertError) {
-          return NextResponse.json({ status: 'error', reason: 'LEAD_INSERT_FAILED', detail: insertError });
+          return NextResponse.json({ status: 'error', reason: 'LEAD_INSERT_FAILED' });
         }
         lead = newLead;
       } else {
@@ -244,10 +238,8 @@ export async function POST(request: Request) {
           updates.context_interest = contextInterest;
         }
         if (!lead.name && pushName) updates.name = pushName;
-
         if (Object.keys(updates).length > 0) {
           await supabase.from('leads').update(updates).eq('id', lead.id);
-          lead = { ...lead, ...updates };
         }
       }
 
@@ -255,170 +247,27 @@ export async function POST(request: Request) {
       if (!lead.bot_active) return NextResponse.json({ status: 'ignored', reason: 'LEAD_BOT_PAUSED' });
 
       // ════════════════════════════════════════════════════════════════
-      // PONTO 8 — SALVAR MENSAGEM NO HISTÓRICO
-      // Nota: o debounce por setTimeout foi removido — mensagens
-      // rápidas são agrupadas pela IA via histórico; o buffer
-      // persistente deve ser implementado na migração de domínio.
+      // P8 — ENCAMINHAR AO ORQUESTRADOR UNIFICADO
+      // O orquestrador aplica o buffer de 5s, detecta colaboradores,
+      // calcula SLA, abre tickets e compõe a resposta verdadeira.
       // ════════════════════════════════════════════════════════════════
-      await supabase.from('interactions').insert([{ lead_id: lead.id, sender_type: 'lead', message_content: finalContent }]);
+      const result = await receiveInbound({
+        tenantId: globalConfig?.tenant_id || lead.tenant_id || undefined,
+        instanceId: instanceName,
+        externalMessageId: messageId,
+        fromNumber: remoteJid,
+        pushName,
+        body: finalContent,
+        messageType,
+        rawPayload: body,
+      });
 
-      // ════════════════════════════════════════════════════════════════
-      // PONTO 9 — RECUPERAR HISTÓRICO RECENTE
-      // ════════════════════════════════════════════════════════════════
-      const { data: historyData } = await supabase
-        .from('interactions')
-        .select('sender_type, message_content')
-        .eq('lead_id', lead.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      const history = (historyData || []).reverse();
-
-      // ════════════════════════════════════════════════════════════════
-      // PONTO 10 — TRIAGEM: SDR vs SUPORTE vs PÓS-VENDA
-      // ════════════════════════════════════════════════════════════════
-      const decision = classifyReturnIntent(finalContent, lead);
-      let resposta_whatsapp = '';
-
-      if (decision.mode === 'POS_VENDA') {
-        const posVendaResult = await processPostSaleMessage(history, lead.id);
-        resposta_whatsapp = posVendaResult.resposta_whatsapp;
-        await supabase.from('leads').update({ status: 'POS_VENDA', return_intent: 'POS_VENDA' }).eq('id', lead.id);
-
-      } else if (decision.mode === 'SUPORTE') {
-        const supportResult = await generateSupportResponse(lead, history);
-        resposta_whatsapp = supportResult.resposta || supportResult.message;
-
-        const updateData: any = { return_intent: 'SUPORTE' };
-        if (decision.shouldAlertSla) {
-          updateData.sla_breached = true;
-        }
-        await supabase.from('leads').update(updateData).eq('id', lead.id);
-
-      } else {
-        // FLUXO SDR
-        const aiResult = await processLeadWithSkills(history, lead.id);
-
-        if (aiResult && !aiResult.erro_openai) {
-          resposta_whatsapp = aiResult.resposta_whatsapp;
-
-          const leadUpdate: any = {
-            updated_at: new Date().toISOString(),
-            b2b_attempts: aiResult.b2b_attempts || lead.b2b_attempts
-          };
-
-          if (aiResult.cliente?.nome) leadUpdate.name = aiResult.cliente.nome;
-          if (aiResult.cliente?.empresa) {
-            leadUpdate.company = aiResult.cliente.empresa;
-            leadUpdate.empresa = aiResult.cliente.empresa;
-          }
-          if (aiResult.cliente?.cnpj) leadUpdate.cnpj = aiResult.cliente.cnpj;
-          if (aiResult.cliente?.email) leadUpdate.email_corporativo = aiResult.cliente.email;
-          if (aiResult.cliente?.cidade) leadUpdate.cidade_empresa = aiResult.cliente.cidade;
-          if (aiResult.demanda?.produto_normalizado) {
-            leadUpdate.detected_product = aiResult.demanda.produto_normalizado;
-            leadUpdate.produto = aiResult.demanda.produto_normalizado;
-          }
-          if (aiResult.demanda?.quantidade_metragem) leadUpdate.quantidade = aiResult.demanda.quantidade_metragem;
-
-          // Capturar especificação técnica completa (prioriza campo completo sobre dimensões)
-          if ((aiResult.demanda as any)?.especificacao_tecnica_completa) {
-            leadUpdate.especificacao = (aiResult.demanda as any).especificacao_tecnica_completa;
-          } else if (aiResult.demanda?.dimensoes) {
-            leadUpdate.especificacao = aiResult.demanda.dimensoes;
-          }
-          if (aiResult.demanda?.resumo_executivo) leadUpdate.observacao = aiResult.demanda.resumo_executivo;
-
-          // Extração direta do resumo oficial apresentado pelo Lino na conversa (garante 100% de fidelidade)
-          const allMsgs = [...history, { sender_type: 'lead', message_content: finalContent }, { sender_type: 'sdr_ai', message_content: resposta_whatsapp }];
-          const summaryMessage = allMsgs.slice().reverse().find(m => m.message_content && m.message_content.includes('Aqui está o resumo das informações do seu projeto:'));
-          if (summaryMessage) {
-            const specMatch = summaryMessage.message_content.match(/-\s*Especificação:\s*([^\n\r]+)/i);
-            if (specMatch && specMatch[1]) {
-              const fullSpec = specMatch[1].trim();
-              if (!leadUpdate.especificacao || fullSpec.length > leadUpdate.especificacao.length) {
-                leadUpdate.especificacao = fullSpec;
-              }
-            }
-            const qtyMatch = summaryMessage.message_content.match(/-\s*Quantidade:\s*([^\n\r]+)/i);
-            if (qtyMatch && qtyMatch[1] && (!leadUpdate.quantidade || qtyMatch[1].trim().length > (leadUpdate.quantidade || '').length)) {
-              leadUpdate.quantidade = qtyMatch[1].trim();
-            }
-            const appMatch = summaryMessage.message_content.match(/-\s*Resumo da Aplicação:\s*([^\n\r]+)/i);
-            if (appMatch && appMatch[1] && !leadUpdate.observacao) {
-              leadUpdate.observacao = appMatch[1].trim();
-            }
-          }
-
-          // Salvar segmento com segurança no qualification_state (já que a coluna 'segmento' não existe na tabela)
-          if (aiResult.demanda?.segmento_detectado) {
-            leadUpdate.qualification_state = {
-              ...(lead.qualification_state || {}),
-              segmento: aiResult.demanda.segmento_detectado
-            };
-          }
-
-          // A IA sugere qualificacao_concluida, mas o BACKEND valida deterministicamente
-          if (aiResult.qualificacao_concluida) {
-            leadUpdate.status = 'WAITING_SELLER';
-            leadUpdate.qualification_completed = true;
-            leadUpdate.qualified_at = new Date().toISOString();
-          }
-
-          const { error: updateError } = await supabase.from('leads').update(leadUpdate).eq('id', lead.id);
-          if (updateError) {
-            console.error('[Supabase Lead Update Error]', updateError);
-          }
-
-          if (aiResult.qualificacao_concluida) {
-            const normalizedPhone = normalizePhone(remoteJid) || remoteJid;
-            const ddd = normalizedPhone.length >= 12 && normalizedPhone.startsWith('55')
-              ? normalizedPhone.substring(2, 4)
-              : '';
-            await routeLead(lead.id, lead.tenant_id || globalConfig?.tenant_id || '', {
-              produto: leadUpdate.detected_product || lead.detected_product || lead.produto,
-              quantidade: leadUpdate.quantidade || lead.quantidade,
-              especificacao: leadUpdate.especificacao || lead.especificacao,
-              nome_cliente: leadUpdate.name || lead.name,
-              empresa: leadUpdate.company || lead.company || lead.empresa,
-              cnpj: leadUpdate.cnpj || lead.cnpj,
-              email: leadUpdate.email_corporativo || lead.email_corporativo,
-              cidade: leadUpdate.cidade_empresa || lead.cidade_empresa,
-              segmento_detectado: aiResult.demanda?.segmento_detectado || leadUpdate.qualification_state?.segmento || 'Indústria',
-              resumo: leadUpdate.observacao || lead.observacao,
-              ddd
-            });
-          }
-        }
-      }
-
-      // ════════════════════════════════════════════════════════════════
-      // PONTO 11 — ENVIAR RESPOSTA (guard de saída integrado ao sendTextMessage)
-      // ════════════════════════════════════════════════════════════════
-      if (resposta_whatsapp) {
-        await supabase.from('interactions').insert([{
-          lead_id: lead.id,
-          sender_type: decision.mode === 'POS_VENDA' ? 'post_sale_ai' : decision.mode === 'SUPORTE' ? 'support_ai' : 'sdr_ai',
-          message_content: resposta_whatsapp
-        }]);
-
-        if (globalConfig?.evolution_url && globalConfig?.evolution_key) {
-          await sendTextMessage(
-            globalConfig.evolution_instance_name || 'linooficial',
-            globalConfig.evolution_url,
-            globalConfig.evolution_key,
-            remoteJid,
-            resposta_whatsapp
-          );
-        }
-      }
-
-      return NextResponse.json({ status: 'success', mode: decision.mode, action: 'responded' });
+      return NextResponse.json({ status: result.status, mode: result.mode, action: result.reason });
     }
 
     return NextResponse.json({ status: 'ignored', reason: 'not_messages_upsert' });
   } catch (error: any) {
     console.error('[Webhook Error]', error);
-    return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
+    return NextResponse.json({ status: 'error', error: 'Erro interno.' }, { status: 500 });
   }
 }

@@ -3,212 +3,172 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  MessageSquareText,
+  Kanban,
+  BarChart3,
+  Settings,
+  Search,
+  LogOut,
+  AlertTriangle,
+} from "lucide-react";
 
-// Modo de teste ativo quando variável de ambiente não for 'production'.
-// Lido no lado do cliente para exibição do banner.
-const IS_TEST_MODE = process.env.NEXT_PUBLIC_LINO_RUNTIME_MODE !== 'production';
+const IS_TEST_MODE = process.env.NEXT_PUBLIC_LINO_RUNTIME_MODE !== "production";
 
-const menuGroups = [
-  {
-    title: "Plataforma Lino",
-    items: [
-      { href: "/", label: "Leads & Funil", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg> },
-      { href: "/dashboard", label: "Central de Métricas", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg> },
-      { href: "/settings", label: "Configurações Globais", icon: (color: string) => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> }
-    ]
-  }
+// As 5 áreas principais da nova arquitetura de navegação
+const mainNavigation = [
+  { href: "/", label: "Visão geral", icon: LayoutDashboard },
+  { href: "/atendimentos", label: "Atendimentos", icon: MessageSquareText },
+  { href: "/oportunidades", label: "Oportunidades", icon: Kanban },
+  { href: "/dashboard", label: "Relatórios", icon: BarChart3 },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLogin = pathname === "/login";
 
-  const [config, setConfig] = useState({
-    company_name: "LINO CRM",
-    company_subtitle: "Grupo Permetal",
-    primary_color: "#0ecab2",
-    secondary_color: "#087f71",
-    bg_type: "texture",
-    bg_color1: "#0a0a0a",
-    bg_color2: "#1a1a1a",
-    bg_opacity: 0.2,
-    logo_url: "",
-    texture_url: "",
-  });
+  const [companyName, setCompanyName] = useState("Lino");
 
   useEffect(() => {
-    // Forçar a remoção de qualquer classe dark ou vestígio
-    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove("dark");
     localStorage.removeItem("crm-theme");
-  }, []);
 
-  useEffect(() => {
     async function loadConfig() {
-      const { data } = await supabase.from("tenant_config").select("*").limit(1).single();
-      if (data) {
-        setConfig({
-          ...data,
-          company_name: data.company_name || "LINO CRM",
-          company_subtitle: data.company_subtitle || "Grupo Permetal",
-          primary_color: data.primary_color || "#0ecab2",
-          secondary_color: data.secondary_color || "#087f71",
-          font_heading: data.font_heading || "Roboto Condensed",
-          font_body: data.font_body || "Assistant",
-          bg_type: data.bg_type || "texture",
-          bg_color1: data.bg_color1 || "#0a0a0a",
-          bg_color2: data.bg_color2 || "#1a1a1a",
-          bg_opacity: data.bg_opacity ?? 0.2,
-          logo_url: data.logo_url || "",
-          texture_url: data.texture_url || "",
-        });
-      }
+      const { data } = await supabase
+        .from("tenant_config")
+        .select("company_name")
+        .limit(1)
+        .single();
+      if (data?.company_name) setCompanyName(data.company_name);
     }
     loadConfig();
   }, [pathname]);
 
-  function hexToHSL(hex: string): string {
-    hex = hex.replace("#", "");
-    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-    const r = parseInt(hex.substring(0, 2), 16) / 255;
-    const g = parseInt(hex.substring(2, 4), 16) / 255;
-    const b = parseInt(hex.substring(4, 6), 16) / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-  }
-
-  const primaryHSL = hexToHSL(config.primary_color);
-
   if (isLogin) {
-    return <div style={{ "--tenant-primary": primaryHSL } as any}>{children}</div>;
+    return <div className="min-h-screen bg-[#fafafa]">{children}</div>;
   }
 
   return (
-    <div className="app-container" style={{ 
-      "--font-heading": "Geist, Inter, sans-serif",
-      "--font-body": "Geist, Inter, sans-serif"
-    } as any}>
-      <style jsx global>{`
-        h1, h2, h3, h4, h5, h6, .font-heading {
-          font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-        }
-        body, p, span, div, .font-body, table, td, th {
-          font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-      `}</style>
-      
-      {/* Sidebar Ultra-Limpa (Referência Vercel Style) */}
-      <aside className="sidebar">
-        <div className="mb-2">
-          <a href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            {config.logo_url ? (
-              <img src={config.logo_url} alt="Logo" className="h-6 object-contain" />
-            ) : (
-              <div className="w-6 h-6 rounded bg-[#111111] flex items-center justify-center text-white font-black text-xs">
-                P
-              </div>
-            )}
-            {!config.logo_url && (
-              <span className="font-bold tracking-tight text-[15px] text-[var(--text-primary)]">{config.company_name}</span>
-            )}
-          </a>
-        </div>
-
-        {/* Campo de Busca Minimalista */}
-        <div className="search-container">
-          <input 
-            type="text" 
-            placeholder="Buscar..." 
-            className="search-input"
-          />
-          <span className="search-shortcut">F</span>
-        </div>
-
-        <nav className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-          {menuGroups.map((group, gIdx) => (
-            <div key={gIdx} className="nav-group">
-              <h4 className="nav-label">{group.title}</h4>
-              {group.items.map((item) => {
-                const isActive = pathname === item.href || (item.href === "/" && pathname === "/");
-                return (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    className={`nav-item ${isActive ? "active" : ""}`}
-                  >
-                    <span className="flex-shrink-0 flex items-center justify-center text-current">
-                      {item.icon(config.primary_color)}
-                    </span>
-                    <span>{item.label}</span>
-                  </a>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-
-        <div className="pt-4 border-t border-[var(--border-light)] flex flex-col gap-3">
-          <div className="p-2 rounded bg-[var(--bg-surface-muted)] flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#eaeaea] text-[#111111]">AD</div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold truncate text-[var(--text-primary)]">Administrador</p>
-              <p className="text-[10px] text-[var(--text-muted)] truncate">Permetal SaaS</p>
-            </div>
-          </div>
-          <a 
-            href="/api/logout" 
-            className="btn-secondary w-full h-8 text-xs font-medium"
-          >
-            Encerrar Sessão
-          </a>
-        </div>
-      </aside>
-
-      {/* ── BANNER MODO DE TESTE ─────────────────────────────────────────────── */}
+    <div className="flex h-screen w-full bg-[#fafafa] text-[#111111] overflow-hidden font-sans antialiased selection:bg-neutral-200">
+      {/* ── BANNER MODO DE TESTE ────────────────────────────────────────── */}
       {IS_TEST_MODE && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 9999,
-            background: 'linear-gradient(90deg, #f59e0b, #d97706)',
-            color: '#111',
-            textAlign: 'center',
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            padding: '5px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          }}
-        >
-          <span style={{ fontSize: '14px' }}>⚠️</span>
-          MODO DE TESTE ATIVO — Apenas o número{' '}
-          <code style={{ background: 'rgba(0,0,0,0.12)', padding: '1px 5px', borderRadius: '3px', fontFamily: 'monospace' }}>
-            5516991415319
-          </code>
-          {' '}está autorizado para automações.
-          <span style={{ fontSize: '14px' }}>⚠️</span>
+        <div className="fixed top-0 left-0 right-0 z-50 h-7 bg-amber-500 text-black text-[11px] font-semibold tracking-wider flex items-center justify-center gap-2 shadow-xs select-none">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          <span>
+            AMBIENTE DE TESTE — Saída física restrita a{" "}
+            <code className="bg-black/15 px-1.5 py-0.5 rounded font-mono text-[10px]">
+              5516991415319
+            </code>
+          </span>
         </div>
       )}
 
-      {/* Área de Conteúdo Principal */}
-      <main className={pathname === "/" ? "flex-1 h-screen overflow-hidden relative bg-white" : "main-content"}
-        style={IS_TEST_MODE ? { paddingTop: '28px' } : undefined}
+      {/* ── SIDEBAR (232px) ────────────────────────────────────────────── */}
+      <aside
+        className={`w-[232px] flex-shrink-0 border-r border-[#eaeaea] bg-white flex flex-col justify-between z-20 ${
+          IS_TEST_MODE ? "pt-7" : ""
+        }`}
+      >
+        <div className="p-3.5 flex flex-col gap-3">
+          {/* Logo / Header Lino */}
+          <div className="flex items-center justify-between px-1.5 py-1 mb-1">
+            <a href="/" className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded bg-[#111111] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                ▲
+              </div>
+              <span className="font-semibold text-sm tracking-tight text-[#111111]">
+                {companyName}
+              </span>
+            </a>
+            <span className="text-[10px] font-medium text-[#666666] bg-[#f5f5f5] px-1.5 py-0.5 rounded border border-[#eaeaea]">
+              v4.1
+            </span>
+          </div>
+
+          {/* Busca Global ⌘K */}
+          <button
+            type="button"
+            className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-[#666666] bg-[#fafafa] border border-[#eaeaea] rounded-md hover:border-[#999999] transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-[#888888]" />
+              <span>Buscar...</span>
+            </div>
+            <kbd className="text-[10px] font-mono text-[#888888] bg-white border border-[#eaeaea] px-1.5 py-0.5 rounded shadow-2xs">
+              ⌘K
+            </kbd>
+          </button>
+
+          {/* Navegação Principal (4 itens superiores) */}
+          <nav className="flex flex-col gap-0.5 pt-1">
+            {mainNavigation.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href || pathname.startsWith(item.href);
+
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md transition-colors ${
+                    isActive
+                      ? "bg-[#f5f5f5] text-[#111111] font-semibold"
+                      : "text-[#666666] hover:bg-[#fafafa] hover:text-[#111111]"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 text-current flex-shrink-0" />
+                  <span>{item.label}</span>
+                </a>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Rodapé: Configurações + Perfil (5º item de navegação) */}
+        <div className="p-3 border-t border-[#eaeaea] flex flex-col gap-1 bg-white">
+          <a
+            href="/settings"
+            className={`flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-md transition-colors ${
+              pathname.startsWith("/settings")
+                ? "bg-[#f5f5f5] text-[#111111] font-semibold"
+                : "text-[#666666] hover:bg-[#fafafa] hover:text-[#111111]"
+            }`}
+          >
+            <Settings className="w-4 h-4 text-current flex-shrink-0" />
+            <span>Configurações</span>
+          </a>
+
+          <div className="pt-2 mt-1 border-t border-[#f0f0f0] flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-6 h-6 rounded-full bg-[#111111] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                P
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-[#111111] truncate leading-tight">
+                  Coordenação
+                </p>
+                <p className="text-[10px] text-[#666666] truncate">Permetal</p>
+              </div>
+            </div>
+            <a
+              href="/api/logout"
+              title="Encerrar sessão"
+              className="p-1 rounded text-[#666666] hover:text-[#111111] hover:bg-[#f5f5f5] transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── ÁREA PRINCIPAL ────────────────────────────────────────────── */}
+      <main
+        className={`flex-1 h-screen overflow-y-auto bg-[#fafafa] ${
+          IS_TEST_MODE ? "pt-7" : ""
+        }`}
       >
         {children}
       </main>

@@ -1,97 +1,138 @@
 /**
- * LINO TEST GUARD — Defesa em Profundidade
+ * LINO TEST GUARD — Defesa em Profundidade v2
  *
- * Protege TODOS os pontos de saída automática (webhook de entrada,
- * envio de WhatsApp, follow-ups, notificações a vendedores e supervisores)
- * enquanto LINO_RUNTIME_MODE=test.
+ * REGRA FAIL-CLOSED: qualquer ausência ou invalidade de configuração
+ * resulta em bloqueio total. Nunca fail-open.
  *
- * REGRA FAIL-CLOSED: se LINO_TEST_ALLOWLIST não estiver configurado,
- * o sistema trata o ambiente como "teste fechado" e bloqueia tudo.
+ * PRODUÇÃO: exige simultaneamente:
+ *   LINO_RUNTIME_MODE=production
+ *   LINO_PRODUCTION_ENABLED=true
  *
- * AUTORIDADE DE CONFIGURAÇÃO: variáveis de ambiente apenas.
- * Produção NÃO pode ser ativada por prompt.
+ * Prompt, banco ou frontend NUNCA ativam produção.
+ *
+ * ALLOWLIST: se LINO_TEST_ALLOWLIST não estiver definido ou não
+ * contiver números válidos em E.164, NINGUÉM é autorizado.
+ *
+ * COMPARAÇÃO: igualdade estrita em E.164 normalizado.
+ * Sem includes(), endsWith(), correspondência parcial ou wildcard.
  */
 
-const RUNTIME_MODE = (process.env.LINO_RUNTIME_MODE || 'production').toLowerCase();
-const RAW_ALLOWLIST = process.env.LINO_TEST_ALLOWLIST || '5516991415319,16991415319';
+// ─── Resolução de modo ─────────────────────────────────────────────────────
+// Default = 'test' (fail-closed). Produção exige as duas flags explícitas.
+const RAW_MODE = (process.env.LINO_RUNTIME_MODE || 'test').toLowerCase().trim();
+const PRODUCTION_ENABLED = (process.env.LINO_PRODUCTION_ENABLED || '').toLowerCase().trim() === 'true';
+
+const RUNTIME_MODE: 'production' | 'test' =
+  RAW_MODE === 'production' && PRODUCTION_ENABLED
+    ? 'production'
+    : 'test';
+
+if (RUNTIME_MODE === 'test') {
+  console.info('[TestGuard] Modo: TEST — toda saída física restrita ao telefone de teste autorizado.');
+} else {
+  console.info('[TestGuard] Modo: PRODUCTION — envios reais ativos.');
+}
+
+// ─── Allowlist ─────────────────────────────────────────────────────────────
+// Sem fallback hardcoded. Se vazia ou ausente → allowlist efetiva = vazia.
+const RAW_ALLOWLIST = (process.env.LINO_TEST_ALLOWLIST || '').trim();
 
 /**
- * Normaliza um número de telefone para formato canônico: apenas dígitos,
- * com DDI 55, DDD de 2 dígitos e 9 dígitos de assinante.
+ * Normaliza um número de telefone para E.164 canônico: apenas dígitos,
+ * DDI 55, DDD 2 dígitos, assinante 8-9 dígitos.
  * Remove sufixos @s.whatsapp.net e @g.us.
+ * Retorna null se o número não puder ser normalizado.
  */
 export function normalizePhone(input: string): string | null {
-  if (!input) return null;
+  if (!input || typeof input !== 'string') return null;
 
   // Remover sufixo JID do Evolution
   let clean = input.replace(/@[^@]+$/, '').replace(/\D/g, '');
 
   if (!clean) return null;
 
-  // Remover DDI 55 para reprocessar
+  // Remover DDI 55 para reprocessar comprimento
   if (clean.startsWith('55') && clean.length > 11) {
     clean = clean.substring(2);
   }
 
   // Brasil: DDD (2) + 9 dígitos = 11 dígitos
-  // Aceitar também 10 dígitos (linha fixa / sem nono dígito em DDDs antigos)
   if (clean.length === 11) {
     return '55' + clean;
   }
 
-  // Linha fixa ou celular sem nono dígito (10 dígitos): aceitar
+  // Linha fixa ou celular sem nono dígito (10 dígitos)
   if (clean.length === 10) {
     return '55' + clean;
   }
 
-  // Já veio com DDI completo (13 dígitos com nono: 55 + DDD + 9 dígitos)
-  if (clean.length === 13) {
+  // Já veio com DDI completo e nono dígito (13 dígitos)
+  if (clean.length === 13 && clean.startsWith('55')) {
     return clean;
   }
 
-  // Número inválido / não resolvível
   return null;
 }
 
 /**
- * Obtém a allowlist canônica a partir de LINO_TEST_ALLOWLIST.
- * Suporta múltiplos números separados por vírgula.
+ * Constrói a allowlist canônica a partir de LINO_TEST_ALLOWLIST.
+ * Se vazia ou sem entradas válidas → Set vazio (ninguém autorizado).
+ * Sem fallback hardcoded.
  */
-function getAllowlist(): Set<string> {
-  const list = RAW_ALLOWLIST || '5516991415319,16991415319';
-  return new Set(
-    list.split(',')
-      .map((n) => normalizePhone(n.trim()))
-      .filter((n): n is string => n !== null)
-  );
+function buildAllowlist(): Set<string> {
+  if (!RAW_ALLOWLIST) return new Set();
+
+  const entries = RAW_ALLOWLIST.split(',')
+    .map((n) => normalizePhone(n.trim()))
+    .filter((n): n is string => n !== null);
+
+  return new Set(entries);
+}
+
+// Construída uma vez no startup do módulo
+const ALLOWLIST = buildAllowlist();
+
+if (RUNTIME_MODE === 'test') {
+  if (ALLOWLIST.size === 0) {
+    console.warn('[TestGuard] LINO_TEST_ALLOWLIST vazia ou inválida — NENHUM número autorizado em modo de teste.');
+  } else {
+    console.info(`[TestGuard] Allowlist ativa: ${ALLOWLIST.size} número(s) autorizado(s).`);
+  }
 }
 
 /**
- * Retorna se o número é autorizado no modo atual.
+ * Retorna se um número de telefone é autorizado no modo atual.
  *
- * - Em modo 'production': qualquer número é autorizado.
- * - Em modo 'test': apenas os números na LINO_TEST_ALLOWLIST (padrão: 5516991415319).
+ * - Em produção: qualquer número é autorizado.
+ * - Em teste: somente números na LINO_TEST_ALLOWLIST, com comparação
+ *   estrita em E.164. Sem correspondência parcial.
  */
 export function isPhoneAuthorized(rawPhone: string): boolean {
   if (RUNTIME_MODE === 'production') return true;
 
   const normalized = normalizePhone(rawPhone);
   if (!normalized) {
-    console.warn(`[TestGuard] Número não resolvível bloqueado: "${rawPhone}"`);
+    console.warn(`[TestGuard] Número não normalizável bloqueado: "${rawPhone}"`);
     return false;
   }
 
-  // Sempre autorizar número oficial de teste do gestor
-  if (normalized === '5516991415319' || normalized.includes('991415319')) {
-    return true;
-  }
-
-  const allowlist = getAllowlist();
-  const authorized = allowlist.has(normalized);
+  // Comparação estrita por igualdade — sem includes, endsWith ou wildcards
+  const authorized = ALLOWLIST.has(normalized);
   if (!authorized) {
     console.log(`[TestGuard] Número bloqueado em modo de teste: ${normalized}`);
   }
   return authorized;
+}
+
+/**
+ * Retorna o número de sink de teste (primeiro da allowlist).
+ * Usado pelo dispatcher para redirecionar saídas em modo de teste.
+ * Retorna null se a allowlist estiver vazia.
+ */
+export function getTestSinkPhone(): string | null {
+  if (RUNTIME_MODE === 'production') return null;
+  const [first] = ALLOWLIST;
+  return first ?? null;
 }
 
 /**
@@ -101,7 +142,7 @@ export function isPhoneAuthorized(rawPhone: string): boolean {
 export function assertOutboundAuthorized(rawPhone: string, context: string): void {
   if (!isPhoneAuthorized(rawPhone)) {
     throw new Error(
-      `[TestGuard] Envio bloqueado em modo de teste [${context}]: ${rawPhone}`
+      `[TestGuard] Envio bloqueado em modo de teste [${context}]: ${normalizePhone(rawPhone) ?? rawPhone}`
     );
   }
 }
@@ -114,7 +155,7 @@ export function isTestMode(): boolean {
 }
 
 /**
- * Cria resposta de webhook bloqueado — HTTP 200 silencioso.
+ * Resposta HTTP 200 silenciosa para webhooks de números não autorizados.
  * O remetente não sabe que foi bloqueado.
  */
 export function blockedWebhookResponse(): { status: string; reason: string } {

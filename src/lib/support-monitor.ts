@@ -1,6 +1,5 @@
-import { supabase } from './supabase';
+import { supabaseServer as supabase } from './supabase-server';
 import { generateSupportResponse } from './openai';
-import { isPhoneAuthorized } from './test-guard';
 import {
   notifySellerAboutLead,
   notifySupervisor,
@@ -302,16 +301,14 @@ async function notifySellerUrgent(lead: any, returnCount: number): Promise<void>
 
   const sellerPhone = await getSellerPhone(lead.current_owner_id);
   if (sellerPhone) {
-    // Guard: bloquear notificação em modo de teste
-    if (!isPhoneAuthorized(sellerPhone)) {
-      console.log(`[Support Guard] Notificação urgente ao vendedor bloqueada: ${sellerPhone}`);
-      return;
-    }
+    // Guard aplicado internamente pelo dispatcher via notifySellerAboutLead
     await notifySellerAboutLead(
       sellerPhone,
       lead.name || 'Lead',
       lead.whatsapp_number || '',
-      3
+      returnCount >= 2 ? 3 : 2,
+      lead.current_owner?.name,
+      lead.id
     );
   }
 }
@@ -320,25 +317,23 @@ async function notifySupervisorUrgent(lead: any): Promise<void> {
   const supervisor = await getTeamSupervisor(lead.current_owner?.team_id);
   if (!supervisor?.phone) return;
 
-  // Guard: bloquear escalada em modo de teste
-  if (!isPhoneAuthorized(supervisor.phone)) {
-    console.log(`[Support Guard] Escalada para supervisor bloqueada em modo de teste: ${supervisor.phone}`);
-    return;
-  }
-
+  // Guard aplicado internamente pelo dispatcher via notifySupervisor
   await notifySupervisor(
     supervisor.phone,
     lead.current_owner?.name || 'Vendedor',
     lead.name || 'Lead',
-    lead.whatsapp_number || ''
+    lead.whatsapp_number || '',
+    lead.id
   );
 
-  await supabase.from('supervisor_escalations').insert([{
-    lead_id: lead.id,
-    user_id: lead.current_owner_id,
-    team_id: lead.current_owner?.team_id,
-    escalation_reason: 'Cliente voltou reclamando de falta de atendimento/prazo.'
-  }]);
+  try {
+    await supabase.from('supervisor_escalations').insert([{
+      lead_id: lead.id,
+      user_id: lead.current_owner_id,
+      team_id: lead.current_owner?.team_id,
+      escalation_reason: 'Cliente voltou reclamando de falta de atendimento/prazo.'
+    }]);
+  } catch {}
 
   await updateLeadStatus(lead.id, 'ESCALATED_TO_SUPERVISOR');
 }
@@ -451,7 +446,8 @@ export async function escalateToSupervisor(
       supervisor.phone,
       lead.current_owner?.name || 'Vendedor',
       lead.name || 'Lead',
-      lead.whatsapp_number || ''
+      lead.whatsapp_number || '',
+      leadId
     );
   }
 

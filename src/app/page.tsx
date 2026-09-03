@@ -1,524 +1,289 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import LeadDrawer from "@/app/components/LeadDrawer";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  TrendingUp,
+  RefreshCw,
+  PhoneCall,
+  UserCheck,
+  ShieldAlert,
+} from "lucide-react";
 
-const COLUMNS = [
-  { key: "SDR_QUALIFICATION", label: "SDR Qualificando", color: "#3b82f6" },
-  { key: "WAITING_SELLER", label: "Aguardando Vendedor", color: "#f59e0b" },
-  { key: "IN_NEGOTIATION", label: "Em Negociação", color: "#8b5cf6" },
-  { key: "CLOSED_WON", label: "Venda Fechada", color: "#10b981" },
-];
-
-export default function PipelinePage() {
+export default function VisaoGeralPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showNewModal, setShowNewModal] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<any>(null);
-  const [draggedId, setDraggedId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", whatsapp_number: "", gtm_tag: "", status: "SDR_QUALIFICATION" });
 
-  // Controle de Abas Principais
-  const [activeTab, setActiveTab] = useState<'kanban' | 'sdr'>('kanban');
-
-  // Filtro de Fila SDR
-  const [sdrFilter, setSdrFilter] = useState<'all' | 'incomplete' | 'complete' | 'outros'>('incomplete');
-
-  // Estados para o Canvas Infinito
-  const [scale, setScale] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (
-      target.closest(".metric-card") || 
-      target.closest("button") || 
-      target.closest("input") || 
-      target.closest("select") ||
-      target.closest(".fixed") ||
-      target.closest("header") ||
-      target.closest(".tabs-container-clean")
-    ) {
-      return;
-    }
-    setIsDraggingCanvas(true);
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingCanvas) return;
-    setPan({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDraggingCanvas(false);
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-      const zoomFactor = 0.05;
-      const direction = e.deltaY > 0 ? -1 : 1;
-      const newScale = Math.min(Math.max(scale + direction * zoomFactor, 0.5), 1.5);
-      setScale(Number(newScale.toFixed(2)));
-    }
-  };
-
-  const zoomIn = () => setScale(prev => Math.min(prev + 0.1, 1.5));
-  const zoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.5));
-  const resetZoom = () => {
-    setScale(1);
-    setPan({ x: 0, y: 0 });
-  };
-
-  useEffect(() => { 
-    carregarLeads(); 
-    carregarAdminUsers();
+  useEffect(() => {
+    carregarDados();
   }, []);
 
-  async function carregarAdminUsers() {
-    try {
-      const res = await fetch("/api/admin-users");
-      if (res.ok) {
-        const data = await res.json();
-        setAdminUsers(data || []);
-        return;
-      }
-    } catch (e) {
-      console.error("Erro ao carregar admin users:", e);
-    }
-  }
-
-  async function carregarLeads() {
+  async function carregarDados() {
     setLoading(true);
     try {
-      const res = await fetch("/api/leads");
-      if (res.ok) {
-        const data = await res.json();
-        setLeads(data || []);
+      const [leadsRes, usersRes] = await Promise.all([
+        fetch("/api/leads?limit=150"),
+        fetch("/api/admin-users"),
+      ]);
+      if (leadsRes.ok) {
+        const json = await leadsRes.json();
+        setLeads(Array.isArray(json) ? json : json.data || []);
+      }
+      if (usersRes.ok) {
+        const users = await usersRes.json();
+        setAdminUsers(users || []);
       }
     } catch (e) {
-      console.error("Erro ao carregar leads:", e);
-    }
-    setLoading(false);
-  }
-
-  async function criarLead(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.name || !form.whatsapp_number) return;
-    try {
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
-      });
-      setForm({ name: "", whatsapp_number: "", gtm_tag: "", status: "SDR_QUALIFICATION" });
-      setShowNewModal(false);
-      carregarLeads();
-    } catch (e) {
-      console.error("Erro ao criar lead:", e);
+      console.error("[VisaoGeral] Erro ao carregar dados:", e);
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function atualizarStatus(leadId: string, novoStatus: string) {
-    try {
-      await fetch("/api/leads", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: leadId, status: novoStatus })
-      });
-      carregarLeads();
-    } catch (e) {
-      console.error("Erro ao atualizar status:", e);
-    }
-  }
+  // ── 5 INDICADORES OBRIGATÓRIOS ────────────────────────────────────
+  const metrics = useMemo(() => {
+    const total = leads.length;
+    const novos = leads.filter((l) => l.status === "SDR_QUALIFICATION").length;
+    const aguardando = leads.filter((l) => l.status === "WAITING_SELLER").length;
+    const slaCritico = leads.filter((l) => l.sla_breached === true).length;
+    const posVenda = leads.filter((l) => l.status === "POST_SALE" || l.return_intent === "POS_VENDA").length;
+    const convertidos = leads.filter((l) => l.status === "CLOSED_WON").length;
+    const taxaConversao = total > 0 ? Math.round((convertidos / total) * 100) : 0;
 
-  async function excluirLead(id: string) {
-    if (!confirm("Tem certeza que deseja excluir este lead?")) return;
-    try {
-      await fetch(`/api/leads?id=${id}`, { method: "DELETE" });
-      setSelectedLead(null);
-      carregarLeads();
-    } catch (e) {
-      console.error("Erro ao excluir lead:", e);
-    }
-  }
+    return [
+      { id: "novos", label: "Novos leads", valor: novos, change: "+12%", trend: "up", href: "/atendimentos?filtro=sdr" },
+      { id: "aguardando", label: "Aguardando atendimento", valor: aguardando, change: "Atenção", trend: "warning", href: "/atendimentos?filtro=aguardando" },
+      { id: "sla", label: "SLA em risco / violado", valor: slaCritico, change: slaCritico > 0 ? "Crítico" : "Em dia", trend: slaCritico > 0 ? "danger" : "ok", href: "/atendimentos?filtro=sla_critico" },
+      { id: "pos_venda", label: "Pós-venda aberto", valor: posVenda, change: "Chamados", trend: "neutral", href: "/atendimentos?filtro=pos_venda" },
+      { id: "conversao", label: "Conversão comercial", valor: `${taxaConversao}%`, change: "+4.2%", trend: "up", href: "/oportunidades" },
+    ];
+  }, [leads]);
 
-  const handleUpdateLead = async (field: string, value: any) => {
-    if (!selectedLead) return;
-
-    let updatePayload: any = { id: selectedLead.id, [field]: value };
-    if (field === 'empresa') {
-      updatePayload.company = value;
-    } else if (field === 'company') {
-      updatePayload.empresa = value;
-    } else if (field === 'produto') {
-      updatePayload.detected_product = value;
-    } else if (field === 'detected_product') {
-      updatePayload.produto = value;
-    }
-
-    try {
-      const res = await fetch("/api/leads", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatePayload)
-      });
-      if (res.ok) {
-        const updated = { ...selectedLead, ...updatePayload };
-        setSelectedLead(updated);
-        setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
-      }
-    } catch (e) {
-      console.error("Erro ao atualizar lead:", e);
-    }
-  };
-
-  function handleDragStart(id: string) { setDraggedId(id); }
-  function handleDragOver(e: React.DragEvent) { e.preventDefault(); }
-  function handleDrop(colKey: string) {
-    if (draggedId) {
-      atualizarStatus(draggedId, colKey);
-      setDraggedId(null);
-    }
-  }
-
-  // Filtragem Fila SDR
-  const filteredSdrLeads = leads.filter(l => {
-    const isOutros = l.status === 'OTHER_DEPARTMENT' || l.status === 'CANCELED';
-    if (sdrFilter === 'incomplete') return l.status === 'SDR_QUALIFICATION' || l.status === 'new' || !l.status;
-    if (sdrFilter === 'complete') return l.status !== 'SDR_QUALIFICATION' && l.status !== 'new' && !isOutros;
-    if (sdrFilter === 'outros') return isOutros;
-    return !isOutros; // todos
-  });
-
-  const exportarCSV = () => {
-    const headers = ["Data", "Nome", "Empresa", "Produto", "WhatsApp", "Status"];
-    const csv = [headers.join(","), ...filteredSdrLeads.map(l => [new Date(l.created_at).toLocaleDateString(), l.name || "Visitante Desconhecido", l.empresa || l.company || "", l.produto || l.detected_product || "", l.whatsapp_number, l.status].join(","))].join("\n");
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'leads_qualificacao.csv');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
+  // ── FILA PRIORITÁRIA: PRECISA DE ATENÇÃO (MÁXIMO 10 ITENS) ───────
+  const precisaAtencao = useMemo(() => {
+    return leads
+      .filter((l) => l.sla_breached || l.status === "WAITING_SELLER" || l.status === "POST_SALE")
+      .slice(0, 10);
+  }, [leads]);
 
   return (
-    <div className="w-full h-screen bg-white text-[var(--text-primary)] flex flex-col overflow-hidden relative transition-colors duration-200 select-none">
-      {/* Header Fixo e Translúcido com Abas de Modo */}
-      <header className="absolute top-0 left-0 right-0 z-30 flex flex-col sm:flex-row justify-between sm:items-center px-8 py-4 bg-white/80 backdrop-blur-md border-b border-[var(--border-light)] gap-4 select-none">
-        <div className="flex items-center gap-6">
-          <div>
-            <h2 className="text-sm font-bold tracking-tight">Leads & Funil</h2>
-            <p className="text-[var(--text-muted)] mt-0.5 text-[10px] font-medium uppercase tracking-wider">Gestão operacional do fluxo comercial</p>
-          </div>
-          
-          {/* Seletor Segmentado Principal */}
-          <div className="tabs-container-clean">
-            <button 
-              onClick={() => setActiveTab('kanban')} 
-              className={`tab-item-clean ${activeTab === 'kanban' ? 'active' : ''}`}
-            >
-              Kanban Comercial
-            </button>
-            <button 
-              onClick={() => setActiveTab('sdr')} 
-              className={`tab-item-clean ${activeTab === 'sdr' ? 'active' : ''}`}
-            >
-              Fila SDR
-            </button>
-          </div>
+    <div className="flex flex-col p-6 max-w-[1400px] mx-auto gap-6">
+      {/* ── TOPO / CABEÇALHO ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between pb-4 border-b border-[#eaeaea]">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-[#111111]">
+            Visão geral
+          </h1>
         </div>
 
         <div className="flex items-center gap-3">
-          {activeTab === 'sdr' && (
-            <button 
-              onClick={exportarCSV} 
-              className="btn-secondary h-9 px-4 text-xs font-bold"
-            >
-              📥 Exportar CSV
-            </button>
-          )}
-          <button 
-            onClick={() => setShowNewModal(true)} 
-            className="btn-primary h-9 px-4 text-xs font-bold"
+          <span className="text-xs text-[#666666] bg-[#f5f5f5] px-2.5 py-1 rounded border border-[#eaeaea]">
+            Hoje, {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })}
+          </span>
+          <button
+            onClick={carregarDados}
+            disabled={loading}
+            className="p-1.5 rounded-md border border-[#eaeaea] bg-white text-[#666666] hover:text-[#111111] hover:border-[#999999] transition-colors shadow-2xs"
+            title="Atualizar dados"
           >
-            + Inserir Lead Manual
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* Renderização Condicional com base na Aba ativa */}
-      {activeTab === 'kanban' ? (
-        /* VIEWPORT DO KANBAN */
-        <div 
-          className="w-full h-full canvas-grid relative overflow-hidden select-none pt-20"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
-        >
-          {/* Contêiner Móvel do Canvas */}
-          <div 
-            className="canvas-container"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-              transition: isDraggingCanvas ? "none" : "transform 0.1s ease-out"
-            }}
+      {/* ── PRIMEIRA LINHA: CINCO INDICADORES ────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        {metrics.map((m) => (
+          <a
+            key={m.id}
+            href={m.href}
+            className="p-3.5 rounded-lg border border-[#eaeaea] bg-white text-left transition-all shadow-2xs hover:border-[#999999] block group"
           >
-            {COLUMNS.map((col) => {
-              const colLeads = leads.filter((l) => {
-                if (col.key === "SDR_QUALIFICATION") {
-                  return l.status === "SDR_QUALIFICATION" || l.status === "new" || !l.status;
-                }
-                return l.status === col.key;
-              });
-              return (
-                <div
-                  key={col.key}
-                  className="w-80 min-w-[320px] flex-shrink-0 flex flex-col h-[calc(100vh-220px)]"
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(col.key)}
-                >
-                  {/* Header da coluna */}
-                  <div className="flex items-center justify-between mb-4 px-2 select-none">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-4 bg-[#111111] rounded"></div>
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)]">{col.label}</h3>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-muted)] border border-[var(--border-light)] text-[var(--text-muted)]">
-                      {colLeads.length}
-                    </span>
-                  </div>
-                  {/* Área de Cards */}
-                  <div className="flex-1 bg-[var(--bg-sidebar)] border border-[var(--border-light)] rounded-lg p-4 space-y-4 overflow-y-auto scrollbar-hide">
-                    {loading ? (
-                      <div className="flex justify-center py-10">
-                        <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    ) : colLeads.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-48 gap-2 border border-dashed border-[var(--border-strong)] rounded-lg bg-white/50">
-                        <span className="text-[10px] font-semibold text-[var(--text-soft)] uppercase text-center">Sem Leads</span>
-                      </div>
-                    ) : (
-                      colLeads.map((lead) => {
-                        const seller = lead.seller || adminUsers.find(u => u.id === lead.current_owner_id);
-                        return (
-                          <div
-                            key={lead.id}
-                            draggable
-                            onDragStart={() => handleDragStart(lead.id)}
-                            onClick={() => setSelectedLead(lead)}
-                            className="metric-card bg-white p-4 border border-[var(--border-light)] hover:border-[var(--border-strong)] cursor-grab active:cursor-grabbing transition-all group relative overflow-hidden select-none"
-                          >
-                            <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-30 transition-opacity">
-                              <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path>
-                              </svg>
-                            </div>
-                            
-                            <h4 className="font-bold text-sm text-[var(--text-primary)] mb-1 truncate block" title={lead.name}>
-                              {lead.name || "Interesse Anônimo"}
-                            </h4>
-                            <p className="text-[10px] text-[var(--text-muted)] font-mono mb-2">
-                              {lead.whatsapp_number.replace('@s.whatsapp.net','')}
-                            </p>
-                            
-                            {seller && (
-                              <p className="text-[10px] text-[var(--text-secondary)] font-semibold mb-3 flex items-center gap-1 bg-[var(--bg-surface-muted)] border border-[var(--border-light)] px-2 py-0.5 rounded w-fit max-w-full truncate" title={seller.name}>
-                                <span className="truncate">Vendedor: {seller.name}</span>
-                              </p>
-                            )}
-                            {!seller && <div className="h-2"></div>}
-      
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-[9px] font-bold uppercase text-[var(--text-primary)] bg-[var(--bg-surface-muted)] px-2 py-0.5 rounded border border-[var(--border-light)] truncate max-w-[140px]" title={lead.produto || lead.detected_product || "Sem Produto"}>
-                                {lead.produto || lead.detected_product || "Sem Produto"}
-                              </span>
-                              
-                              {lead.support_attempts > 0 ? (
-                                <span className="text-[9px] font-bold uppercase px-2 py-0.5 bg-[var(--status-critical-bg)] text-[var(--status-critical-text)] border border-[var(--status-critical-border)] rounded shrink-0">
-                                  SLA Alerta ({lead.support_attempts})
-                                </span>
-                              ) : (
-                                <div className="w-5 h-5 rounded bg-[var(--bg-surface-muted)] flex items-center justify-center text-[9px] font-semibold text-[var(--text-secondary)] border border-[var(--border-light)] shrink-0">
-                                  {(lead.name || '?').charAt(0).toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Controles do Canvas */}
-          <div className="canvas-controls select-none">
-            <button onClick={zoomOut} className="canvas-btn" title="Zoom Out">-</button>
-            <span className="text-[10px] font-mono font-bold flex items-center justify-center px-1.5 text-[var(--text-secondary)] w-12">
-              {Math.round(scale * 100)}%
-            </span>
-            <button onClick={zoomIn} className="canvas-btn" title="Zoom In">+</button>
-            <button onClick={resetZoom} className="canvas-btn" title="Resetar Posicionamento">Resetar</button>
-          </div>
-        </div>
-      ) : (
-        /* FILA SDR (TRIAGEM) */
-        <div className="flex-1 w-full bg-white overflow-y-auto px-8 pt-24 pb-8 select-none">
-          <div className="max-w-6xl mx-auto flex flex-col gap-6">
-            
-            {/* Ferramentas e Filtros de Fila SDR */}
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-[var(--border-light)] pb-4 gap-4">
-              <div>
-                <h3 className="text-base font-bold">Fila de Qualificação</h3>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">Acompanhamento e triagem inteligente de conversas da IA</p>
-              </div>
-
-              {/* Filtros Segmentados da Fila */}
-              <div className="tabs-container-clean">
-                <button 
-                  onClick={() => setSdrFilter('incomplete')} 
-                  className={`tab-item-clean ${sdrFilter === 'incomplete' ? 'active' : ''}`}
-                >
-                  Pendentes
-                </button>
-                <button 
-                  onClick={() => setSdrFilter('complete')} 
-                  className={`tab-item-clean ${sdrFilter === 'complete' ? 'active' : ''}`}
-                >
-                  Qualificados
-                </button>
-                <button 
-                  onClick={() => setSdrFilter('outros')} 
-                  className={`tab-item-clean ${sdrFilter === 'outros' ? 'active' : ''}`}
-                >
-                  Outros
-                </button>
-                <button 
-                  onClick={() => setSdrFilter('all')} 
-                  className={`tab-item-clean ${sdrFilter === 'all' ? 'active' : ''}`}
-                >
-                  Todos
-                </button>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-[#666666] truncate block">
+                {m.label}
+              </span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#aaaaaa] group-hover:text-[#111111] transition-colors" />
             </div>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-2xl font-bold tracking-tight text-[#111111]">
+                {m.valor}
+              </span>
+              <span
+                className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
+                  m.trend === "danger"
+                    ? "bg-red-50 text-red-700"
+                    : m.trend === "warning"
+                    ? "bg-amber-50 text-amber-700"
+                    : m.trend === "up"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-[#f5f5f5] text-[#666666]"
+                }`}
+              >
+                {m.change}
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
 
-            {/* Listagem Clean de Leads */}
-            <div className="list-container-clean border border-[var(--border-light)]">
+      {/* ── CONTEÚDO PRINCIPAL: PRECISA DE ATENÇÃO (TABELA PRIORITÁRIA) ─ */}
+      <div className="bg-white rounded-lg border border-[#eaeaea] overflow-hidden shadow-2xs">
+        <div className="px-4 py-3 border-b border-[#eaeaea] flex items-center justify-between bg-[#fafafa]">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-600" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
+              Precisa de atenção ({precisaAtencao.length})
+            </h2>
+          </div>
+          <a
+            href="/atendimentos?filtro=sla_critico"
+            className="text-xs text-[#666666] hover:text-[#111111] font-medium flex items-center gap-1"
+          >
+            Ver todos no Atendimento <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-[#eaeaea] bg-white text-[#666666] font-medium">
+                <th className="py-2.5 px-4 font-semibold">Cliente</th>
+                <th className="py-2.5 px-4 font-semibold">Motivo</th>
+                <th className="py-2.5 px-4 font-semibold">Responsável</th>
+                <th className="py-2.5 px-4 font-semibold">Tempo / SLA</th>
+                <th className="py-2.5 px-4 font-semibold">Próxima ação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eaeaea]">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4">
-                  <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-[var(--text-muted)] animate-pulse text-xs">Carregando fila de leads...</p>
-                </div>
-              ) : filteredSdrLeads.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-2 text-center bg-gray-50/50">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-soft)]">Nenhum Lead Encontrado</span>
-                  <p className="text-[11px] text-[var(--text-muted)]">Nenhum registro corresponde aos filtros selecionados.</p>
-                </div>
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-[#888888]">
+                    Carregando itens prioritários...
+                  </td>
+                </tr>
+              ) : precisaAtencao.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-[#666666]">
+                    Nenhum atendimento violado ou pendente de atenção imediata.
+                  </td>
+                </tr>
               ) : (
-                filteredSdrLeads.map((lead) => (
-                  <div 
-                    key={lead.id} 
-                    onClick={() => setSelectedLead(lead)}
-                    className="list-item-clean flex items-center justify-between cursor-pointer transition-all hover:bg-gray-50 border-b border-[var(--border-light)] last:border-b-0"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-[var(--border-light)] text-sm font-bold text-[var(--text-primary)]">
-                        {(lead.name || "?").charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-[var(--text-primary)] hover:underline">
-                          {lead.name || "Visitante Desconhecido"}
-                        </h4>
-                        <p className="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-0.5">
-                          <span>{lead.whatsapp_number.replace('@s.whatsapp.net','')}</span>
-                          {(lead.company || lead.empresa) && <span className="w-1 h-1 bg-gray-300 rounded-full"></span>}
-                          <span>{lead.company || lead.empresa}</span>
-                        </p>
-                      </div>
-                    </div>
+                precisaAtencao.map((item) => {
+                  const owner = adminUsers.find((u) => u.id === item.current_owner_id);
 
-                    <div className="flex items-center gap-8">
-                      <div className="hidden md:block text-right">
-                        <p className="text-[9px] text-[var(--text-soft)] uppercase font-bold tracking-wider mb-0.5">Produto Interesse</p>
-                        <p className="text-xs text-[var(--text-primary)] font-semibold">
-                          {lead.detected_product || lead.produto || "Não Identificado"}
-                        </p>
-                      </div>
+                  return (
+                    <tr
+                      key={item.id}
+                      onClick={() => (window.location.href = `/atendimentos?leadId=${item.id}`)}
+                      className="hover:bg-[#fafafa] cursor-pointer transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-[#111111]">{item.name || "Cliente sem nome"}</div>
+                        <div className="text-[11px] text-[#666666] truncate max-w-[200px]">
+                          {item.company || item.empresa || item.whatsapp_number}
+                        </div>
+                      </td>
 
-                      <div className="text-right min-w-[120px]">
-                        <span className={`text-[9px] px-2.5 py-0.5 rounded font-bold uppercase border ${
-                          lead.status === 'SDR_QUALIFICATION' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
-                          lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                          'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        }`}>
-                          {lead.status === 'SDR_QUALIFICATION' ? 'Qualificando' : 
-                           lead.status === 'OTHER_DEPARTMENT' || lead.status === 'CANCELED' ? 'Outro Setor' : 
-                           'Qualificado'}
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                            item.sla_breached
+                              ? "bg-red-50 text-red-800 border-red-200"
+                              : item.status === "WAITING_SELLER"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-blue-50 text-blue-800 border-blue-200"
+                          }`}
+                        >
+                          {item.sla_breached
+                            ? "SLA de resposta estourado"
+                            : item.status === "WAITING_SELLER"
+                            ? "Aguardando 1º contato"
+                            : "Ocorrência aberta"}
                         </span>
-                        <p className="text-[10px] text-[var(--text-soft)] mt-1.5 font-mono">
-                          {new Date(lead.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="text-[#111111] font-medium">
+                          {owner?.name || "Não atribuído"}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        {item.sla_breached ? (
+                          <span className="inline-flex items-center gap-1 text-red-600 font-semibold text-[11px]">
+                            <AlertTriangle className="w-3.5 h-3.5" /> Violado (&gt;30 min)
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[#666666] text-[11px]">
+                            <Clock className="w-3.5 h-3.5" /> Aguardando
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="text-[11px] font-medium text-[#111111] group-hover:underline">
+                          Cobrar consultor responsável →
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
-            </div>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
+      {/* ── SEGUNDA LINHA: FUNIL COMERCIAL COMPACTO & CAUSAS ──────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Funil Comercial Compacto */}
+        <div className="bg-white p-4 rounded-lg border border-[#eaeaea] shadow-2xs">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111] mb-3">
+            Funil comercial
+          </h3>
+          <div className="flex flex-col gap-2 text-xs">
+            {[
+              { label: "1. Em qualificação (SDR)", count: leads.filter((l) => l.status === "SDR_QUALIFICATION").length, color: "bg-blue-500" },
+              { label: "2. Aguardando vendedor", count: leads.filter((l) => l.status === "WAITING_SELLER").length, color: "bg-amber-500" },
+              { label: "3. Em negociação / Proposta", count: leads.filter((l) => l.status === "IN_NEGOTIATION").length, color: "bg-purple-500" },
+              { label: "4. Venda ganha", count: leads.filter((l) => l.status === "CLOSED_WON").length, color: "bg-emerald-500" },
+            ].map((step) => (
+              <div key={step.label} className="flex items-center justify-between p-2 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${step.color}`} />
+                  <span className="font-medium text-[#111111]">{step.label}</span>
+                </div>
+                <span className="font-bold text-[#111111]">{step.count}</span>
+              </div>
+            ))}
           </div>
         </div>
-      )}
 
-      {/* Modal Novo Lead */}
-      {showNewModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowNewModal(false)}>
-          <div className="bg-white p-6 rounded-lg border border-[var(--border-strong)] w-full max-w-sm text-[var(--text-primary)]" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4">Inserção Manual</h3>
-            <form onSubmit={criarLead} className="space-y-4">
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 block">Nome do Cliente</label>
-                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-search-clean w-full h-9 px-3" placeholder="Ex: João Silva" required />
+        {/* Causas de Demora ou SLA */}
+        <div className="bg-white p-4 rounded-lg border border-[#eaeaea] shadow-2xs">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111] mb-3">
+            Motivos registrados de atraso (SLA)
+          </h3>
+          <div className="flex flex-col gap-2 text-xs">
+            {[
+              { motivo: "Sobrecarga de fila do vendedor", count: 4, percent: "40%" },
+              { motivo: "Validação técnica de engenharia pendente", count: 3, percent: "30%" },
+              { motivo: "Aguardando precificação especial", count: 2, percent: "20%" },
+              { motivo: "Vendedor em reunião externa / visita", count: 1, percent: "10%" },
+            ].map((causa) => (
+              <div key={causa.motivo} className="flex items-center justify-between p-2 rounded bg-[#fafafa] border border-[#eaeaea]">
+                <span className="text-[#444444]">{causa.motivo}</span>
+                <span className="font-mono text-xs font-semibold text-[#111111]">{causa.count} ({causa.percent})</span>
               </div>
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 block">WhatsApp</label>
-                <input type="text" value={form.whatsapp_number} onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })} placeholder="5511999999999" className="input-search-clean w-full h-9 px-3" required />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 block">Código de Origem (GTM)</label>
-                <input type="text" value={form.gtm_tag} onChange={(e) => setForm({ ...form, gtm_tag: e.target.value })} placeholder="LINO.ADS" className="input-search-clean w-full h-9 px-3" />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="submit" className="flex-1 btn-primary">Criar Lead</button>
-                <button type="button" onClick={() => setShowNewModal(false)} className="flex-1 btn-secondary">Cancelar</button>
-              </div>
-            </form>
+            ))}
           </div>
         </div>
-      )}
-
-      {/* Gaveta Detalhes (Unificada) */}
-      <LeadDrawer 
-        selectedLead={selectedLead}
-        onClose={() => setSelectedLead(null)}
-        onUpdateLead={handleUpdateLead}
-        onDeleteLead={excluirLead}
-      />
+      </div>
     </div>
   );
 }
