@@ -9,83 +9,102 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { whatsapp_number } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const whatsapp_number = body.whatsapp_number || '16991415319';
 
-    if (!whatsapp_number) {
-      return NextResponse.json({ error: 'Número de WhatsApp é obrigatório' }, { status: 400 });
-    }
-
-    // Tenta múltiplos formatos para achar o lead
+    // Normaliza variações do número
     const rawNumber = whatsapp_number.replace(/\D/g, ''); // só dígitos
     const withoutCountry = rawNumber.replace(/^55/, '');
     const without9 = rawNumber.replace(/(\d{2})9(\d{8})/, '$1$2');
     const withoutCountryAnd9 = withoutCountry.replace(/(\d{2})9(\d{8})/, '$1$2');
 
-    const formats = [
-      `${rawNumber}@s.whatsapp.net`,
-      `55${rawNumber}@s.whatsapp.net`,
-      rawNumber,
-      `55${rawNumber}`,
-      `${withoutCountry}@s.whatsapp.net`,
-      withoutCountry,
-      `${without9}@s.whatsapp.net`,
-      without9,
-      `${withoutCountryAnd9}@s.whatsapp.net`,
-      withoutCountryAnd9,
-      `55${withoutCountryAnd9}@s.whatsapp.net`,
-      `55${withoutCountryAnd9}`
-    ];
+    // 1. Buscar todos os leads associados a qualquer variante desse número
+    const { data: leads } = await supabase
+      .from('leads')
+      .select('id, whatsapp_number')
+      .or(`whatsapp_number.ilike.%${withoutCountryAnd9}%,whatsapp_number.ilike.%${withoutCountry}%,whatsapp_number.ilike.%${rawNumber}%`);
 
-    let lead: any = null;
-    for (const fmt of formats) {
-      const { data } = await supabase.from('leads').select('id, whatsapp_number').eq('whatsapp_number', fmt).single();
-      if (data) { lead = data; break; }
-    }
+    const leadIds = (leads || []).map((l) => l.id);
 
-    if (!lead) {
-      // Como último recurso, tenta usar ilike
-      const { data } = await supabase.from('leads').select('id, whatsapp_number').ilike('whatsapp_number', `%${withoutCountryAnd9}%`).limit(1).single();
-      if (data) {
-        lead = data;
-      } else {
-        return NextResponse.json({ error: `Lead não encontrado para número: ${whatsapp_number}` }, { status: 404 });
+    if (leadIds.length > 0) {
+      // 2. Deletar histórico em todas as tabelas relacionadas
+      for (const id of leadIds) {
+        try { await supabase.from('interactions').delete().eq('lead_id', id); } catch {}
+        try { await supabase.from('service_tickets').delete().eq('lead_id', id); } catch {}
+        try { await supabase.from('conversation_events').delete().eq('lead_id', id); } catch {}
+        try { await supabase.from('supervisor_escalations').delete().eq('lead_id', id); } catch {}
+        try { await supabase.from('lead_status_history').delete().eq('lead_id', id); } catch {}
+        try { await supabase.from('lead_follow_ups').delete().eq('lead_id', id); } catch {}
+        try { await supabase.from('attendance_bottlenecks').delete().eq('lead_id', id); } catch {}
+        try { await supabase.from('outbound_messages').delete().eq('correlation_lead_id', id); } catch {}
+      }
+
+      // 3. Resetar COMPLETAMENTE todas as variáveis de qualificação, produto, empresa e status
+      for (const id of leadIds) {
+        await supabase
+          .from('leads')
+          .update({
+            status: 'SDR_QUALIFICATION',
+            qualification_completed: false,
+            bot_active: true,
+            name: null,
+            company: null,
+            empresa: null,
+            cargo: null,
+            cnpj: null,
+            email_corporativo: null,
+            cidade_empresa: null,
+            estado_empresa: null,
+            produto: null,
+            detected_product: null,
+            detected_ddd: null,
+            quantidade: null,
+            especificacao: null,
+            observacao: null,
+            marca_id: null,
+            region_id: null,
+            qualified_at: null,
+            routed_at: null,
+            last_mode: 'SDR',
+            intent_type: null,
+            return_intent: 'SDR',
+            support_attempts: 0,
+            sent_to_seller_at: null,
+            seller_confirmed_at: null,
+            seller_acknowledged_at: null,
+            seller_contacted_at: null,
+            quote_sent_at: null,
+            attendance_started_at: null,
+            tentativas_coleta: 0,
+            qualification_state: null,
+            tracking_code: null,
+            tracking_id: null,
+            context_source: null,
+            context_interest: null,
+            b2b_attempts: { cnpj: 0, email: 0, nome: 0, empresa: 0 },
+            sla_breached: false,
+            last_interaction_at: null,
+            current_owner_id: null,
+            assigned_at: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
       }
     }
 
-    // 2. Deletar histórico em todas as tabelas relacionadas
-    await supabase.from('interactions').delete().eq('lead_id', lead.id);
-    await supabase.from('lead_status_history').delete().eq('lead_id', lead.id);
-    await supabase.from('lead_follow_ups').delete().eq('lead_id', lead.id);
-    await supabase.from('attendance_bottlenecks').delete().eq('lead_id', lead.id);
-    await supabase.from('supervisor_escalations').delete().eq('lead_id', lead.id);
+    // 4. Limpar mensagens de outbound/inbound associadas ao número
+    try {
+      await supabase.from('outbound_messages').delete().or(`to_phone.ilike.%${withoutCountryAnd9}%,to_phone.ilike.%${rawNumber}%`);
+    } catch {}
+    try {
+      await supabase.from('inbound_messages').delete().or(`from_number.ilike.%${withoutCountryAnd9}%,from_number.ilike.%${rawNumber}%`);
+    } catch {}
 
-    // 3. Resetar status do lead e reativar bot
-    const { error: updateLeadError } = await supabase
-      .from('leads')
-      .update({ 
-        status: 'SDR_QUALIFICATION',
-        bot_active: true,
-        detected_product: null,
-        detected_ddd: null,
-        name: null,
-        company: null,
-        current_owner_id: null,
-        sent_to_seller_at: null,
-        seller_confirmed_at: null,
-        attendance_started_at: null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', lead.id);
-
-    if (updateLeadError) {
-      throw updateLeadError;
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      message: `Histórico limpo para o número ${whatsapp_number}` 
+    return NextResponse.json({
+      success: true,
+      message: `Histórico, tickets, dados de qualificação e memória completamente apagados para o número ${whatsapp_number}`,
+      leadsResetados: leadIds.length,
     });
-
   } catch (error: any) {
     console.error('[Clear History Error]', error);
     return NextResponse.json({ error: error.message || 'Erro interno' }, { status: 500 });

@@ -205,19 +205,28 @@ export default function SaaSPage() {
           </button>
           <button 
             onClick={async () => {
-              if (confirm('Tem certeza que deseja apagar o histórico de testes do número 5516991415319?')) {
-                const res = await fetch('/api/test/clear-history', {
-                  method: 'POST',
-                  body: JSON.stringify({ whatsapp_number: '5516991415319' }),
-                  headers: { 'Content-Type': 'application/json' }
-                });
-                if (res.ok) alert('Histórico apagado! O Lino vai iniciar uma nova conversa no próximo Oi.');
-                else alert('Erro ao apagar histórico.');
+              if (confirm('Deseja zerar COMPLETAMENTE o histórico de testes do número 16991415319?\n\nIsso apagará todas as mensagens, dados coletados (produto, medidas, empresa) e memória no Supabase para iniciar um fluxo 100% novo.')) {
+                try {
+                  const res = await fetch('/api/test/clear-history', {
+                    method: 'POST',
+                    body: JSON.stringify({ whatsapp_number: '5516991415319' }),
+                    headers: { 'Content-Type': 'application/json' }
+                  });
+                  const json = await res.json();
+                  if (res.ok) {
+                    alert('Histórico e memória do número 16991415319 foram 100% apagados! O próximo teste começará do zero.');
+                  } else {
+                    alert('Erro ao apagar histórico: ' + (json.error || 'Erro desconhecido'));
+                  }
+                } catch (e: any) {
+                  alert('Erro de rede: ' + e.message);
+                }
               }
             }}
-            className="px-4 py-2 bg-white text-red-600 border border-red-200 hover:bg-red-50 text-xs font-semibold rounded-md transition-all cursor-pointer"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+            style={{ color: '#ffffff', backgroundColor: '#dc2626' }}
           >
-            🗑️ Zerar Histórico de Testes
+            🗑️ Zerar Histórico de Testes (16991415319)
           </button>
         </div>
       </header>

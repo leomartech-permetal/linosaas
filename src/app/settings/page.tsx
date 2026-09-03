@@ -972,18 +972,29 @@ export default function SettingsPage() {
           </button>
           <button 
             onClick={async () => {
-              if (confirm('Zerar histórico do número de testes 5516991415319?')) {
-                const res = await fetch('/api/test/clear-history', {
-                  method: 'POST',
-                  body: JSON.stringify({ whatsapp_number: '5516991415319' }),
-                  headers: { 'Content-Type': 'application/json' }
-                });
-                if (res.ok) alert('Histórico apagado!');
+              if (confirm('Deseja zerar COMPLETAMENTE o histórico do número de teste 16991415319?\n\nIsso apagará todas as mensagens, dados coletados (produto, medidas, empresa) e memória no Supabase para iniciar um fluxo 100% novo.')) {
+                try {
+                  const res = await fetch('/api/test/clear-history', {
+                    method: 'POST',
+                    body: JSON.stringify({ whatsapp_number: '5516991415319' }),
+                    headers: { 'Content-Type': 'application/json' }
+                  });
+                  const json = await res.json();
+                  if (res.ok) {
+                    flash('✔ Histórico, dados coletados e memória 100% zerados!');
+                    alert('Sucesso! Histórico e memória do número 16991415319 foram completamente apagados no Supabase.');
+                  } else {
+                    alert('Erro ao zerar: ' + (json.error || 'Erro desconhecido'));
+                  }
+                } catch (e: any) {
+                  alert('Erro de rede: ' + e.message);
+                }
               }
             }}
-            className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 text-xs font-semibold rounded transition-all cursor-pointer"
+            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+            style={{ color: '#ffffff', backgroundColor: '#dc2626' }}
           >
-            Zerador de Testes
+            🗑️ Zerar Histórico de Teste (16991415319)
           </button>
         </div>
       </header>
