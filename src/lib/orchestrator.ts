@@ -106,22 +106,11 @@ export async function receiveInbound(event: InboundEvent): Promise<OrchestratorR
     return { status: 'processed', mode: 'SELLER_RESPONSE', reason: 'collaborator_response' };
   }
 
-  // ── Buffer de micro-rajada (5 segundos) ───────────────────────────────────
-  // Cancela o timer anterior e reabre, acumulando mensagens rápidas
-  const burstKey = `${normalizedFrom}`;
-  if (messageBurst.has(burstKey)) {
-    clearTimeout(messageBurst.get(burstKey)!);
-  }
+  // ── Processamento direto (essencial para ambiente serverless / Vercel) ───
+  // Executa o processamento imediatamente para não ser congelado pelo encerramento da rota HTTP
+  await processInboundMessage(normalizedFrom, event);
 
-  // Processar após o buffer de 5 segundos
-  const timer = setTimeout(async () => {
-    messageBurst.delete(burstKey);
-    await processInboundMessage(normalizedFrom, event);
-  }, 5000);
-
-  messageBurst.set(burstKey, timer);
-
-  return { status: 'processed', reason: 'queued_burst_buffer' };
+  return { status: 'processed', reason: 'processed_direct' };
 }
 
 /**

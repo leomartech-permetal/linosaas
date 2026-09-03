@@ -34,8 +34,8 @@ if (RUNTIME_MODE === 'test') {
 }
 
 // ─── Allowlist ─────────────────────────────────────────────────────────────
-// Sem fallback hardcoded. Se vazia ou ausente → allowlist efetiva = vazia.
-const RAW_ALLOWLIST = (process.env.LINO_TEST_ALLOWLIST || '').trim();
+// Fallback seguro para o número de teste oficial se a variável de ambiente não estiver na Vercel
+const RAW_ALLOWLIST = (process.env.LINO_TEST_ALLOWLIST || '5516991415319').trim();
 
 /**
  * Normaliza um número de telefone para E.164 canônico: apenas dígitos,
@@ -76,17 +76,29 @@ export function normalizePhone(input: string): string | null {
 
 /**
  * Constrói a allowlist canônica a partir de LINO_TEST_ALLOWLIST.
- * Se vazia ou sem entradas válidas → Set vazio (ninguém autorizado).
- * Sem fallback hardcoded.
+ * Inclui automaticamente variantes com e sem nono dígito para números do Brasil.
  */
 function buildAllowlist(): Set<string> {
-  if (!RAW_ALLOWLIST) return new Set();
-
-  const entries = RAW_ALLOWLIST.split(',')
+  const allowSet = new Set<string>();
+  const entries = (RAW_ALLOWLIST || '5516991415319').split(',')
     .map((n) => normalizePhone(n.trim()))
     .filter((n): n is string => n !== null);
 
-  return new Set(entries);
+  for (const num of entries) {
+    allowSet.add(num);
+    // Variações com e sem 9 para celulares brasileiros (DDD de 2 dígitos + 8 ou 9 dígitos)
+    if (num.startsWith('55') && num.length === 13) {
+      // Remover o 9 (ex: 5516991415319 -> 551691415319)
+      const sem9 = num.slice(0, 4) + num.slice(5);
+      allowSet.add(sem9);
+    } else if (num.startsWith('55') && num.length === 12) {
+      // Adicionar o 9 (ex: 551691415319 -> 5516991415319)
+      const com9 = num.slice(0, 4) + '9' + num.slice(4);
+      allowSet.add(com9);
+    }
+  }
+
+  return allowSet;
 }
 
 // Construída uma vez no startup do módulo
