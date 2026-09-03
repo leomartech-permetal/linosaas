@@ -224,7 +224,7 @@ export default function OportunidadesPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Botão Raio-X de Atribuição por Código LINO / Protheus */}
           <button
             onClick={() => {
@@ -233,18 +233,20 @@ export default function OportunidadesPage() {
               setAttributionError("");
               setShowAttributionModal(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-white border border-[#eaeaea] text-[#111111] hover:border-[#111111] transition-colors shadow-2xs"
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-white border border-neutral-300 text-neutral-900 hover:bg-neutral-50 hover:border-neutral-900 transition-all shadow-xs cursor-pointer"
           >
-            <Compass className="w-3.5 h-3.5 text-blue-600" />
+            <Compass className="w-4 h-4 text-blue-600" />
             <span>Consultar Código / Campanha</span>
           </button>
 
-          {/* Seletor Tabela / Kanban */}
-          <div className="flex items-center p-0.5 rounded-md bg-[#f0f0f0] border border-[#eaeaea]">
+          {/* Seletor Tabela / Kanban com respiro e alto contraste */}
+          <div className="flex items-center p-1 rounded-lg bg-neutral-100 border border-neutral-300 gap-1">
             <button
               onClick={() => setViewMode("table")}
-              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded transition-colors ${
-                viewMode === "table" ? "bg-white text-[#111111] shadow-2xs" : "text-[#666666] hover:text-[#111111]"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                viewMode === "table"
+                  ? "bg-white text-black shadow-xs font-bold"
+                  : "text-neutral-600 hover:text-black"
               }`}
             >
               <TableIcon className="w-3.5 h-3.5" />
@@ -252,8 +254,10 @@ export default function OportunidadesPage() {
             </button>
             <button
               onClick={() => setViewMode("kanban")}
-              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded transition-colors ${
-                viewMode === "kanban" ? "bg-white text-[#111111] shadow-2xs" : "text-[#666666] hover:text-[#111111]"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                viewMode === "kanban"
+                  ? "bg-white text-black shadow-xs font-bold"
+                  : "text-neutral-600 hover:text-black"
               }`}
             >
               <KanbanIcon className="w-3.5 h-3.5" />
@@ -263,7 +267,7 @@ export default function OportunidadesPage() {
 
           <button
             onClick={() => setShowNewLeadModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-[#111111] text-white hover:bg-black transition-colors shadow-2xs"
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-black text-white hover:bg-neutral-800 transition-all shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Novo lead</span>
@@ -271,24 +275,26 @@ export default function OportunidadesPage() {
         </div>
       </div>
 
-      {/* ── BARRA DE BUSCA E FILTROS ÚNICA ────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* ── BARRA DE BUSCA E FILTROS ÚNICA COM ALTO CONTRASTE E PADDING ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4 py-1">
         <div className="relative w-full sm:w-80">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888888]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
           <input
             type="text"
             placeholder="Buscar código LINO, cliente, empresa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md bg-white border border-[#eaeaea] text-[#111111] outline-none focus:border-[#111111] transition-colors"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg bg-white border border-neutral-300 text-black shadow-2xs placeholder:text-neutral-500 outline-none focus:border-black transition-colors"
           />
         </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto text-xs">
+        <div className="flex items-center gap-2 overflow-x-auto py-1">
           <button
             onClick={() => setStageFilter("ALL")}
-            className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-              stageFilter === "ALL" ? "bg-[#111111] text-white" : "bg-white border border-[#eaeaea] text-[#666666] hover:text-[#111111]"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap cursor-pointer ${
+              stageFilter === "ALL"
+                ? "bg-black text-white border-black shadow-xs font-bold"
+                : "bg-white text-neutral-700 border-neutral-300 hover:border-black hover:text-black shadow-2xs"
             }`}
           >
             Todas as etapas
@@ -297,8 +303,10 @@ export default function OportunidadesPage() {
             <button
               key={s.key}
               onClick={() => setStageFilter(s.key)}
-              className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                stageFilter === s.key ? "bg-[#111111] text-white" : "bg-white border border-[#eaeaea] text-[#666666] hover:text-[#111111]"
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap cursor-pointer ${
+                stageFilter === s.key
+                  ? "bg-black text-white border-black shadow-xs font-bold"
+                  : "bg-white text-neutral-700 border-neutral-300 hover:border-black hover:text-black shadow-2xs"
               }`}
             >
               {s.label}

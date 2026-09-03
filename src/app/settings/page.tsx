@@ -406,8 +406,25 @@ export default function SettingsPage() {
       master_prompt: masterPrompt,
       sla_rules: slaRules
     }).eq("id", tenantConfig.id);
+
+    // Sincronizar diretamente com o motor de SLA determinístico
+    try {
+      await fetch("/api/settings/sla", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hard_escalate_minutes: (slaRules.max_wait_hours || 4) * 60,
+          first_contact_minutes: slaRules.retry_interval_minutes || 30,
+          escalate_after_returns: slaRules.seller_notify_max || 3,
+          min_minutes_between_charges: slaRules.seller_notify_interval_minutes || 10,
+        }),
+      });
+    } catch (e) {
+      console.error("Erro ao sincronizar SLA:", e);
+    }
+
     setSavingCerebro(false);
-    flash(error ? "Erro: " + error.message : "✔ Prompt Mestre e SLAs salvos!");
+    flash(error ? "Erro: " + error.message : "✔ Prompt Mestre e Regras de SLA ativadas e salvas com sucesso!");
     loadAll();
   }
 
@@ -1729,31 +1746,88 @@ export default function SettingsPage() {
                       <textarea value={supportPrompt} onChange={e => setSupportPrompt(e.target.value)} className="input-clean h-28 font-mono text-xs leading-relaxed p-3 resize-none bg-white" placeholder="Prompt de Suporte SLA..." />
                     </div>
 
-                    <div className="border-t border-neutral-200 pt-6">
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--text-secondary)] mb-4">Regras Gerais de SLA & Cobrança de Vendedores</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border-t border-neutral-200 pt-6 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Tempo de Espera Máximo (Horas antes de escalar ao supervisor)</label>
-                          <input type="number" value={slaRules.max_wait_hours} onChange={e => setSlaRules({...slaRules, max_wait_hours: parseInt(e.target.value) || 2})} className="input-clean bg-white" min={1} />
+                          <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900">
+                            Regras Gerais de SLA & Cobrança de Vendedores
+                          </h3>
+                          <p className="text-[11px] text-neutral-500 mt-0.5">
+                            Parâmetros aplicados pelo Lino para cobrança de vendedores e escalada para a coordenação.
+                          </p>
+                        </div>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                          ATIVADO NO MOTOR LINO
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-neutral-50 p-5 rounded-lg border border-neutral-200">
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-800 mb-1">
+                            Tempo de Espera Máximo (Horas antes de escalar ao coordenador)
+                          </label>
+                          <input
+                            type="number"
+                            value={slaRules.max_wait_hours}
+                            onChange={e => setSlaRules({...slaRules, max_wait_hours: parseInt(e.target.value) || 2})}
+                            className="w-full px-3 py-2 text-xs rounded-md border border-neutral-300 bg-white text-black font-semibold outline-none focus:border-black"
+                            min={1}
+                          />
+                          <span className="text-[10px] text-neutral-500 mt-1 block">Atingindo esse prazo, o coordenador é notificado no WhatsApp.</span>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Intervalo de Cobrança ao Vendedor (Minutos)</label>
-                          <input type="number" value={slaRules.retry_interval_minutes} onChange={e => setSlaRules({...slaRules, retry_interval_minutes: parseInt(e.target.value) || 15})} className="input-clean bg-white" min={1} />
+                          <label className="block text-xs font-semibold text-neutral-800 mb-1">
+                            Prazo para 1º Contato do Vendedor (Minutos úteis)
+                          </label>
+                          <input
+                            type="number"
+                            value={slaRules.retry_interval_minutes}
+                            onChange={e => setSlaRules({...slaRules, retry_interval_minutes: parseInt(e.target.value) || 30})}
+                            className="w-full px-3 py-2 text-xs rounded-md border border-neutral-300 bg-white text-black font-semibold outline-none focus:border-black"
+                            min={5}
+                          />
+                          <span className="text-[10px] text-neutral-500 mt-1 block">Prazo padrão de SLA comercial da Permetal (30 min úteis).</span>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Máximo de Cobranças Automáticas</label>
-                          <input type="number" value={slaRules.seller_notify_max} onChange={e => setSlaRules({...slaRules, seller_notify_max: parseInt(e.target.value) || 3})} className="input-clean bg-white" min={1} />
+                          <label className="block text-xs font-semibold text-neutral-800 mb-1">
+                            Máximo de Cobranças Automáticas (Limite de Escalada)
+                          </label>
+                          <input
+                            type="number"
+                            value={slaRules.seller_notify_max}
+                            onChange={e => setSlaRules({...slaRules, seller_notify_max: parseInt(e.target.value) || 3})}
+                            className="w-full px-3 py-2 text-xs rounded-md border border-neutral-300 bg-white text-black font-semibold outline-none focus:border-black"
+                            min={1}
+                            max={10}
+                          />
+                          <span className="text-[10px] text-neutral-500 mt-1 block">Passou disso (ex: 3x), escala imediatamente para a coordenação.</span>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Intervalo entre Cobranças (Minutos)</label>
-                          <input type="number" value={slaRules.seller_notify_interval_minutes} onChange={e => setSlaRules({...slaRules, seller_notify_interval_minutes: parseInt(e.target.value) || 15})} className="input-clean bg-white" min={1} />
+                          <label className="block text-xs font-semibold text-neutral-800 mb-1">
+                            Intervalo Mínimo entre Cobranças ao Vendedor (Minutos)
+                          </label>
+                          <input
+                            type="number"
+                            value={slaRules.seller_notify_interval_minutes}
+                            onChange={e => setSlaRules({...slaRules, seller_notify_interval_minutes: parseInt(e.target.value) || 10})}
+                            className="w-full px-3 py-2 text-xs rounded-md border border-neutral-300 bg-white text-black font-semibold outline-none focus:border-black"
+                            min={5}
+                          />
+                          <span className="text-[10px] text-neutral-500 mt-1 block">Evita disparar cobranças repetidas em saídas breves (mín. 10 min).</span>
                         </div>
                       </div>
                     </div>
 
-                    <button onClick={saveCerebro} disabled={savingCerebro} className="btn-primary w-full h-[42px] text-xs font-bold shadow-md">
-                      {savingCerebro ? "Salvando Configurações..." : "💾 Salvar Configurações do Cérebro IA"}
-                    </button>
+                    <div className="pt-3">
+                      <button
+                        onClick={saveCerebro}
+                        disabled={savingCerebro}
+                        className="w-full h-11 text-xs font-bold rounded-lg bg-black text-white hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {savingCerebro ? "Salvando Configurações..." : "💾 Salvar Configurações do Cérebro IA & Regras de SLA"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
