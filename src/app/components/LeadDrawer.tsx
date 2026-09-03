@@ -17,6 +17,11 @@ import {
   MessageSquare,
   Activity,
   FileSpreadsheet,
+  Globe,
+  Compass,
+  Copy,
+  Check,
+  Tag,
 } from "lucide-react";
 
 interface LeadDrawerProps {
@@ -37,6 +42,8 @@ export default function LeadDrawer({
   const [events, setEvents] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [formData, setFormData] = useState<any>({});
+  const [attribution, setAttribution] = useState<any>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [internalNote, setInternalNote] = useState("");
@@ -73,17 +80,33 @@ export default function LeadDrawer({
   async function loadInteractionsAndEvents(leadId: string) {
     setLoadingHistory(true);
     try {
-      const resInteractions = await fetch(`/api/interactions?lead_id=${leadId}`);
+      const [resInteractions, resAttr] = await Promise.all([
+        fetch(`/api/interactions?lead_id=${leadId}`),
+        fetch(`/api/tracking/attribution?lead_id=${leadId}`),
+      ]);
+
       if (resInteractions.ok) {
         const data = await resInteractions.json();
         setHistory(data || []);
       }
+
+      if (resAttr.ok) {
+        const attrData = await resAttr.json();
+        if (attrData.found) setAttribution(attrData);
+        else setAttribution(null);
+      }
     } catch (e) {
-      console.error("[LeadDrawer] Erro ao carregar interações:", e);
+      console.error("[LeadDrawer] Erro ao carregar dados:", e);
     } finally {
       setLoadingHistory(false);
     }
   }
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
 
   // Ação atômica via PATCH único
   const handleSaveAll = async () => {
@@ -249,6 +272,70 @@ export default function LeadDrawer({
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" /> Marcar Venda Fechada
                   </button>
+                </div>
+              </div>
+
+              {/* Origem e Atribuição de Campanha / Rastreabilidade */}
+              <div className="p-4 rounded-lg bg-white border border-[#eaeaea] shadow-xs flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-blue-600" />
+                    <h3 className="text-xs font-bold text-[#111111] uppercase tracking-wider">
+                      Origem & Atribuição de Campanha
+                    </h3>
+                  </div>
+                  {formData.tracking_code && (
+                    <button
+                      onClick={() => handleCopyCode(formData.tracking_code)}
+                      className="flex items-center gap-1 text-[11px] font-mono font-medium text-[#666666] hover:text-[#111111] bg-[#f5f5f5] px-2 py-0.5 rounded border border-[#eaeaea] transition-colors"
+                      title="Copiar código de rastreamento"
+                    >
+                      {copiedCode ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{formData.tracking_code}</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <span className="text-[#666666] block text-[11px]">Canal / Origem</span>
+                    <span className="font-semibold text-[#111111]">
+                      {attribution?.campaign?.origem || formData.context_source || "Direto / Orgânico"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[#666666] block text-[11px]">Campanha (UTM)</span>
+                    <span className="font-semibold text-[#111111] truncate block">
+                      {attribution?.campaign?.utm_campaign || "Geral / Site"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[#666666] block text-[11px]">Mídia (Medium)</span>
+                    <span className="font-semibold text-[#111111]">
+                      {attribution?.campaign?.utm_medium || "cpc / link"}
+                    </span>
+                  </div>
+                  {attribution?.campaign?.utm_term && (
+                    <div className="col-span-2">
+                      <span className="text-[#666666] block text-[11px]">Termo de Busca</span>
+                      <span className="font-medium text-[#111111] bg-blue-50/60 px-2 py-0.5 rounded border border-blue-200/50 block">
+                        {attribution.campaign.utm_term}
+                      </span>
+                    </div>
+                  )}
+                  {attribution?.campaign?.page_title && (
+                    <div className="col-span-3">
+                      <span className="text-[#666666] block text-[11px]">Página Navegada no Site</span>
+                      <span className="text-[#222222] font-medium truncate block">
+                        {attribution.campaign.page_title}
+                      </span>
+                    </div>
+                  )}
+                  {attribution?.campaign?.clicked_at && (
+                    <div className="col-span-3 text-[11px] text-[#888888] pt-1 border-t border-[#f0f0f0]">
+                      Horário do clique: {new Date(attribution.campaign.clicked_at).toLocaleString('pt-BR')}
+                    </div>
+                  )}
                 </div>
               </div>
 
