@@ -940,7 +940,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-8 md:p-10 w-full h-full text-[var(--text-primary)] bg-white overflow-y-auto">
+    <div className="p-8 md:p-10 w-full h-full text-[var(--text-primary)] bg-white overflow-y-auto select-text">
       {msg && (
         <div className="fixed bottom-4 right-4 z-50 bg-[#111111] text-white text-xs px-4 py-3 rounded-md border border-[var(--border-strong)] shadow-md animate-fade-in">
           {msg}
