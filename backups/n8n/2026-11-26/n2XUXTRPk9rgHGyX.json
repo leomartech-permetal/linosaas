@@ -1,0 +1,796 @@
+{
+  "snapshot_type": "sanitized_n8n_workflow_details",
+  "warning": "This is a sanitized snapshot from get_workflow_details, not a raw n8n workflow export. Secrets are redacted; confirm with n8n native export before editing.",
+  "captured_at": "2026-11-26",
+  "triggerInfo": "This workflow has the following trigger(s):\n\n\nSchedule trigger(s):\n\n\n\t\t\t\t<trigger 1>\n\t\t\t\t\t - Node name: Verificar prazos a cada minuto\n\t\t\t\t</trigger 1>\n\nScheduled workflows can be executed directly through MCP clients and do not require external inputs.",
+  "workflow": {
+    "id": "n2XUXTRPk9rgHGyX",
+    "name": "Lino | Despachante SLA e pesquisa Meta",
+    "active": false,
+    "isArchived": false,
+    "versionId": "80eac7be-9290-4baa-af92-06a706d21073",
+    "activeVersionId": null,
+    "triggerCount": 1,
+    "createdAt": "2026-11-22T22:14:08.194Z",
+    "updatedAt": "2026-11-23T18:50:59.335Z",
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": true
+    },
+    "connections": {
+      "Executar ciclo manual": {
+        "main": [
+          [
+            {
+              "node": "Reservar fila do SLA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reservar fila do SLA": {
+        "main": [
+          [
+            {
+              "node": "Montar mensagens aprovadas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Classificar envio": {
+        "main": [
+          [
+            {
+              "node": "Registrar resultado na oportunidade",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verificar prazos a cada minuto": {
+        "main": [
+          [
+            {
+              "node": "Reservar fila do SLA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Montar mensagens aprovadas": {
+        "main": [
+          [
+            {
+              "node": "Usar template?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Usar template?": {
+        "main": [
+          [
+            {
+              "node": "Escolher template aprovado",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Enviar texto na janela Meta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar texto na janela Meta": {
+        "main": [
+          [
+            {
+              "node": "Classificar envio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Escolher template aprovado": {
+        "main": [
+          [
+            {
+              "node": "Modelo para vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Modelo para supervisão",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Modelo de falha de entrega",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Modelo de coordenação",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Modelo de pesquisa 24h",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Modelo para vendedor": {
+        "main": [
+          [
+            {
+              "node": "Classificar envio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Modelo para supervisão": {
+        "main": [
+          [
+            {
+              "node": "Classificar envio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Modelo de falha de entrega": {
+        "main": [
+          [
+            {
+              "node": "Classificar envio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Modelo de coordenação": {
+        "main": [
+          [
+            {
+              "node": "Classificar envio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Modelo de pesquisa 24h": {
+        "main": [
+          [
+            {
+              "node": "Classificar envio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodes": [
+      {
+        "id": "306fdb43-fb5f-4a03-9b70-3190d65ab464",
+        "name": "Executar ciclo manual",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "8b3aad39-acbd-4c25-814c-1c409f8d976c",
+        "name": "Reservar fila do SLA",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          224,
+          96
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "create",
+          "tableId": "lino_codex_sla_despachante_n8n",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operacao",
+                "fieldValue": "reservar"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "5efe45ff-9b27-4a8c-9b44-f541a5556065",
+        "name": "Montar mensagens aprovadas",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 1,
+        "position": [
+          448,
+          96
+        ],
+        "parameters": {
+          "jsCode": "const TEMPLATES = {\n  vendedor: 'lino_suporte_cobranca_vendedor',\n  supervisao: 'lino_supervisao_retorno_pendente',\n  falha: 'lino_suporte_alerta_supervisao',\n  coordenacao: 'lino_suporte_escalacao_coordenacao',\n  pesquisa: 'lino_suporte_pesquisa_atendimento_24h',\n};\n\nfunction campo(value, max, fallback = 'Não informado') {\n  const text = String(value ?? '').replace(/[\\r\\n\\t]+/g, ' ').replace(/ {2,}/g, ' ').trim();\n  if (!text) return fallback;\n  const chars = Array.from(text);\n  return chars.length > max ? chars.slice(0, max - 1).join('') + '…' : text;\n}\n\nfunction montarPedidoMeta(job) {\n  const to = String(job.telefone ?? '');\n  const sellerPhone = String(job.snapshot?.vendedor?.telefone ?? '');\n  if (!/^[1-9][0-9]{9,14}$/.test(to)) throw new Error('destinatario_invalido');\n  const acao = String(job.chave).split(':', 1)[0];\n  const cliente = job.snapshot?.cliente ?? {};\n  const responsavel = campo(job.nome_destino, 48, 'Equipe comercial');\n  const nome = campo(cliente.nome, 60, 'Cliente');\n  const vendedor = campo(job.snapshot?.vendedor?.nome, 60, 'Equipe comercial');\n  const codigo = campo(job.codigo, 60, 'Consulte no Pipeline');\n  const produto = campo(job.snapshot?.produto, 100, 'sua solicitação');\n  const especificacao = campo(job.snapshot?.especificacao, 205);\n  const contato = campo(job.cliente_whatsapp, 17);\n  const dados = [\n    cliente.empresa ? 'Empresa: ' + campo(cliente.empresa, 65) : '',\n    cliente.cnpj ? 'CNPJ: ' + campo(cliente.cnpj, 22) : '',\n    cliente.email ? 'E-mail: ' + campo(cliente.email, 80) : '',\n    job.cliente_whatsapp ? 'WhatsApp: +' + contato : '',\n    job.snapshot?.especificacao ? 'Especificação: ' + campo(job.snapshot.especificacao, 140) : '',\n    job.relato ? 'Cliente disse: “' + campo(job.relato, 115) + '”' : '',\n  ].filter(Boolean).join(' | ');\n  const seguimento = campo([\n    'Cliente relata falta de retorno.',\n    Number.isInteger(job.minutos_uteis) ? 'Tempo útil: ' + job.minutos_uteis + ' min.' : '',\n    'Faltas: ' + Number(job.faltas ?? 0) + '.',\n    dados\n  ].filter(Boolean).join(' '), 430);\n  const template = (name, fields, buttons = []) => ({\n    messaging_product: 'whatsapp',\n    recipient_type: 'individual',\n    to,\n    type: 'template',\n    template: {\n      name, language: {code: 'pt_BR'},\n      components: [{type:'body', parameters: fields.map(text => ({type:'text', text}))}, ...buttons]\n    }\n  });\n  const text = body => ({messaging_product:'whatsapp', recipient_type:'individual', to, type:'text',\n    text:{preview_url:false,body}});\n\n  if (acao === 'confirmacao_cliente' && job.t0 && /^[1-9][0-9]{9,14}$/.test(sellerPhone)) {\n    return text('Seu atendimento foi encaminhado para ' + vendedor + ', responsável pela sua solicitação. ' +\n      'O WhatsApp dele é +' + sellerPhone + '. Você também pode falar diretamente com ele. ' +\n      'Vou continuar acompanhando seu atendimento por aqui.');\n  }\n  if (acao === 'pesquisa_atendimento' && job.t0) {\n    const buttons = ['lino_sla_atendido_sim','lino_sla_atendido_nao'].map((payload,index) =>\n      ({type:'button',sub_type:'quick_reply',index:String(index),parameters:[{type:'payload',payload}]}));\n    return template(TEMPLATES.pesquisa, [nome,codigo,produto,vendedor], buttons);\n  }\n  if (acao === 'complemento_vendedor' || acao === 'pedido_vendedor') {\n    const assunto = acao === 'pedido_vendedor' ? 'Solicitação sobre pedido' : 'Complemento de cotação';\n    return text(assunto + ' ' + codigo + ' de ' + nome + ', sobre ' + produto + '. ' +\n      campo(job.relato,400) + ' Consulte o atendimento no Pipeline do Lino e dê retorno ao cliente.');\n  }\n  if (job.destino === 'vendedor') {\n    return template(TEMPLATES.vendedor, [responsavel,nome,codigo,produto,seguimento]);\n  }\n  if (job.destino === 'coordenacao_comercial') {\n    const contexto = acao === 'falha_notificacao'\n      ? campo('Entrega inicial ainda sem confirmação da Meta. ' + dados, 420)\n      : seguimento;\n    return template(TEMPLATES.coordenacao,[responsavel,nome,vendedor,produto,codigo,contexto]);\n  }\n  if (acao === 'falha_notificacao') {\n    return template(TEMPLATES.falha,[responsavel,codigo,nome,vendedor,produto,\n      campo('A entrega da notificação inicial ao vendedor ainda não foi confirmada. ' + dados,420)]);\n  }\n  if (String(job.destino).startsWith('supervisor_')) {\n    return template(TEMPLATES.supervisao,[responsavel,nome,codigo,produto,especificacao,contato]);\n  }\n  throw new Error('tipo_de_despacho_invalido');\n}\nconst tarefas=$input.first()?.json?.resultado?.tarefas||[];\nif (!Array.isArray(tarefas)) throw new Error('Resposta de reserva inválida');\nreturn tarefas.map(tarefa=>({json:{id:tarefa.id,token:tarefa.token,payload:montarPedidoMeta(tarefa)},pairedItem:{item:0}}));"
+        }
+      },
+      {
+        "id": "ea4ec0af-3c50-42b2-8f26-da1fcf294f7d",
+        "name": "Classificar envio",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 1,
+        "position": [
+          896,
+          96
+        ],
+        "parameters": {
+          "jsCode": "return $input.all().map((item,i)=>{\n  const j=item.json||{}, job=$('Montar mensagens aprovadas').itemMatching(i)?.json;\n  if (!job?.id || !job?.token) throw new Error('Reserva sem vínculo do item');\n  const body=j.body||j;\n  const id=String(body.messages?.[0]?.id||'');\n  const code=Number(body.error?.code||0), statusCode=Number(j.statusCode||0);\n  const knownFailure=Boolean(body.error && (statusCode>=400 && statusCode<500));\n  const retry=knownFailure && (statusCode===429 || [4,17,130429,131056].includes(code));\n  const status=id.startsWith('wamid.')?'aceito':retry?'retry':knownFailure?'falhou':'incerto';\n  return {json:{id:job.id,token:job.token,status,meta_id:id||null,\n    erro:id?null:(code?'meta_'+code:statusCode?'http_'+statusCode:'sem_resposta_meta')},pairedItem:{item:i}};\n});"
+        }
+      },
+      {
+        "id": "baf2eedb-3b55-4102-965a-c76688e801da",
+        "name": "Registrar resultado na oportunidade",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          96
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "create",
+          "tableId": "lino_codex_sla_despachante_n8n",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operacao",
+                "fieldValue": "resultado"
+              },
+              {
+                "fieldId": "dados",
+                "fieldValue": "={{ $json }}"
+              }
+            ]
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "96ede92b-181c-4166-9371-8cf747c88d32",
+        "name": "Verificar prazos a cada minuto",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          192
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "0f4e986c-30ed-4ec9-9b17-05e2043cce5d",
+        "name": "Usar template?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          600,
+          100
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.payload.type === 'template' }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "3ddd95bd-05bc-4173-bee8-aa58dcd9bc85",
+        "name": "Enviar texto na janela Meta",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          800,
+          200
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "send",
+          "messageType": "text",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $json.payload.to }}",
+          "textBody": "={{ $json.payload.text.body }}",
+          "additionalFields": {}
+        },
+        "onError": "continueRegularOutput",
+        "webhookId": "a1dbc026-3556-465b-9260-c75f0d730f50"
+      },
+      {
+        "id": "d7bc3800-6de1-4076-b000-cbdb28c03db8",
+        "name": "Escolher template aprovado",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          800,
+          -100
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.payload.template.name }}",
+                      "rightValue": "lino_suporte_cobranca_vendedor",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.payload.template.name }}",
+                      "rightValue": "lino_supervisao_retorno_pendente",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.payload.template.name }}",
+                      "rightValue": "lino_suporte_alerta_supervisao",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.payload.template.name }}",
+                      "rightValue": "lino_suporte_escalacao_coordenacao",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.payload.template.name }}",
+                      "rightValue": "lino_suporte_pesquisa_atendimento_24h",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "f12a90ba-5b7c-484a-9853-4dbc5ea0b959",
+        "name": "Modelo para vendedor",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          1100,
+          -300
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendTemplate",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $json.payload.to }}",
+          "template": "lino_suporte_cobranca_vendedor|pt_BR",
+          "components": {
+            "component": [
+              {
+                "type": "body",
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[0].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[1].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[2].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[3].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[4].text }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput",
+        "webhookId": "c92f7745-6179-426e-95a1-c555f4b96258"
+      },
+      {
+        "id": "a3838193-8479-4335-b8c1-01ae2d49cbb0",
+        "name": "Modelo para supervisão",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          1100,
+          -130
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendTemplate",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $json.payload.to }}",
+          "template": "lino_supervisao_retorno_pendente|pt_BR",
+          "components": {
+            "component": [
+              {
+                "type": "body",
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[0].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[1].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[2].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[3].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[4].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[5].text }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput",
+        "webhookId": "8d098358-367f-4b79-9bd7-18b89bad5e21"
+      },
+      {
+        "id": "5c68c12f-15dd-48fb-aa41-a494ebd91859",
+        "name": "Modelo de falha de entrega",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          1100,
+          40
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendTemplate",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $json.payload.to }}",
+          "template": "lino_suporte_alerta_supervisao|pt_BR",
+          "components": {
+            "component": [
+              {
+                "type": "body",
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[0].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[1].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[2].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[3].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[4].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[5].text }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput",
+        "webhookId": "c8d2d5e6-ee24-4132-a49f-5d45ff558bfc"
+      },
+      {
+        "id": "1384130e-4f92-47e2-ac15-9ec139514df1",
+        "name": "Modelo de coordenação",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          1100,
+          210
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendTemplate",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $json.payload.to }}",
+          "template": "lino_suporte_escalacao_coordenacao|pt_BR",
+          "components": {
+            "component": [
+              {
+                "type": "body",
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[0].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[1].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[2].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[3].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[4].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[5].text }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput",
+        "webhookId": "23a85ca0-2cc1-46ad-99ea-5a8fdfe84c1e"
+      },
+      {
+        "id": "ce0114ac-3cb4-49f2-8eb0-ce3e833782a4",
+        "name": "Modelo de pesquisa 24h",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          1100,
+          380
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendTemplate",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $json.payload.to }}",
+          "template": "lino_suporte_pesquisa_atendimento_24h|pt_BR",
+          "components": {
+            "component": [
+              {
+                "type": "body",
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[0].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[1].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[2].text }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": "={{ $json.payload.template.components[0].parameters[3].text }}"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "button",
+                "sub_type": "quick_reply",
+                "index": 0,
+                "buttonParameters": {
+                  "parameter": {
+                    "type": "payload",
+                    "payload": "lino_sla_atendido_sim"
+                  }
+                }
+              },
+              {
+                "type": "button",
+                "sub_type": "quick_reply",
+                "index": 1,
+                "buttonParameters": {
+                  "parameter": {
+                    "type": "payload",
+                    "payload": "lino_sla_atendido_nao"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput",
+        "webhookId": "a1181c29-e8e8-4c4c-a9d7-b8de9304d411"
+      }
+    ],
+    "activeVersion": null,
+    "tags": [],
+    "meta": {
+      "aiBuilderAssisted": true,
+      "builderVariant": "mcp"
+    },
+    "parentFolderId": null,
+    "description": "Despacha os avisos reativos, confirmação após a entrega e pesquisa Meta de novos atendimentos. A liberação é controlada no Supabase.",
+    "scopes": [
+      "execution:reveal",
+      "workflow:create",
+      "workflow:delete",
+      "workflow:disableRedaction",
+      "workflow:enableRedaction",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:export",
+      "workflow:import",
+      "workflow:list",
+      "workflow:move",
+      "workflow:publish",
+      "workflow:read",
+      "workflow:share",
+      "workflow:unpublish",
+      "workflow:unshare",
+      "workflow:update"
+    ],
+    "canExecute": true
+  }
+}
