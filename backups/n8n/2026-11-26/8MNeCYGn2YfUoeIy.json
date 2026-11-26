@@ -1,0 +1,4477 @@
+{
+  "snapshot_type": "sanitized_n8n_workflow_details",
+  "warning": "This is a sanitized snapshot from get_workflow_details, not a raw n8n workflow export. Secrets are redacted; confirm with n8n native export before editing.",
+  "captured_at": "2026-11-26",
+  "triggerInfo": "This workflow has no production triggers (Schedule, Webhook, Form, or Chat). It can only be executed in manual mode.",
+  "workflow": {
+    "id": "8MNeCYGn2YfUoeIy",
+    "name": "Lino Operations - Meta/SLA",
+    "active": true,
+    "isArchived": false,
+    "versionId": "12a32be9-89ed-4531-b000-8816ede96f94",
+    "activeVersionId": "12a32be9-89ed-4531-b000-8816ede96f94",
+    "triggerCount": 0,
+    "createdAt": "2026-11-02T01:25:57.711Z",
+    "updatedAt": "2026-11-10T13:08:42.566Z",
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": true,
+      "binaryMode": "separate"
+    },
+    "connections": {
+      "OPS | Roteador": {
+        "main": [
+          [
+            {
+              "node": "OPS | Resolver Ator",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Suporte",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Complemento Tem Vendedor?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Nova Cotacao",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | LGPD",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Aplicar Rota",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Silencio Humano",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Aplicar Rota",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Responder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Resolver Ator": {
+        "main": [
+          [
+            {
+              "node": "OPS | Caso Vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Caso Vendedor": {
+        "main": [
+          [
+            {
+              "node": "OPS | Interpretar Vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Interpretar Vendedor": {
+        "main": [
+          [
+            {
+              "node": "OPS | Registrar Resposta?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Registrar Resposta?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Salvar Resposta Vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Responder Ator | Kill Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Responder Ator": {
+        "main": [
+          [
+            {
+              "node": "OPS | Interno Pronto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Suporte": {
+        "main": [
+          [
+            {
+              "node": "OPS | Preparar Suporte",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Preparar Suporte": {
+        "main": [
+          [
+            {
+              "node": "OPS | Notificar Interno?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Notificar Interno?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Interno | Kill Switch",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Suporte Pronto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Interno": {
+        "main": [
+          [
+            {
+              "node": "OPS | Suporte Pronto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Complemento": {
+        "main": [
+          [
+            {
+              "node": "OPS | Preparar Suporte",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | LGPD": {
+        "main": [
+          [
+            {
+              "node": "OPS | LGPD Recusado?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | LGPD Recusado?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Aplicar Rota",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Responder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Aplicar Rota": {
+        "main": [
+          [
+            {
+              "node": "OPS | Preparar Handoff",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Preparar Handoff": {
+        "main": [
+          [
+            {
+              "node": "OPS | Handoff Pronto?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Handoff Pronto?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Reservar Handoff",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Rota Incompleta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Vendedor": {
+        "main": [
+          [
+            {
+              "node": "OPS | Avaliar Vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Avaliar Vendedor": {
+        "main": [
+          [
+            {
+              "node": "OPS | Vendedor OK?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Vendedor OK?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Confirmar Handoff",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Falhar Handoff",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Confirmar Handoff": {
+        "main": [
+          [
+            {
+              "node": "OPS | Registrar Handoff",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Registrar Handoff": {
+        "main": [
+          [
+            {
+              "node": "OPS | Handoff Pronto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Falhar Handoff": {
+        "main": [
+          [
+            {
+              "node": "OPS | Handoff Falhou",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Planejar": {
+        "main": [
+          [
+            {
+              "node": "OPS | Test Mode?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Test Mode?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Resultado Teste",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Persistir Turno V9?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Complemento Tem Vendedor?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Complemento",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Aplicar Rota",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Nova Cotacao": {
+        "main": [
+          [
+            {
+              "node": "OPS | Aplicar Nova Cotacao",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Aplicar Nova Cotacao": {
+        "main": [
+          [
+            {
+              "node": "OPS | Preparar Handoff",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Reservar Handoff": {
+        "main": [
+          [
+            {
+              "node": "OPS | Avaliar Reserva",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Avaliar Reserva": {
+        "main": [
+          [
+            {
+              "node": "OPS | Reserva Liberada?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Reserva Liberada?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Vendedor | Kill Switch",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Reserva Nao Envia",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Persistir Turno V9?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Persistir Turno V9",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Roteador",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Persistir Turno V9": {
+        "main": [
+          [
+            {
+              "node": "OPS | Restaurar Plano V9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Restaurar Plano V9": {
+        "main": [
+          [
+            {
+              "node": "OPS | Roteador",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Input": {
+        "main": [
+          [
+            {
+              "node": "OPS | Claim Turn",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Claim Turn": {
+        "main": [
+          [
+            {
+              "node": "OPS | Turn Inedito?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Turn Inedito?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Planejar",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OPS | Duplicate Noop",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Salvar Resposta Vendedor": {
+        "main": [
+          [
+            {
+              "node": "OPS | Responder Ator | Kill Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Responder Ator | Kill Switch": {
+        "main": [
+          [
+            {
+              "node": "OPS | Responder Ator | Permitido?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Interno | Kill Switch": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Interno | Permitido?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Vendedor | Kill Switch": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Vendedor | Permitido?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Responder Ator | Permitido?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Responder Ator | Claim Outbound",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Responder Ator | Claim Outbound": {
+        "main": [
+          [
+            {
+              "node": "OPS | Responder Ator | Outbound Inedito?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Responder Ator | Outbound Inedito?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Responder Ator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Interno | Permitido?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Interno | Claim Outbound",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Interno | Claim Outbound": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Interno | Outbound Inedito?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Interno | Outbound Inedito?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Interno",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Vendedor | Permitido?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Vendedor | Claim Outbound",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Vendedor | Claim Outbound": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Vendedor | Outbound Inedito?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OPS | Enviar Vendedor | Outbound Inedito?": {
+        "main": [
+          [
+            {
+              "node": "OPS | Enviar Vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "47a83747-851f-41d0-a9c4-ef1e545c64c8",
+        "name": "OPS | Input",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          384,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst x=$('OPS | Input').first()?.json||{};\nconst turn=x.turn||{};\nconst state=x.state||{};\nconst b=x.brain||{};\n\nlet action=String(b.action||'respond');\nconst actor=String(turn.actor_type||'cliente');\n\n// Overrides permitidos: identidade interna e takeover real.\nif(actor==='vendedor'||actor==='coordenacao') action='internal_actor';\nelse if(state.human_takeover_blocked===true||state.human_takeover===true) action='silent_human';\n\nconst featurePhone=String(turn.phone||state.telefone||'').replace(/\\D/g,'');\nconst useConversationV2=x.feature_flags?.conversation_v2===true || state.feature_flags?.conversation_v2===true;\nconst alreadyAssigned=Boolean(state?.vendedor_atual?.id||state?.vendedor_atual?.nome||state?.oportunidade?.vendedor_id);\nconst technicalOpen=b.technical_open===true || (state?.lino_v9_state?.technical_open===true && b.technical_open!==false);\nconst nonCommercialIntent=['general','careers','institutional','out_of_portfolio'].includes(String(b.intent||''));\nif(action==='respond' || nonCommercialIntent){\n  // Resposta direta nunca entra no pipeline SDR/distribuicao.\n  action='respond';\n} else if(useConversationV2 && !alreadyAssigned && !technicalOpen){\n  if(['ask','route_rules'].includes(action)) action='route_rules';\n  if(action==='quote_complement') action='route_rules';\n}\n\nconst norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim();\nfunction productSlugFrom(text){\n  const t=norm(text).replace(/[_-]+/g,' ');\n  if(!t) return null;\n  if(/grade\\s+de\\s+piso|grade\\s+eletrofundida/.test(t)) return 'grade_piso';\n  if(/degrau/.test(t)&&/grade|piso/.test(t)) return 'degrau_grade_piso';\n  if(/gradil/.test(t)) return 'gradil_metalico';\n  if(/chapa\\s+perfurada|perfurad[ao]/.test(t)) return 'chapa_perfurada';\n  if(/chapa\\s+expandida/.test(t)) return 'chapa_expandida';\n  if(/chapa\\s+recalcada|recalcad[ao]/.test(t)) return 'chapa_recalcada';\n  if(/telha\\s+trapezoidal|trapezoidal/.test(t)) return 'telha_trapezoidal';\n  if(/telha\\s+(?:ondulada|ondulado)|cobertura\\s+ondulada/.test(t)) return 'telha_ondulada';\n  if(/tela\\s+expandida/.test(t)) return 'tela_expandida';\n  if(/tela\\s+moeda/.test(t)) return 'tela_moeda';\n  if(/forro/.test(t)) return 'forro_metalico';\n  if(/brise/.test(t)) return 'brise_metalico';\n  if(/port[aã]o/.test(t)&&/gradil/.test(t)) return 'portao_gradil';\n  if(/piso\\s+industrial/.test(t)) return 'piso_industrial';\n  return null;\n}\n\nconst facts=Array.isArray(b.facts_to_store)?b.facts_to_store:[];\nconst normalizeOrigin=v=>{\n  const s=String(v||'').toLowerCase().trim();\n  if(['cliente_informou','cliente_escolheu','inferido_contexto','sugestao_lino_aceita','validacao_tecnica_pendente'].includes(s)) return s;\n  if(['mensagem_cliente','cliente','whatsapp','mensagem_atual'].includes(s)) return 'cliente_informou';\n  if(['historico_recente','historico_cliente','memoria','contexto'].includes(s)) return 'inferido_contexto';\n  return 'inferido_contexto';\n};\nlet updates=(Array.isArray(b.commercial_updates)?b.commercial_updates:[])\n  .map(u=>u&&typeof u==='object'?{\n    campo:u.campo??u.field??null,\n    valor:u.valor??u.value??null,\n    origem:normalizeOrigin(u.origem??u.source??'cliente_informou'),\n    confianca:u.confianca??u.confidence??'alta'\n  }:null)\n  .filter(u=>u?.campo&&u.valor!==undefined&&u.valor!==null);\n\nconst looksLikeInternalBlob=v=>{\n  const s=String(v??'').trim();\n  return !s || s.length>220 || /\\[ANALISE_IMAGEM\\]|\\[CONTEXTO VISUAL RECENTE\\]|encrypted_content|gAAAAA|\\\\\"type\\\\\":\\\\\"reasoning\\\\\"|output_text/i.test(s);\n};\nupdates=updates.filter(u=>{\n  if(u.campo==='quantidade') return !looksLikeInternalBlob(u.valor);\n  if(['empresa','cnpj','email','nome','segmento','produto'].includes(String(u.campo))) return String(u.valor??'').length<=500 && !looksLikeInternalBlob(u.valor);\n  return true;\n});\n\nconst stateSubject=\n  productSlugFrom(state?.produto_slug) ||\n  productSlugFrom(state?.lino_v9_state?.current_subject) ||\n  productSlugFrom(state?.comercial?.dados_atuais?.produto) ||\n  null;\nconst updateProduct=updates.find(u=>u.campo==='produto');\nconst productSlug=\n  productSlugFrom(turn.content||turn.text||'') ||\n  stateSubject ||\n  productSlugFrom(updateProduct?.valor) ||\n  productSlugFrom(b.current_subject) ||\n  null;\nconst specialProject=['telha_ondulada','telha_trapezoidal'].includes(String(productSlug||''));\nif(specialProject && !alreadyAssigned){\n  if(['respond','ask','quote_complement','route_rules'].includes(action)) action='route_rules';\n}\n\nconst oppId=\n  state?.oportunidade?.id ||\n  state?.comercial?.oportunidade_id ||\n  state?.oportunidade_id ||\n  null;\nconst objFact=facts.find(f=>f&&typeof f==='object'&&!Array.isArray(f))||{};\nconst factText=facts.filter(f=>typeof f==='string').join(' | ');\nconst findUpdate=campo=>updates.find(u=>u?.campo===campo)?.valor??null;\n\nconst qtyMatch=factText.match(/quantidade\\s*:\\s*([^|]+)/i);\nconst segMatch=factText.match(/segmento\\s*:\\s*([^|]+)/i);\nconst sourceText=String(turn.content||turn.text||'');\nconst awaitedStage=String(state?.conversa?.campo_aguardado||state?.conversa?.ultima_pergunta||'');\nconst awaitingFinalConfirmation =\n  state?.conversa?.confirmacao_pendente===true ||\n  awaitedStage==='confirmacao_final';\nconst awaitingLgpd = awaitedStage==='lgpd_final';\nconst normalizedFinalReply=norm(sourceText).replace(/[.!?]+$/g,'').trim();\nconst yesReply=/^(sim|s|ok|certo|correto|confirmo|confirmado|pode|pode sim|pode encaminhar|pode enviar)$/.test(normalizedFinalReply);\nconst noReply=/^(nao|não|n|nao esta|não esta|incorreto|errado)$/.test(normalizedFinalReply);\nconst lgpdYes=/^(sim|s|ok|autorizo|autorizado|pode|pode sim|pode compartilhar|pode enviar)$/.test(normalizedFinalReply);\nconst lgpdNo=/^(nao|não|n|nao autorizo|não autorizo|nao quero|não quero|recuso)$/.test(normalizedFinalReply);\n\nif(awaitingFinalConfirmation && yesReply){\n  b.confirmation_client=true;\n  b.confirmacao_cliente=true;\n  b.lgpd_share_consent=null;\n  b.lgpd_status=null;\n  b.answer=null;\n  b.question='Você autoriza o compartilhamento desses dados com o vendedor responsável pelo atendimento?';\n  action='lgpd';\n}\nif(awaitingFinalConfirmation && noReply){\n  b.confirmation_client=false;\n  b.confirmacao_cliente=false;\n  b.lgpd_share_consent=null;\n  b.lgpd_status=null;\n  b.answer='Claro.';\n  b.question='O que devo corrigir no resumo?';\n  action='ask';\n}\nif(awaitingLgpd && lgpdYes){\n  b.lgpd_share_consent='accepted';\n  b.lgpd_status='accepted';\n  b.question=null;\n  action='lgpd';\n}\nif(awaitingLgpd && lgpdNo){\n  b.lgpd_share_consent='refused';\n  b.lgpd_status='refused';\n  b.question=null;\n  action='lgpd';\n}\nconst directQty=sourceText.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(chapas?|pe[cç]as?|unidades?|un\\b|m\\s*[2²]|kg\\b|metros?\\b)/i);\nconst sanitizeQuantity=v=>{\n  const s=String(v??'').trim();\n  if(!s || looksLikeInternalBlob(s)) return null;\n  if(!/\\d/.test(s)) return null;\n  return s.slice(0,120);\n};\nconst quantity=sanitizeQuantity(\n  findUpdate('quantidade')||\n  objFact.quantidade||\n  (qtyMatch?qtyMatch[1].trim():null)||\n  (directQty?directQty[1]+' '+directQty[2]:null)||\n  state?.comercial?.dados_atuais?.quantidade||\n  state?.oportunidade?.quantidade||\n  null\n);\nlet segment=findUpdate('segmento')||objFact.segmento||(segMatch?segMatch[1].trim().toLowerCase():null)||state?.comercial?.dados_atuais?.segmento||null;\nif(segment==='industria') segment='industrial';\nif(segment==='construção') segment='construcao';\n\nconst contextText=norm([\n  sourceText,\n  b.technical_summary||'',\n  state?.lino_v9_state?.technical_summary||'',\n  state?.pre_especificacao||''\n].join(' '));\n\nconst tipoClienteRaw=String(\n  b.tipo_cliente || b.customer_type ||\n  state?.tipo_cliente || state?.comercial?.tipo_cliente ||\n  state?.qualification_state?.tipo_cliente || ''\n).toLowerCase().trim();\nconst tipoCliente = ['pf','pessoa_fisica','pessoa física','pessoa fisica'].includes(tipoClienteRaw) ? 'pf'\n  : (['pj','pessoa_juridica','pessoa jurídica','pessoa juridica'].includes(tipoClienteRaw) ? 'pj' : null);\nconst neverExpress=new Set(['grade_piso','degrau_grade_piso','tela_antiofuscante','chapa_moeda','tela_moeda','belaco','bobina_moeda','gradinox']);\nconst qtyUnitMatch=String(quantity||'').match(/(\\d+(?:[.,]\\d+)?)\\s*(chapas?|pe[cç]as?|unidades?|un\\b)/i);\nconst qtyUnits=qtyUnitMatch?Number(qtyUnitMatch[1].replace(',','.')):null;\nconst dims3x1=/\\b3\\s*[xX]\\s*1\\b|3000\\s*[xX]\\s*1000/i.test(contextText);\nconst sheetLike=/^(chapa_|tela_)/.test(String(productSlug||''))&&!neverExpress.has(String(productSlug||''));\nconst ownUseCue=/minha loja|loja propria|uso proprio|uso interno|mobilia|mobiliario|movel|moveis|para meu negocio|consumo proprio/.test(contextText);\nconst blockedExpressSegment=['industrial','industria','revenda'].includes(String(segment||'').toLowerCase());\nconst smallByUnits=qtyUnits!==null&&qtyUnits>0&&qtyUnits<=(dims3x1?10:15);\nconst expressSmallOrder = tipoCliente==='pf' || (sheetLike&&smallByUnits&&!blockedExpressSegment&&(ownUseCue||['construcao','serralheria'].includes(String(segment||''))));\n\nconst legacyUpdates=updates.map(u=>u?.campo==='segmento'&&u?.valor==='industria'?{...u,valor:'industrial'}:u);\nif(segment&&!legacyUpdates.some(u=>u?.campo==='segmento')) legacyUpdates.push({campo:'segmento',valor:segment,origem:'inferido_contexto',confianca:'alta'});\nif(quantity&&!legacyUpdates.some(u=>u?.campo==='quantidade')) legacyUpdates.push({campo:'quantidade',valor:String(quantity),origem:'cliente_informou',confianca:'alta'});\n\nlet answer=String(b.answer||'').trim();\nlet question=String(b.question||'').trim();\n\n// PF e sempre EXPRESS: empresa, CNPJ e segmento nao devem bloquear nem virar pergunta.\nif(tipoCliente==='pf'){\n  if(/empresa|cnpj|segmento|ind[uú]stria|constru[cç][aã]o|revenda|serralheria/i.test(question)) question='';\n  action='route_rules';\n}\nif(question && answer.includes('?')){\n  answer=answer.replace(/(^|[\\n\\s])[^.!?\\n]*\\?/g,' ').replace(/\\s{2,}/g,' ').trim();\n}\nconst asksKnownProduct=/qual produto|produto.*procura|qual.*produto|o que deseja cotar|qual solu[cç][aã]o/i.test(question);\nif(expressSmallOrder && /ind[uú]stria|constru[cç][aã]o|revenda|serralheria|segmento|perfil da empresa/i.test(question)){\n  question='';\n  action='route_rules';\n}\nif(productSlug&&asksKnownProduct){\n  if(!quantity) question='Qual é a quantidade aproximada que você precisa?';\n  else if(!segment) question='Essa compra é para indústria, construção, revenda ou serralheria?';\n  else question='';\n}\nif(specialProject){\n  const technicalAsk=/perfil|onda|passo|altura|dobra|conforma|raio|desenho tecnico|capacidade|carga|vao|fixacao|apoio|modelo padrao/i.test(question);\n  if(technicalAsk) question='';\n  if(!quantity && !question) question='Qual é a quantidade aproximada que você precisa?';\n  else if(quantity && !segment && !question) question='Essa compra é para indústria, construção, revenda ou serralheria?';\n}\nconst responseText=[answer,question&&question!==answer&&!answer.toLowerCase().includes(question.toLowerCase())?question:null].filter(Boolean).join('\\n\\n');\n\nconst qLower=question.toLowerCase();\nlet awaitedField=b?.seller_readiness?.next_field||null;\nif(!awaitedField&&question){\n  if(/nome da empresa|qual.*empresa|empresa solicitante/.test(qLower)) awaitedField='empresa';\n  else if(/cnpj/.test(qLower)) awaitedField='cnpj';\n  else if(/e-?mail/.test(qLower)) awaitedField='email';\n  else if(/quantidade|quanto.*precisa|quantos|quantas/.test(qLower)) awaitedField='quantidade';\n  else if(/ind[uú]stria|constru[cç][aã]o|revenda|serralheria|segmento|perfil da empresa/.test(qLower)) awaitedField='segmento';\n  else if(/seu nome|nome completo|como.*chama/.test(qLower)) awaitedField='nome';\n}\nif(!['empresa','cnpj','email','quantidade','nome','segmento'].includes(String(awaitedField||''))) awaitedField=null;\nif(tipoCliente==='pf' && ['empresa','cnpj','segmento'].includes(String(awaitedField||''))) awaitedField=null;\nif(expressSmallOrder && awaitedField==='segmento') awaitedField=null;\nif(technicalOpen && !specialProject) awaitedField=null;\n\nconst prevTechCount=Number(state?.lino_v9_state?.technical_questions_consecutive||0);\nconst currentQuestion=String(b.question||'');\nconst isTechnicalQuestion=/carga|impacto|proje[cç][aã]o|dist[aâ]ncia|apoio|fixa[cç][aã]o|flecha|risco|zona perigosa|v[aã]o|roda|eixo|área de contato|area de contato/i.test(currentQuestion);\nconst technicalQuestionsConsecutive=isTechnicalQuestion?prevTechCount+1:0;\n\nconst structuredState={\n  version:3,\n  current_subject:productSlug,\n  intent:b.intent||'general',\n  action,\n  relation_to_previous:b.relation_to_previous||'unknown',\n  technical_summary:b.technical_summary||state?.lino_v9_state?.technical_summary||null,\n  technical_questions_consecutive:technicalQuestionsConsecutive,\n  technical_open:specialProject?false:technicalOpen,\n  special_project:specialProject,\n  special_project_reason:specialProject?'telha_conformada_validacao_por_projeto':null,\n  psa_aplicacao_arquitetonica:b.psa_aplicacao_arquitetonica===true || state?.contextual_routing_hint?.psa_aplicacao_arquitetonica===true,\n  express_small_order:expressSmallOrder,\n  express_reason:tipoCliente==='pf'?'cliente_pf_express_soberano':(expressSmallOrder?'pequeno_pedido_chapa_tela_nao_industria_nao_revenda':null),\n  tipo_cliente:tipoCliente,\n  skip_enrichment_due_impatience:b.skip_enrichment_due_impatience===true,\n  knowledge_sources:Array.isArray(b.knowledge_sources)?b.knowledge_sources:[],\n  technical_compatibility:b.technical_compatibility||{status:'not_applicable',product:null,reason:null,engineering_validation_required:false},\n  seller_readiness:expressSmallOrder\n    ? {status:'ready',missing_fields:[],next_field:null,reason:'express_pequeno_pedido'}\n    : (specialProject\n      ? (quantity&&segment\n        ? {status:'ready',missing_fields:[],next_field:null,reason:'projeto_especial_minimo_rota_completo'}\n        : {status:'missing',missing_fields:[!quantity?'quantidade':null,!segment?'segmento':null].filter(Boolean),next_field:!quantity?'quantidade':(!segment?'segmento':null),reason:'projeto_especial_minimo_rota'})\n      : (b.seller_readiness||{status:'unknown',missing_fields:[],next_field:null,reason:null})),\n  facts_to_store:facts,\n  commercial_updates:legacyUpdates,\n  source_message:String(turn.content||turn.text||''),\n  updated_at:new Date().toISOString()\n};\n\nconst legacyPayload={\n  acao:(action==='handoff'||(action==='lgpd'&&b.lgpd_status==='refused'))?'handoff_humano':(action==='route_rules'?'encaminhar':'continuar'),\n  tipo_cliente:tipoCliente,\n  structured_state:structuredState,\n  confirmacao_cliente:b.confirmation_client===true || b.confirmacao_cliente===true,\n  lgpd_share_consent:b.lgpd_share_consent||null,\n  produto:{slug:productSlug,confianca:b.confidence==='high'?'alta':'media'},\n  atualizacoes_comerciais:legacyUpdates,\n  dados_tecnicos:[],\n  especificacao_livre:b.technical_summary||null,\n  solicitacoes_cliente:[],\n  campos_solicitados:awaitedField?[awaitedField]:[],\n  estado_conversa:{ultima_pergunta:question||null,campo_aguardado:awaitedField,sugestao_pendente:null},\n  intencao_cliente:b.intent||'outro',\n  duvida_cliente:String(turn.content||turn.text||''),\n  orientacao_resposta:b.answer||b.question||null\n};\n\nreturn [{json:{...x,action,original_action:String(b.action||'respond'),use_conversation_v2:useConversationV2,product_slug:productSlug,quantity:quantity?String(quantity):null,segment,oportunidade_id:oppId,response_text:responseText,legacy_payload:legacyPayload,decision_source:'brain'}}];\n"
+        },
+        "id": "523ead4c-3f78-4757-a95b-1448df811983",
+        "name": "OPS | Planejar",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          624,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "internal_actor",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "support",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "quote_complement",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "new_quote",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "lgpd",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "handoff",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "silent_human",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "route_rules",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "respond"
+          }
+        },
+        "id": "6804e4e4-adb1-4ae1-851c-4fd2cefbf139",
+        "name": "OPS | Roteador",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1136,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "resolve_actor"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone } }}"
+              }
+            ]
+          }
+        },
+        "id": "0b050b53-b7e6-4aa9-81bf-9ad5da657253",
+        "name": "OPS | Resolver Ator",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1616,
+          -1168
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "seller_case"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { seller_id:$('OPS | Resolver Ator').first().json.result.actor.id, tracking_code:$('OPS | Planejar').first().json.turn.tracking_code || null } }}"
+              }
+            ]
+          }
+        },
+        "id": "c96b278b-5831-4f21-8e0c-ad4ee3bf64db",
+        "name": "OPS | Caso Vendedor",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1840,
+          -1152
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst r = $input.first()?.json?.result ?? {};\nconst p = $('OPS | Planejar').first().json || {};\nconst text = String(p.turn?.content || p.turn?.text || '');\n\nif (r.ambiguous) {\n  return [{\n    json: {\n      mode: 'reply_only',\n      reply: 'Encontrei mais de um atendimento aberto. Responda novamente incluindo o código LINO do atendimento.'\n    }\n  }];\n}\n\nif (!r.encontrado) {\n  return [{\n    json: {\n      mode: 'reply_only',\n      reply: 'Não encontrei atendimento de suporte aberto para você agora.'\n    }\n  }];\n}\n\nconst t = text.toLowerCase();\nlet tipo = 'JUSTIFICATIVA';\nlet prazo = null;\nlet justificativa = text;\nlet m = null;\n\nif (/resolvid|conclu[ií]|finaliz|enviado.*(or[cç]amento|cota[cç][aã]o|proposta)/i.test(t)) {\n  tipo = 'RESOLVIDO';\n} else if (/pode transferir|pode passar|n[aã]o consigo atender|indispon[ií]vel|f[eé]rias|afastad/i.test(t)) {\n  tipo = 'JUSTIFICATIVA';\n  justificativa = 'SOLICITA_TRANSFERENCIA: ' + text;\n} else if ((m = t.match(/(?:em|daqui a|prazo)\\s*(\\d+)\\s*(min|minuto|minutos|h|hora|horas|dia|dias)/i))) {\n  const n = Number(m[1]);\n  const u = m[2];\n  const ms = u.startsWith('min')\n    ? n * 60000\n    : (u === 'h' || u.startsWith('hora'))\n      ? n * 3600000\n      : n * 86400000;\n  prazo = new Date(Date.now() + ms).toISOString();\n  tipo = 'PRAZO';\n} else if ((m = t.match(/(?:at[eé]|por volta de|retorno.*?)(\\d{1,2})(?::(\\d{2}))?\\s*h?/i))) {\n  const now = new Date();\n  const h = Number(m[1]);\n  const min = Number(m[2] || 0);\n  const d = new Date(now);\n  if ((h * 60 + min) <= (now.getHours() * 60 + now.getMinutes())) d.setDate(d.getDate() + 1);\n  d.setHours(h, min, 0, 0);\n  prazo = d.toISOString();\n  tipo = 'PRAZO';\n} else if (/atendi|falei|conversei|contatei|chamei/i.test(t)) {\n  tipo = 'ATENDI';\n}\n\nlet reply = 'Sua atualização foi registrada no acompanhamento.';\nif (tipo === 'ATENDI') reply = 'Contato com o cliente registrado. Obrigado.';\nelse if (tipo === 'PRAZO') reply = 'Prazo registrado.';\nelse if (tipo === 'RESOLVIDO') reply = 'Atendimento marcado como resolvido. Obrigado.';\n\nreturn [{\n  json: {\n    mode: 'record',\n    support_case_id: r.case?.id,\n    tipo,\n    prazo,\n    justificativa: tipo === 'JUSTIFICATIVA' ? justificativa : null,\n    reply\n  }\n}];\n"
+        },
+        "id": "687e760d-3edb-4f9b-8b38-4f676ed152ba",
+        "name": "OPS | Interpretar Vendedor",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2080,
+          -1152
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.mode }}",
+                "rightValue": "record",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "cf3b0269-b815-4c8f-aa72-0022384a4696",
+        "name": "OPS | Registrar Resposta?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2512,
+          -1136
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "seller_reply"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { support_case_id:$('OPS | Interpretar Vendedor').first().json.support_case_id, tipo:$('OPS | Interpretar Vendedor').first().json.tipo, mensagem:$('OPS | Planejar').first().json.turn.content || '', prazo_prometido_em:$('OPS | Interpretar Vendedor').first().json.prazo || null, justificativa:$('OPS | Interpretar Vendedor').first().json.justificativa || null } }}"
+              }
+            ]
+          }
+        },
+        "id": "cbc5b1db-66ed-4eb9-bb18-889452f8a9cd",
+        "name": "OPS | Salvar Resposta Vendedor",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2768,
+          -1392
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ String($('OPS | Planejar').first().json.turn.phone || '').replace(/\\D/g,'') }}",
+          "textBody": "={{ $('OPS | Interpretar Vendedor').first().json.reply }}",
+          "additionalFields": {}
+        },
+        "id": "6e948056-ed26-4d73-a0fd-ea186d0ba45e",
+        "name": "OPS | Responder Ator",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          3792,
+          -1120
+        ],
+        "webhookId": "9b3fc917-d803-40eb-8b2d-5ec267a02914"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{json:{ok:true,silent:true,action:'internal_actor'}}];"
+        },
+        "id": "add87782-cfd6-46be-a079-9159061a775f",
+        "name": "OPS | Interno Pronto",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4016,
+          -1120
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "support"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone, message:$('OPS | Planejar').first().json.turn.content || $('OPS | Planejar').first().json.turn.text || '', classification:{ rota:'operacional', intencao:'status', assunto:'retorno', frustracao:'nenhuma', risco_comercial:'baixo', pedido_humano:false, pedido_outro_vendedor:false, ameaca_perda:false } } }}"
+              }
+            ]
+          }
+        },
+        "id": "69e588c2-cb5a-4f7f-ad3b-a701cfca342c",
+        "name": "OPS | Suporte",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1888,
+          -576
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst body = $input.first()?.json?.result ?? $input.first()?.json ?? {};\nconst d = body.decision || {};\nconst c = d.contexto?.contato || {};\nconst v = d.contexto?.vendedor || {};\nconst coord = d.contexto?.coordenacao || {};\nconst ac = String(d.acao || '');\nconst p = $('OPS | Planejar').first().json || {};\n\nlet client = p.response_text || 'Localizei seu atendimento e vou acompanhar por aqui.';\n\nif (ac.includes('aguardar')) {\n  client = 'Seu atendimento segue em acompanhamento e o prazo vigente ainda não terminou.';\n} else if (ac.includes('cobrar_vendedor')) {\n  client = 'Vou acionar o vendedor responsável agora e acompanhar o retorno.';\n} else if (ac.includes('escalar_coordenacao')) {\n  client = 'Vou acionar a coordenação comercial para acompanhar este caso.';\n}\n\nlet internal = null;\n\nif (d.notificar_coordenacao) {\n  internal = {\n    phone: String(coord.telefone || '').replace(/\\D/g, ''),\n    text: [\n      'ESCALAÇÃO LINO',\n      'Cliente: ' + String(c.nome || c.telefone || ''),\n      'Mensagem: ' + String(p.turn?.content || '')\n    ].join(String.fromCharCode(10)),\n    kind: 'coord'\n  };\n} else if (d.notificar_vendedor) {\n  internal = {\n    phone: String(v.telefone || '').replace(/\\D/g, ''),\n    text: [\n      'ACOMPANHAMENTO LINO',\n      'Cliente: ' + String(c.nome || c.telefone || ''),\n      'Mensagem: ' + String(p.turn?.content || '')\n    ].join(String.fromCharCode(10)),\n    kind: 'seller'\n  };\n}\n\nreturn [{\n  json: {\n    ...p,\n    client_text: client,\n    support_case_id: body.support_case_id || null,\n    internal\n  }\n}];\n"
+        },
+        "id": "4434867b-97f9-4c03-96d8-2fb448493132",
+        "name": "OPS | Preparar Suporte",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2256,
+          -464
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.internal?.phone && $json.internal?.text) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "5df2649a-7955-4f91-a7a0-05595815644e",
+        "name": "OPS | Notificar Interno?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2432,
+          -480
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ String($('OPS | Preparar Suporte').first().json.internal?.phone || '').replace(/\\D/g,'') }}",
+          "textBody": "={{ String($('OPS | Preparar Suporte').first().json.internal?.text || '') }}",
+          "additionalFields": {}
+        },
+        "id": "98c4fdc2-4cfd-4742-a7e4-e1dd86c4eaec",
+        "name": "OPS | Enviar Interno",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          3776,
+          -784
+        ],
+        "webhookId": "3fee9a27-f9a8-4bb3-a059-62cce94ce389"
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst p=$('OPS | Preparar Suporte').first().json;\nreturn [{json:{ok:true,silent:false,client_text:p.client_text||null,support_case_id:p.support_case_id||null,oportunidade_id:p.oportunidade_id||null,action:p.action}}];\n"
+        },
+        "id": "48f11158-1f02-442c-a120-ebc7bb3e07c1",
+        "name": "OPS | Suporte Pronto",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4128,
+          -496
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "support"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone, message:$('OPS | Planejar').first().json.turn.content || $('OPS | Planejar').first().json.turn.text || '', classification:{ rota:'operacional', intencao:'complemento_cotacao', assunto:'tecnico', frustracao:'nenhuma', risco_comercial:'baixo', pedido_humano:false, pedido_outro_vendedor:false, ameaca_perda:false } } }}"
+              }
+            ]
+          }
+        },
+        "id": "019702d7-1ee0-4999-b2db-4a0ad09a250c",
+        "name": "OPS | Complemento",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1888,
+          -384
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "new_quote"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone, source_oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, produto_slug:$('OPS | Planejar').first().json.product_slug, quantidade:$('OPS | Planejar').first().json.quantity, especificacao:$('OPS | Planejar').first().json.brain.technical_summary || $('OPS | Planejar').first().json.turn.content || '' } }}"
+              }
+            ]
+          }
+        },
+        "id": "81da5a49-ffbf-46a9-8f66-ed8e9860b92c",
+        "name": "OPS | Nova Cotacao",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1696,
+          -32
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "lgpd"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, status:$('OPS | Planejar').first().json.brain.lgpd_status || 'pending', source_text:$('OPS | Planejar').first().json.turn.content || $('OPS | Planejar').first().json.turn.text || '' } }}"
+              }
+            ]
+          }
+        },
+        "id": "78b018e4-1e72-4659-8642-489690b627ef",
+        "name": "OPS | LGPD",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1664,
+          256
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $('OPS | Planejar').first().json.brain.lgpd_status === 'refused' }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "7a5fecb8-1267-4087-a58d-b59df363df4b",
+        "name": "OPS | LGPD Recusado?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1856,
+          256
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "={{ $('OPS | Planejar').first().json.use_conversation_v2 === true ? 'apply_v9' : 'apply' }}"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, payload:$('OPS | Planejar').first().json.legacy_payload } }}"
+              }
+            ]
+          }
+        },
+        "id": "1c2ca249-1885-4411-b69a-0a84be96b7b7",
+        "name": "OPS | Aplicar Rota",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2144,
+          176
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst raw = $input.first()?.json || {};\nconst b = raw.result ?? raw.body ?? raw;\nconst p = $('OPS | Planejar').first().json || {};\n\nlet newQuoteId = null;\ntry { newQuoteId = $('OPS | Nova Cotacao').first().json?.result?.oportunidade_id || null; } catch (e) {}\n\nconst oportunidadeId =\n  b.oportunidade_id ||\n  b.oportunidade?.id ||\n  newQuoteId ||\n  p.oportunidade_id ||\n  null;\n\nconst s = b.vendedor || {};\nconst ready = b.finalizacao?.finalizado === true && !!s.telefone;\nconst summary = b.resumo_confirmacao || null;\nconst effectiveAction = String(b.acao_efetiva || 'continuar');\nconst backendContext = b.contexto_comercial || {};\n\nfunction fmtSummary(r) {\n  if (!r || typeof r !== 'object') return null;\n  const lines = ['Antes de encaminhar, confira se registrei corretamente:'];\n  if (r.produto) lines.push('Produto: ' + r.produto);\n  if (r.segmento) lines.push('Aplicação/segmento: ' + r.segmento);\n  if (r.quantidade) lines.push('Quantidade: ' + r.quantidade);\n  if (r.empresa) lines.push('Empresa: ' + r.empresa);\n  if (r.cnpj) lines.push('CNPJ: ' + r.cnpj);\n  if (r.email) lines.push('E-mail: ' + r.email);\n  const tech = String(r.pre_especificacao || r.especificacao || '').trim();\n  if (tech) lines.push('Pré-especificação: ' + tech);\n  lines.push('Está correto? Se algo estiver diferente, me diga o que devo corrigir.');\n  return lines.join('\\n');\n}\n\nlet responseText = p.response_text || null;\n\n// Operations só executa contratos determinísticos do backend.\n// Ele NÃO cria a próxima pergunta comercial. A pergunta pertence ao Brain.\nif (effectiveAction === 'confirmar_dados') {\n  responseText = fmtSummary(summary) || responseText;\n} else if (effectiveAction === 'aguardar_confirmacao') {\n  responseText = fmtSummary(summary) || responseText || 'Só preciso confirmar se o resumo está correto antes de seguir.';\n}\n\nconst shareAccepted = String(\n  p.brain?.lgpd_share_consent ||\n  p.state?.lgpd?.status ||\n  p.brain?.lgpd_status ||\n  ''\n).toLowerCase() === 'accepted';\n\nconst sellerText = [\n  'NOVA SOLICITAÇÃO LINO',\n  p.product_slug ? 'Produto: ' + p.product_slug : null,\n  'Cliente: ' + String(p.turn?.phone || ''),\n  p.brain?.technical_summary ? 'Detalhes: ' + p.brain.technical_summary : null,\n  shareAccepted && backendContext?.dados_atuais?.empresa ? 'Empresa: ' + backendContext.dados_atuais.empresa : null,\n  shareAccepted && backendContext?.dados_atuais?.cnpj ? 'CNPJ: ' + backendContext.dados_atuais.cnpj : null,\n  shareAccepted && backendContext?.dados_atuais?.email ? 'E-mail: ' + backendContext.dados_atuais.email : null,\n  'Mensagem: ' + String(p.turn?.content || p.turn?.text || '')\n].filter(Boolean).join(String.fromCharCode(10));\n\nreturn [{\n  json: {\n    ...p,\n    oportunidade_id: oportunidadeId,\n    ready,\n    seller_phone: String(s.telefone || '').replace(/\\D/g, ''),\n    seller_name: s.nome || '',\n    seller_id: s.id || null,\n    seller_team: s.equipe || null,\n    route_type: b.rota?.tipo_rota || null,\n    seller_text: sellerText,\n    response_text: responseText,\n    route_result: b,\n    backend_action: effectiveAction,\n    backend_context: backendContext,\n    decision_owner: 'brain',\n    ops_question_generated: false\n  }\n}];\n"
+        },
+        "id": "52581654-e993-44cc-adf2-482b827181f1",
+        "name": "OPS | Preparar Handoff",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2400,
+          64
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.ready) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "047c2771-816e-467a-9f8d-c06c427325d9",
+        "name": "OPS | Handoff Pronto?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2624,
+          64
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "begin_notification"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id } }}"
+              }
+            ]
+          }
+        },
+        "id": "351fa390-cff6-44fe-8d8c-f37099bafbe4",
+        "name": "OPS | Reservar Handoff",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2832,
+          -64
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $('OPS | Preparar Handoff').first().json.seller_phone }}",
+          "textBody": "={{ $('OPS | Preparar Handoff').first().json.seller_text }}",
+          "additionalFields": {}
+        },
+        "id": "145d0d80-857a-4124-bbd2-b98d0a38fa65",
+        "name": "OPS | Enviar Vendedor",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          5040,
+          -144
+        ],
+        "webhookId": "f9bb84c4-7200-4c03-978b-a01c4b0a4892"
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst b=$input.first()?.json||{}, id=b?.messages?.[0]?.id||b?.messageId||b?.id||null, err=b.error||b?.message?.error||null;\nreturn [{json:{ok:!err&&!!id,message_id:id,error:err?String(err?.message||err):null}}];\n"
+        },
+        "id": "7f0b9739-bbaa-4c93-aacc-20f415447b00",
+        "name": "OPS | Avaliar Vendedor",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5216,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.ok) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "d04f2108-8222-431a-95e2-35387f71cac3",
+        "name": "OPS | Vendedor OK?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          5376,
+          -240
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "complete_notification"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id, message_id:$('OPS | Avaliar Vendedor').first().json.message_id || '' } }}"
+              }
+            ]
+          }
+        },
+        "id": "3dc46437-6565-43ab-992a-ca035aa6107c",
+        "name": "OPS | Confirmar Handoff",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          5680,
+          -336
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "handoff_event"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id, origem:'lino', tipo:'vendedor', destino_nome:$('OPS | Preparar Handoff').first().json.seller_name||null, destino_telefone:$('OPS | Preparar Handoff').first().json.seller_phone||null, vendedor_id:$('OPS | Preparar Handoff').first().json.seller_id||null, setor:$('OPS | Preparar Handoff').first().json.seller_team||null, rota_comercial:$('OPS | Preparar Handoff').first().json.route_type||null, motivo:$('OPS | Planejar').first().json.brain.intent||'roteamento', mensagem_origem:$('OPS | Planejar').first().json.turn.content||'', metadata:{compat_source:'lino_v9_compacto',provider_message_id:$('OPS | Avaliar Vendedor').first().json.message_id||null} } }}"
+              }
+            ]
+          }
+        },
+        "id": "e33b6fd0-fb55-437f-b25f-b31d4e5b7511",
+        "name": "OPS | Registrar Handoff",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          5920,
+          -336
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const p=$('OPS | Preparar Handoff').first().json;\nreturn [{json:{ok:true,silent:false,client_text:'Pronto. Seu atendimento foi encaminhado para '+(p.seller_name||'o vendedor responsável')+'. Ele deve entrar em contato com você pelo WhatsApp em até 30 minutos úteis. Vou manter o acompanhamento registrado por aqui.',oportunidade_id:p.oportunidade_id||null,action:'handoff'}}];"
+        },
+        "id": "6cc63749-1016-4520-8bd0-0665d639463e",
+        "name": "OPS | Handoff Pronto",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6160,
+          -336
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "fail_notification"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id, error:$('OPS | Avaliar Vendedor').first().json.error || 'meta_send_failed' } }}"
+              }
+            ]
+          }
+        },
+        "id": "8895d2f4-82db-46d5-9f20-b9c8c01e3de8",
+        "name": "OPS | Falhar Handoff",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          5680,
+          -80
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nreturn [{json:{ok:false,silent:false,client_text:'Seus dados estão registrados, mas não consegui confirmar o envio ao vendedor agora. O atendimento permanece registrado para recuperação.',oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id||null,action:'handoff_failed'}}];\n"
+        },
+        "id": "e6aa2e4f-2b58-4983-956b-4e72d3eb837e",
+        "name": "OPS | Handoff Falhou",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5920,
+          -80
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const x=$input.first()?.json||{};\nconst p=$('OPS | Planejar').first().json||{};\nconst b=x.route_result||{};\nconst effective=String(x.backend_action||b.acao_efetiva||'continuar');\nconst text=String(x.response_text||p.response_text||'').trim();\nconst opId=x.oportunidade_id||p.oportunidade_id||null;\n\n// Operations nao cria pergunta. Brain e a unica autoridade conversacional.\nif(effective==='confirmar_dados'){\n  return [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'confirm_data',backend_action:effective,decision_owner:'brain'}}];\n}\nif(effective==='aguardar_confirmacao'){\n  return [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'await_confirmation',backend_action:effective,decision_owner:'brain'}}];\n}\nif(effective==='continuar'){\n  return [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'continue',backend_action:effective,decision_owner:'brain',ops_question_generated:false}}];\n}\n// Se o backend ainda nao confirmou handoff, nunca inventar texto de conclusao.\nreturn [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'handoff_pending',backend_action:effective,decision_owner:'brain',ops_question_generated:false}}];"
+        },
+        "id": "e933e629-c42d-44c8-820e-9e27726866db",
+        "name": "OPS | Rota Incompleta",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2832,
+          176
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst p=$('OPS | Planejar').first().json; return [{json:{ok:true,silent:false,client_text:p.response_text||null,oportunidade_id:p.oportunidade_id||null,action:p.action||'respond'}}];\n"
+        },
+        "id": "07b32108-98ad-4b62-9664-1d70fd7dd1a0",
+        "name": "OPS | Responder",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2144,
+          592
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{json:{ok:true,silent:true,action:'silent_human'}}];"
+        },
+        "id": "8c36d955-a5e4-40c5-9452-07277e959fe0",
+        "name": "OPS | Silencio Humano",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2144,
+          816
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.test_mode) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "81b6d108-6da3-4bd8-a26a-23524dfd9f9f",
+        "name": "OPS | Test Mode?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          816,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const p=$('OPS | Planejar').first().json||{};\nreturn [{json:{ok:true,test_mode:true,no_side_effects:true,silent:p.action==='silent_human'||p.action==='internal_actor',client_text:(p.action==='silent_human'||p.action==='internal_actor')?null:(p.response_text||null),action:p.action,oportunidade_id:p.oportunidade_id||null,product_slug:p.product_slug||null}}];"
+        },
+        "id": "f79fc1cc-0157-4a2c-868d-2cd831f8e835",
+        "name": "OPS | Resultado Teste",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          976,
+          -160
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.state?.vendedor_atual?.nome || $json.state?.vendedor?.nome || $json.state?.oportunidade?.vendedor_id) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "4e554b6c-dc00-4f7b-a53b-ba9afd2f5a82",
+        "name": "OPS | Complemento Tem Vendedor?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1696,
+          -208
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "={{ $('OPS | Planejar').first().json.use_conversation_v2 === true ? 'apply_v9' : 'apply' }}"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Nova Cotacao').first().json.result?.oportunidade_id, payload:$('OPS | Planejar').first().json.legacy_payload } }}"
+              }
+            ]
+          }
+        },
+        "id": "945dcb1c-caf7-4f30-b1cb-4727fab3fef8",
+        "name": "OPS | Aplicar Nova Cotacao",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2144,
+          -32
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst raw = $input.first()?.json || {};\nconst r = raw.result ?? raw.body ?? raw;\nconst p = $('OPS | Preparar Handoff').first().json || {};\n\nconst ready = r?.ready === true;\nconst alreadySent = r?.already_sent === true || r?.motivo === 'ja_submetido_meta';\nconst inProgress = r?.motivo === 'notificacao_em_andamento';\n\nlet clientText = null;\nif (alreadySent) {\n  clientText = p.seller_name\n    ? 'Seu atendimento já foi encaminhado para ' + p.seller_name + '. Vou manter o acompanhamento por aqui.'\n    : 'Seu atendimento já foi encaminhado ao responsável comercial. Vou manter o acompanhamento por aqui.';\n} else if (inProgress) {\n  clientText = 'Seu atendimento já está em processo de encaminhamento ao responsável comercial.';\n} else if (!ready) {\n  clientText = p.response_text || 'Seu atendimento está registrado, mas o encaminhamento ainda não foi liberado.';\n}\n\nreturn [{\n  json: {\n    ...p,\n    reservation_ready: ready,\n    reservation_already_sent: alreadySent,\n    reservation_in_progress: inProgress,\n    reservation_reason: r?.motivo || null,\n    client_text: clientText\n  }\n}];\n"
+        },
+        "id": "bef5399b-60db-4d48-950d-e98eb05cdf43",
+        "name": "OPS | Avaliar Reserva",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3072,
+          -64
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.reservation_ready) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "eba44e9f-9036-4859-a5f0-94d65ed39719",
+        "name": "OPS | Reserva Liberada?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          3328,
+          -64
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const x=$input.first().json||{}; return [{json:{ok:true,silent:false,client_text:x.client_text||null,oportunidade_id:x.oportunidade_id||null,action:'handoff_already_handled',reservation_reason:x.reservation_reason||null}}];"
+        },
+        "id": "e132683a-4255-4d11-bc48-737febdc02c1",
+        "name": "OPS | Reserva Nao Envia",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3632,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "opp",
+                "leftValue": "={{ String($json.oportunidade_id || '') }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              },
+              {
+                "id": "safeAction",
+                "leftValue": "={{ ['internal_actor','silent_human','support','new_quote'].includes(String($json.action||'')) }}",
+                "rightValue": false,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "029a38db-200c-4dcb-99d4-45f33736aee1",
+        "name": "OPS | Persistir Turno V9?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1680,
+          1120
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "persist_v9"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, payload:$('OPS | Planejar').first().json.legacy_payload } }}"
+              }
+            ]
+          }
+        },
+        "id": "17125b67-30b1-4950-aebc-1e561fc8cf67",
+        "name": "OPS | Persistir Turno V9",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1936,
+          1056
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{json:$('OPS | Planejar').first().json}];"
+        },
+        "id": "071ce79e-868a-4348-827c-48f932bf3b23",
+        "name": "OPS | Restaurar Plano V9",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2192,
+          1056
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_operations_claim_requests",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ String($json.turn?.message_id||'') }}"
+              },
+              {
+                "fieldId": "phone",
+                "fieldValue": "={{ String($json.turn?.phone||'').replace(/\\D/g,'') }}"
+              }
+            ]
+          }
+        },
+        "id": "67b4935d-d790-4c47-b81d-ebdc5d537dde",
+        "name": "OPS | Claim Turn",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          496,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.result?.claimed===true) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "0742b202-a866-4f80-9b30-dec7c1086614",
+        "name": "OPS | Turn Inedito?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          688,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{json:{ok:true,silent:true,duplicate_blocked:true,action:'noop',response_text:null,decision_owner:'idempotency_guard'}}];"
+        },
+        "id": "5624931e-1dab-4e10-a236-bfdcb3780484",
+        "name": "OPS | Duplicate Noop",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "lino_runtime_controls",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "key",
+                "condition": "eq",
+                "keyValue": "meta_send_enabled"
+              }
+            ]
+          }
+        },
+        "id": "f9f8f3f0-fa86-490c-adab-433f251cf322",
+        "name": "OPS | Responder Ator | Kill Switch",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2976,
+          -1232
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.enabled===true) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "e22aff55-eeec-425c-8d76-08f6e5458021",
+        "name": "OPS | Responder Ator | Permitido?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          3136,
+          -1104
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "lino_runtime_controls",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "key",
+                "condition": "eq",
+                "keyValue": "meta_send_enabled"
+              }
+            ]
+          }
+        },
+        "id": "40694f2f-caff-4133-9744-3b18874fdad1",
+        "name": "OPS | Enviar Interno | Kill Switch",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2576,
+          -736
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.enabled===true) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "1e8ee2bd-a46b-4cd1-a8c0-8865ecd93bc3",
+        "name": "OPS | Enviar Interno | Permitido?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2800,
+          -784
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "lino_runtime_controls",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "key",
+                "condition": "eq",
+                "keyValue": "meta_send_enabled"
+              }
+            ]
+          }
+        },
+        "id": "38eecb10-3429-45fe-b5f0-f6898b15d088",
+        "name": "OPS | Enviar Vendedor | Kill Switch",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          3968,
+          -112
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.enabled===true) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "a1b5f05d-0d24-4a60-ae15-64038d58c03e",
+        "name": "OPS | Enviar Vendedor | Permitido?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          4128,
+          -112
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_outbound_claim_requests",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "source_message_id",
+                "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.message_id||'') }}"
+              },
+              {
+                "fieldId": "recipient",
+                "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.phone||'').replace(/\\D/g,'') }}"
+              },
+              {
+                "fieldId": "action_type",
+                "fieldValue": "internal_actor_reply"
+              },
+              {
+                "fieldId": "text_hash",
+                "fieldValue": "={{ String($('OPS | Interpretar Vendedor').first().json.reply||'') }}"
+              }
+            ]
+          }
+        },
+        "id": "90d8b742-640b-4ada-bbf4-34d7bcd4fb64",
+        "name": "OPS | Responder Ator | Claim Outbound",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          3360,
+          -1120
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.result?.allowed===true) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "80ba6413-e409-4f6b-86ae-4cd43da351a1",
+        "name": "OPS | Responder Ator | Outbound Inedito?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          3568,
+          -1120
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_outbound_claim_requests",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "source_message_id",
+                "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.message_id||'') }}"
+              },
+              {
+                "fieldId": "recipient",
+                "fieldValue": "={{ String($json.internal?.phone||'').replace(/\\D/g,'') }}"
+              },
+              {
+                "fieldId": "action_type",
+                "fieldValue": "internal_notification"
+              },
+              {
+                "fieldId": "text_hash",
+                "fieldValue": "={{ String($json.internal?.text||'') }}"
+              }
+            ]
+          }
+        },
+        "id": "8d638d4b-d32c-440b-9e1a-279be5bd3626",
+        "name": "OPS | Enviar Interno | Claim Outbound",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          3008,
+          -784
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.result?.allowed===true) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "a74afd06-7816-483a-9344-b94d404c60ea",
+        "name": "OPS | Enviar Interno | Outbound Inedito?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          3472,
+          -752
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_outbound_claim_requests",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "source_message_id",
+                "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.message_id||'') }}"
+              },
+              {
+                "fieldId": "recipient",
+                "fieldValue": "={{ String($('OPS | Preparar Handoff').first().json.seller_phone||'').replace(/\\D/g,'') }}"
+              },
+              {
+                "fieldId": "action_type",
+                "fieldValue": "seller_handoff"
+              },
+              {
+                "fieldId": "text_hash",
+                "fieldValue": "={{ String($('OPS | Preparar Handoff').first().json.seller_text||'') }}"
+              }
+            ]
+          }
+        },
+        "id": "95d79bf2-172a-4345-9399-685c5f6d0dfc",
+        "name": "OPS | Enviar Vendedor | Claim Outbound",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          4448,
+          -96
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.result?.allowed===true) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "1e76019b-44d8-4fac-b8ae-a683c66db266",
+        "name": "OPS | Enviar Vendedor | Outbound Inedito?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          4768,
+          -48
+        ]
+      }
+    ],
+    "activeVersion": {
+      "nodes": [
+        {
+          "parameters": {
+            "inputSource": "passthrough"
+          },
+          "id": "47a83747-851f-41d0-a9c4-ef1e545c64c8",
+          "name": "OPS | Input",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "typeVersion": 1.2,
+          "position": [
+            384,
+            96
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst x=$('OPS | Input').first()?.json||{};\nconst turn=x.turn||{};\nconst state=x.state||{};\nconst b=x.brain||{};\n\nlet action=String(b.action||'respond');\nconst actor=String(turn.actor_type||'cliente');\n\n// Overrides permitidos: identidade interna e takeover real.\nif(actor==='vendedor'||actor==='coordenacao') action='internal_actor';\nelse if(state.human_takeover_blocked===true||state.human_takeover===true) action='silent_human';\n\nconst featurePhone=String(turn.phone||state.telefone||'').replace(/\\D/g,'');\nconst useConversationV2=x.feature_flags?.conversation_v2===true || state.feature_flags?.conversation_v2===true;\nconst alreadyAssigned=Boolean(state?.vendedor_atual?.id||state?.vendedor_atual?.nome||state?.oportunidade?.vendedor_id);\nconst technicalOpen=b.technical_open===true || (state?.lino_v9_state?.technical_open===true && b.technical_open!==false);\nconst nonCommercialIntent=['general','careers','institutional','out_of_portfolio'].includes(String(b.intent||''));\nif(action==='respond' || nonCommercialIntent){\n  // Resposta direta nunca entra no pipeline SDR/distribuicao.\n  action='respond';\n} else if(useConversationV2 && !alreadyAssigned && !technicalOpen){\n  if(['ask','route_rules'].includes(action)) action='route_rules';\n  if(action==='quote_complement') action='route_rules';\n}\n\nconst norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim();\nfunction productSlugFrom(text){\n  const t=norm(text).replace(/[_-]+/g,' ');\n  if(!t) return null;\n  if(/grade\\s+de\\s+piso|grade\\s+eletrofundida/.test(t)) return 'grade_piso';\n  if(/degrau/.test(t)&&/grade|piso/.test(t)) return 'degrau_grade_piso';\n  if(/gradil/.test(t)) return 'gradil_metalico';\n  if(/chapa\\s+perfurada|perfurad[ao]/.test(t)) return 'chapa_perfurada';\n  if(/chapa\\s+expandida/.test(t)) return 'chapa_expandida';\n  if(/chapa\\s+recalcada|recalcad[ao]/.test(t)) return 'chapa_recalcada';\n  if(/telha\\s+trapezoidal|trapezoidal/.test(t)) return 'telha_trapezoidal';\n  if(/telha\\s+(?:ondulada|ondulado)|cobertura\\s+ondulada/.test(t)) return 'telha_ondulada';\n  if(/tela\\s+expandida/.test(t)) return 'tela_expandida';\n  if(/tela\\s+moeda/.test(t)) return 'tela_moeda';\n  if(/forro/.test(t)) return 'forro_metalico';\n  if(/brise/.test(t)) return 'brise_metalico';\n  if(/port[aã]o/.test(t)&&/gradil/.test(t)) return 'portao_gradil';\n  if(/piso\\s+industrial/.test(t)) return 'piso_industrial';\n  return null;\n}\n\nconst facts=Array.isArray(b.facts_to_store)?b.facts_to_store:[];\nconst normalizeOrigin=v=>{\n  const s=String(v||'').toLowerCase().trim();\n  if(['cliente_informou','cliente_escolheu','inferido_contexto','sugestao_lino_aceita','validacao_tecnica_pendente'].includes(s)) return s;\n  if(['mensagem_cliente','cliente','whatsapp','mensagem_atual'].includes(s)) return 'cliente_informou';\n  if(['historico_recente','historico_cliente','memoria','contexto'].includes(s)) return 'inferido_contexto';\n  return 'inferido_contexto';\n};\nlet updates=(Array.isArray(b.commercial_updates)?b.commercial_updates:[])\n  .map(u=>u&&typeof u==='object'?{\n    campo:u.campo??u.field??null,\n    valor:u.valor??u.value??null,\n    origem:normalizeOrigin(u.origem??u.source??'cliente_informou'),\n    confianca:u.confianca??u.confidence??'alta'\n  }:null)\n  .filter(u=>u?.campo&&u.valor!==undefined&&u.valor!==null);\n\nconst looksLikeInternalBlob=v=>{\n  const s=String(v??'').trim();\n  return !s || s.length>220 || /\\[ANALISE_IMAGEM\\]|\\[CONTEXTO VISUAL RECENTE\\]|encrypted_content|gAAAAA|\\\\\"type\\\\\":\\\\\"reasoning\\\\\"|output_text/i.test(s);\n};\nupdates=updates.filter(u=>{\n  if(u.campo==='quantidade') return !looksLikeInternalBlob(u.valor);\n  if(['empresa','cnpj','email','nome','segmento','produto'].includes(String(u.campo))) return String(u.valor??'').length<=500 && !looksLikeInternalBlob(u.valor);\n  return true;\n});\n\nconst stateSubject=\n  productSlugFrom(state?.produto_slug) ||\n  productSlugFrom(state?.lino_v9_state?.current_subject) ||\n  productSlugFrom(state?.comercial?.dados_atuais?.produto) ||\n  null;\nconst updateProduct=updates.find(u=>u.campo==='produto');\nconst productSlug=\n  productSlugFrom(turn.content||turn.text||'') ||\n  stateSubject ||\n  productSlugFrom(updateProduct?.valor) ||\n  productSlugFrom(b.current_subject) ||\n  null;\nconst specialProject=['telha_ondulada','telha_trapezoidal'].includes(String(productSlug||''));\nif(specialProject && !alreadyAssigned){\n  if(['respond','ask','quote_complement','route_rules'].includes(action)) action='route_rules';\n}\n\nconst oppId=\n  state?.oportunidade?.id ||\n  state?.comercial?.oportunidade_id ||\n  state?.oportunidade_id ||\n  null;\nconst objFact=facts.find(f=>f&&typeof f==='object'&&!Array.isArray(f))||{};\nconst factText=facts.filter(f=>typeof f==='string').join(' | ');\nconst findUpdate=campo=>updates.find(u=>u?.campo===campo)?.valor??null;\n\nconst qtyMatch=factText.match(/quantidade\\s*:\\s*([^|]+)/i);\nconst segMatch=factText.match(/segmento\\s*:\\s*([^|]+)/i);\nconst sourceText=String(turn.content||turn.text||'');\nconst awaitedStage=String(state?.conversa?.campo_aguardado||state?.conversa?.ultima_pergunta||'');\nconst awaitingFinalConfirmation =\n  state?.conversa?.confirmacao_pendente===true ||\n  awaitedStage==='confirmacao_final';\nconst awaitingLgpd = awaitedStage==='lgpd_final';\nconst normalizedFinalReply=norm(sourceText).replace(/[.!?]+$/g,'').trim();\nconst yesReply=/^(sim|s|ok|certo|correto|confirmo|confirmado|pode|pode sim|pode encaminhar|pode enviar)$/.test(normalizedFinalReply);\nconst noReply=/^(nao|não|n|nao esta|não esta|incorreto|errado)$/.test(normalizedFinalReply);\nconst lgpdYes=/^(sim|s|ok|autorizo|autorizado|pode|pode sim|pode compartilhar|pode enviar)$/.test(normalizedFinalReply);\nconst lgpdNo=/^(nao|não|n|nao autorizo|não autorizo|nao quero|não quero|recuso)$/.test(normalizedFinalReply);\n\nif(awaitingFinalConfirmation && yesReply){\n  b.confirmation_client=true;\n  b.confirmacao_cliente=true;\n  b.lgpd_share_consent=null;\n  b.lgpd_status=null;\n  b.answer=null;\n  b.question='Você autoriza o compartilhamento desses dados com o vendedor responsável pelo atendimento?';\n  action='lgpd';\n}\nif(awaitingFinalConfirmation && noReply){\n  b.confirmation_client=false;\n  b.confirmacao_cliente=false;\n  b.lgpd_share_consent=null;\n  b.lgpd_status=null;\n  b.answer='Claro.';\n  b.question='O que devo corrigir no resumo?';\n  action='ask';\n}\nif(awaitingLgpd && lgpdYes){\n  b.lgpd_share_consent='accepted';\n  b.lgpd_status='accepted';\n  b.question=null;\n  action='lgpd';\n}\nif(awaitingLgpd && lgpdNo){\n  b.lgpd_share_consent='refused';\n  b.lgpd_status='refused';\n  b.question=null;\n  action='lgpd';\n}\nconst directQty=sourceText.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(chapas?|pe[cç]as?|unidades?|un\\b|m\\s*[2²]|kg\\b|metros?\\b)/i);\nconst sanitizeQuantity=v=>{\n  const s=String(v??'').trim();\n  if(!s || looksLikeInternalBlob(s)) return null;\n  if(!/\\d/.test(s)) return null;\n  return s.slice(0,120);\n};\nconst quantity=sanitizeQuantity(\n  findUpdate('quantidade')||\n  objFact.quantidade||\n  (qtyMatch?qtyMatch[1].trim():null)||\n  (directQty?directQty[1]+' '+directQty[2]:null)||\n  state?.comercial?.dados_atuais?.quantidade||\n  state?.oportunidade?.quantidade||\n  null\n);\nlet segment=findUpdate('segmento')||objFact.segmento||(segMatch?segMatch[1].trim().toLowerCase():null)||state?.comercial?.dados_atuais?.segmento||null;\nif(segment==='industria') segment='industrial';\nif(segment==='construção') segment='construcao';\n\nconst contextText=norm([\n  sourceText,\n  b.technical_summary||'',\n  state?.lino_v9_state?.technical_summary||'',\n  state?.pre_especificacao||''\n].join(' '));\n\nconst tipoClienteRaw=String(\n  b.tipo_cliente || b.customer_type ||\n  state?.tipo_cliente || state?.comercial?.tipo_cliente ||\n  state?.qualification_state?.tipo_cliente || ''\n).toLowerCase().trim();\nconst tipoCliente = ['pf','pessoa_fisica','pessoa física','pessoa fisica'].includes(tipoClienteRaw) ? 'pf'\n  : (['pj','pessoa_juridica','pessoa jurídica','pessoa juridica'].includes(tipoClienteRaw) ? 'pj' : null);\nconst neverExpress=new Set(['grade_piso','degrau_grade_piso','tela_antiofuscante','chapa_moeda','tela_moeda','belaco','bobina_moeda','gradinox']);\nconst qtyUnitMatch=String(quantity||'').match(/(\\d+(?:[.,]\\d+)?)\\s*(chapas?|pe[cç]as?|unidades?|un\\b)/i);\nconst qtyUnits=qtyUnitMatch?Number(qtyUnitMatch[1].replace(',','.')):null;\nconst dims3x1=/\\b3\\s*[xX]\\s*1\\b|3000\\s*[xX]\\s*1000/i.test(contextText);\nconst sheetLike=/^(chapa_|tela_)/.test(String(productSlug||''))&&!neverExpress.has(String(productSlug||''));\nconst ownUseCue=/minha loja|loja propria|uso proprio|uso interno|mobilia|mobiliario|movel|moveis|para meu negocio|consumo proprio/.test(contextText);\nconst blockedExpressSegment=['industrial','industria','revenda'].includes(String(segment||'').toLowerCase());\nconst smallByUnits=qtyUnits!==null&&qtyUnits>0&&qtyUnits<=(dims3x1?10:15);\nconst expressSmallOrder = tipoCliente==='pf' || (sheetLike&&smallByUnits&&!blockedExpressSegment&&(ownUseCue||['construcao','serralheria'].includes(String(segment||''))));\n\nconst legacyUpdates=updates.map(u=>u?.campo==='segmento'&&u?.valor==='industria'?{...u,valor:'industrial'}:u);\nif(segment&&!legacyUpdates.some(u=>u?.campo==='segmento')) legacyUpdates.push({campo:'segmento',valor:segment,origem:'inferido_contexto',confianca:'alta'});\nif(quantity&&!legacyUpdates.some(u=>u?.campo==='quantidade')) legacyUpdates.push({campo:'quantidade',valor:String(quantity),origem:'cliente_informou',confianca:'alta'});\n\nlet answer=String(b.answer||'').trim();\nlet question=String(b.question||'').trim();\n\n// PF e sempre EXPRESS: empresa, CNPJ e segmento nao devem bloquear nem virar pergunta.\nif(tipoCliente==='pf'){\n  if(/empresa|cnpj|segmento|ind[uú]stria|constru[cç][aã]o|revenda|serralheria/i.test(question)) question='';\n  action='route_rules';\n}\nif(question && answer.includes('?')){\n  answer=answer.replace(/(^|[\\n\\s])[^.!?\\n]*\\?/g,' ').replace(/\\s{2,}/g,' ').trim();\n}\nconst asksKnownProduct=/qual produto|produto.*procura|qual.*produto|o que deseja cotar|qual solu[cç][aã]o/i.test(question);\nif(expressSmallOrder && /ind[uú]stria|constru[cç][aã]o|revenda|serralheria|segmento|perfil da empresa/i.test(question)){\n  question='';\n  action='route_rules';\n}\nif(productSlug&&asksKnownProduct){\n  if(!quantity) question='Qual é a quantidade aproximada que você precisa?';\n  else if(!segment) question='Essa compra é para indústria, construção, revenda ou serralheria?';\n  else question='';\n}\nif(specialProject){\n  const technicalAsk=/perfil|onda|passo|altura|dobra|conforma|raio|desenho tecnico|capacidade|carga|vao|fixacao|apoio|modelo padrao/i.test(question);\n  if(technicalAsk) question='';\n  if(!quantity && !question) question='Qual é a quantidade aproximada que você precisa?';\n  else if(quantity && !segment && !question) question='Essa compra é para indústria, construção, revenda ou serralheria?';\n}\nconst responseText=[answer,question&&question!==answer&&!answer.toLowerCase().includes(question.toLowerCase())?question:null].filter(Boolean).join('\\n\\n');\n\nconst qLower=question.toLowerCase();\nlet awaitedField=b?.seller_readiness?.next_field||null;\nif(!awaitedField&&question){\n  if(/nome da empresa|qual.*empresa|empresa solicitante/.test(qLower)) awaitedField='empresa';\n  else if(/cnpj/.test(qLower)) awaitedField='cnpj';\n  else if(/e-?mail/.test(qLower)) awaitedField='email';\n  else if(/quantidade|quanto.*precisa|quantos|quantas/.test(qLower)) awaitedField='quantidade';\n  else if(/ind[uú]stria|constru[cç][aã]o|revenda|serralheria|segmento|perfil da empresa/.test(qLower)) awaitedField='segmento';\n  else if(/seu nome|nome completo|como.*chama/.test(qLower)) awaitedField='nome';\n}\nif(!['empresa','cnpj','email','quantidade','nome','segmento'].includes(String(awaitedField||''))) awaitedField=null;\nif(tipoCliente==='pf' && ['empresa','cnpj','segmento'].includes(String(awaitedField||''))) awaitedField=null;\nif(expressSmallOrder && awaitedField==='segmento') awaitedField=null;\nif(technicalOpen && !specialProject) awaitedField=null;\n\nconst prevTechCount=Number(state?.lino_v9_state?.technical_questions_consecutive||0);\nconst currentQuestion=String(b.question||'');\nconst isTechnicalQuestion=/carga|impacto|proje[cç][aã]o|dist[aâ]ncia|apoio|fixa[cç][aã]o|flecha|risco|zona perigosa|v[aã]o|roda|eixo|área de contato|area de contato/i.test(currentQuestion);\nconst technicalQuestionsConsecutive=isTechnicalQuestion?prevTechCount+1:0;\n\nconst structuredState={\n  version:3,\n  current_subject:productSlug,\n  intent:b.intent||'general',\n  action,\n  relation_to_previous:b.relation_to_previous||'unknown',\n  technical_summary:b.technical_summary||state?.lino_v9_state?.technical_summary||null,\n  technical_questions_consecutive:technicalQuestionsConsecutive,\n  technical_open:specialProject?false:technicalOpen,\n  special_project:specialProject,\n  special_project_reason:specialProject?'telha_conformada_validacao_por_projeto':null,\n  psa_aplicacao_arquitetonica:b.psa_aplicacao_arquitetonica===true || state?.contextual_routing_hint?.psa_aplicacao_arquitetonica===true,\n  express_small_order:expressSmallOrder,\n  express_reason:tipoCliente==='pf'?'cliente_pf_express_soberano':(expressSmallOrder?'pequeno_pedido_chapa_tela_nao_industria_nao_revenda':null),\n  tipo_cliente:tipoCliente,\n  skip_enrichment_due_impatience:b.skip_enrichment_due_impatience===true,\n  knowledge_sources:Array.isArray(b.knowledge_sources)?b.knowledge_sources:[],\n  technical_compatibility:b.technical_compatibility||{status:'not_applicable',product:null,reason:null,engineering_validation_required:false},\n  seller_readiness:expressSmallOrder\n    ? {status:'ready',missing_fields:[],next_field:null,reason:'express_pequeno_pedido'}\n    : (specialProject\n      ? (quantity&&segment\n        ? {status:'ready',missing_fields:[],next_field:null,reason:'projeto_especial_minimo_rota_completo'}\n        : {status:'missing',missing_fields:[!quantity?'quantidade':null,!segment?'segmento':null].filter(Boolean),next_field:!quantity?'quantidade':(!segment?'segmento':null),reason:'projeto_especial_minimo_rota'})\n      : (b.seller_readiness||{status:'unknown',missing_fields:[],next_field:null,reason:null})),\n  facts_to_store:facts,\n  commercial_updates:legacyUpdates,\n  source_message:String(turn.content||turn.text||''),\n  updated_at:new Date().toISOString()\n};\n\nconst legacyPayload={\n  acao:(action==='handoff'||(action==='lgpd'&&b.lgpd_status==='refused'))?'handoff_humano':(action==='route_rules'?'encaminhar':'continuar'),\n  tipo_cliente:tipoCliente,\n  structured_state:structuredState,\n  confirmacao_cliente:b.confirmation_client===true || b.confirmacao_cliente===true,\n  lgpd_share_consent:b.lgpd_share_consent||null,\n  produto:{slug:productSlug,confianca:b.confidence==='high'?'alta':'media'},\n  atualizacoes_comerciais:legacyUpdates,\n  dados_tecnicos:[],\n  especificacao_livre:b.technical_summary||null,\n  solicitacoes_cliente:[],\n  campos_solicitados:awaitedField?[awaitedField]:[],\n  estado_conversa:{ultima_pergunta:question||null,campo_aguardado:awaitedField,sugestao_pendente:null},\n  intencao_cliente:b.intent||'outro',\n  duvida_cliente:String(turn.content||turn.text||''),\n  orientacao_resposta:b.answer||b.question||null\n};\n\nreturn [{json:{...x,action,original_action:String(b.action||'respond'),use_conversation_v2:useConversationV2,product_slug:productSlug,quantity:quantity?String(quantity):null,segment,oportunidade_id:oppId,response_text:responseText,legacy_payload:legacyPayload,decision_source:'brain'}}];\n"
+          },
+          "id": "523ead4c-3f78-4757-a95b-1448df811983",
+          "name": "OPS | Planejar",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            624,
+            96
+          ]
+        },
+        {
+          "parameters": {
+            "rules": {
+              "values": [
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "internal_actor",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "support",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "quote_complement",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "new_quote",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "lgpd",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "handoff",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "silent_human",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "route_rules",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                }
+              ]
+            },
+            "options": {
+              "fallbackOutput": "extra",
+              "renameFallbackOutput": "respond"
+            }
+          },
+          "id": "6804e4e4-adb1-4ae1-851c-4fd2cefbf139",
+          "name": "OPS | Roteador",
+          "type": "n8n-nodes-base.switch",
+          "typeVersion": 3.4,
+          "position": [
+            1136,
+            0
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "resolve_actor"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone } }}"
+                }
+              ]
+            }
+          },
+          "id": "0b050b53-b7e6-4aa9-81bf-9ad5da657253",
+          "name": "OPS | Resolver Ator",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1616,
+            -1168
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "seller_case"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { seller_id:$('OPS | Resolver Ator').first().json.result.actor.id, tracking_code:$('OPS | Planejar').first().json.turn.tracking_code || null } }}"
+                }
+              ]
+            }
+          },
+          "id": "c96b278b-5831-4f21-8e0c-ad4ee3bf64db",
+          "name": "OPS | Caso Vendedor",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1840,
+            -1152
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst r = $input.first()?.json?.result ?? {};\nconst p = $('OPS | Planejar').first().json || {};\nconst text = String(p.turn?.content || p.turn?.text || '');\n\nif (r.ambiguous) {\n  return [{\n    json: {\n      mode: 'reply_only',\n      reply: 'Encontrei mais de um atendimento aberto. Responda novamente incluindo o código LINO do atendimento.'\n    }\n  }];\n}\n\nif (!r.encontrado) {\n  return [{\n    json: {\n      mode: 'reply_only',\n      reply: 'Não encontrei atendimento de suporte aberto para você agora.'\n    }\n  }];\n}\n\nconst t = text.toLowerCase();\nlet tipo = 'JUSTIFICATIVA';\nlet prazo = null;\nlet justificativa = text;\nlet m = null;\n\nif (/resolvid|conclu[ií]|finaliz|enviado.*(or[cç]amento|cota[cç][aã]o|proposta)/i.test(t)) {\n  tipo = 'RESOLVIDO';\n} else if (/pode transferir|pode passar|n[aã]o consigo atender|indispon[ií]vel|f[eé]rias|afastad/i.test(t)) {\n  tipo = 'JUSTIFICATIVA';\n  justificativa = 'SOLICITA_TRANSFERENCIA: ' + text;\n} else if ((m = t.match(/(?:em|daqui a|prazo)\\s*(\\d+)\\s*(min|minuto|minutos|h|hora|horas|dia|dias)/i))) {\n  const n = Number(m[1]);\n  const u = m[2];\n  const ms = u.startsWith('min')\n    ? n * 60000\n    : (u === 'h' || u.startsWith('hora'))\n      ? n * 3600000\n      : n * 86400000;\n  prazo = new Date(Date.now() + ms).toISOString();\n  tipo = 'PRAZO';\n} else if ((m = t.match(/(?:at[eé]|por volta de|retorno.*?)(\\d{1,2})(?::(\\d{2}))?\\s*h?/i))) {\n  const now = new Date();\n  const h = Number(m[1]);\n  const min = Number(m[2] || 0);\n  const d = new Date(now);\n  if ((h * 60 + min) <= (now.getHours() * 60 + now.getMinutes())) d.setDate(d.getDate() + 1);\n  d.setHours(h, min, 0, 0);\n  prazo = d.toISOString();\n  tipo = 'PRAZO';\n} else if (/atendi|falei|conversei|contatei|chamei/i.test(t)) {\n  tipo = 'ATENDI';\n}\n\nlet reply = 'Sua atualização foi registrada no acompanhamento.';\nif (tipo === 'ATENDI') reply = 'Contato com o cliente registrado. Obrigado.';\nelse if (tipo === 'PRAZO') reply = 'Prazo registrado.';\nelse if (tipo === 'RESOLVIDO') reply = 'Atendimento marcado como resolvido. Obrigado.';\n\nreturn [{\n  json: {\n    mode: 'record',\n    support_case_id: r.case?.id,\n    tipo,\n    prazo,\n    justificativa: tipo === 'JUSTIFICATIVA' ? justificativa : null,\n    reply\n  }\n}];\n"
+          },
+          "id": "687e760d-3edb-4f9b-8b38-4f676ed152ba",
+          "name": "OPS | Interpretar Vendedor",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2080,
+            -1152
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 1
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ $json.mode }}",
+                  "rightValue": "record",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "cf3b0269-b815-4c8f-aa72-0022384a4696",
+          "name": "OPS | Registrar Resposta?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            2512,
+            -1136
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "seller_reply"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { support_case_id:$('OPS | Interpretar Vendedor').first().json.support_case_id, tipo:$('OPS | Interpretar Vendedor').first().json.tipo, mensagem:$('OPS | Planejar').first().json.turn.content || '', prazo_prometido_em:$('OPS | Interpretar Vendedor').first().json.prazo || null, justificativa:$('OPS | Interpretar Vendedor').first().json.justificativa || null } }}"
+                }
+              ]
+            }
+          },
+          "id": "cbc5b1db-66ed-4eb9-bb18-889452f8a9cd",
+          "name": "OPS | Salvar Resposta Vendedor",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            2768,
+            -1392
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "send",
+            "phoneNumberId": "1368022049723472",
+            "recipientPhoneNumber": "={{ String($('OPS | Planejar').first().json.turn.phone || '').replace(/\\D/g,'') }}",
+            "textBody": "={{ $('OPS | Interpretar Vendedor').first().json.reply }}",
+            "additionalFields": {}
+          },
+          "id": "6e948056-ed26-4d73-a0fd-ea186d0ba45e",
+          "name": "OPS | Responder Ator",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            3792,
+            -1120
+          ],
+          "webhookId": "9b3fc917-d803-40eb-8b2d-5ec267a02914"
+        },
+        {
+          "parameters": {
+            "jsCode": "return [{json:{ok:true,silent:true,action:'internal_actor'}}];"
+          },
+          "id": "add87782-cfd6-46be-a079-9159061a775f",
+          "name": "OPS | Interno Pronto",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            4016,
+            -1120
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "support"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone, message:$('OPS | Planejar').first().json.turn.content || $('OPS | Planejar').first().json.turn.text || '', classification:{ rota:'operacional', intencao:'status', assunto:'retorno', frustracao:'nenhuma', risco_comercial:'baixo', pedido_humano:false, pedido_outro_vendedor:false, ameaca_perda:false } } }}"
+                }
+              ]
+            }
+          },
+          "id": "69e588c2-cb5a-4f7f-ad3b-a701cfca342c",
+          "name": "OPS | Suporte",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1888,
+            -576
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst body = $input.first()?.json?.result ?? $input.first()?.json ?? {};\nconst d = body.decision || {};\nconst c = d.contexto?.contato || {};\nconst v = d.contexto?.vendedor || {};\nconst coord = d.contexto?.coordenacao || {};\nconst ac = String(d.acao || '');\nconst p = $('OPS | Planejar').first().json || {};\n\nlet client = p.response_text || 'Localizei seu atendimento e vou acompanhar por aqui.';\n\nif (ac.includes('aguardar')) {\n  client = 'Seu atendimento segue em acompanhamento e o prazo vigente ainda não terminou.';\n} else if (ac.includes('cobrar_vendedor')) {\n  client = 'Vou acionar o vendedor responsável agora e acompanhar o retorno.';\n} else if (ac.includes('escalar_coordenacao')) {\n  client = 'Vou acionar a coordenação comercial para acompanhar este caso.';\n}\n\nlet internal = null;\n\nif (d.notificar_coordenacao) {\n  internal = {\n    phone: String(coord.telefone || '').replace(/\\D/g, ''),\n    text: [\n      'ESCALAÇÃO LINO',\n      'Cliente: ' + String(c.nome || c.telefone || ''),\n      'Mensagem: ' + String(p.turn?.content || '')\n    ].join(String.fromCharCode(10)),\n    kind: 'coord'\n  };\n} else if (d.notificar_vendedor) {\n  internal = {\n    phone: String(v.telefone || '').replace(/\\D/g, ''),\n    text: [\n      'ACOMPANHAMENTO LINO',\n      'Cliente: ' + String(c.nome || c.telefone || ''),\n      'Mensagem: ' + String(p.turn?.content || '')\n    ].join(String.fromCharCode(10)),\n    kind: 'seller'\n  };\n}\n\nreturn [{\n  json: {\n    ...p,\n    client_text: client,\n    support_case_id: body.support_case_id || null,\n    internal\n  }\n}];\n"
+          },
+          "id": "4434867b-97f9-4c03-96d8-2fb448493132",
+          "name": "OPS | Preparar Suporte",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2256,
+            -464
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 1
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.internal?.phone && $json.internal?.text) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "5df2649a-7955-4f91-a7a0-05595815644e",
+          "name": "OPS | Notificar Interno?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            2432,
+            -480
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "send",
+            "phoneNumberId": "1368022049723472",
+            "recipientPhoneNumber": "={{ String($('OPS | Preparar Suporte').first().json.internal?.phone || '').replace(/\\D/g,'') }}",
+            "textBody": "={{ String($('OPS | Preparar Suporte').first().json.internal?.text || '') }}",
+            "additionalFields": {}
+          },
+          "id": "98c4fdc2-4cfd-4742-a7e4-e1dd86c4eaec",
+          "name": "OPS | Enviar Interno",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            3776,
+            -784
+          ],
+          "webhookId": "3fee9a27-f9a8-4bb3-a059-62cce94ce389"
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst p=$('OPS | Preparar Suporte').first().json;\nreturn [{json:{ok:true,silent:false,client_text:p.client_text||null,support_case_id:p.support_case_id||null,oportunidade_id:p.oportunidade_id||null,action:p.action}}];\n"
+          },
+          "id": "48f11158-1f02-442c-a120-ebc7bb3e07c1",
+          "name": "OPS | Suporte Pronto",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            4128,
+            -496
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "support"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone, message:$('OPS | Planejar').first().json.turn.content || $('OPS | Planejar').first().json.turn.text || '', classification:{ rota:'operacional', intencao:'complemento_cotacao', assunto:'tecnico', frustracao:'nenhuma', risco_comercial:'baixo', pedido_humano:false, pedido_outro_vendedor:false, ameaca_perda:false } } }}"
+                }
+              ]
+            }
+          },
+          "id": "019702d7-1ee0-4999-b2db-4a0ad09a250c",
+          "name": "OPS | Complemento",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1888,
+            -384
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "new_quote"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { phone:$('OPS | Planejar').first().json.turn.phone, source_oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, produto_slug:$('OPS | Planejar').first().json.product_slug, quantidade:$('OPS | Planejar').first().json.quantity, especificacao:$('OPS | Planejar').first().json.brain.technical_summary || $('OPS | Planejar').first().json.turn.content || '' } }}"
+                }
+              ]
+            }
+          },
+          "id": "81da5a49-ffbf-46a9-8f66-ed8e9860b92c",
+          "name": "OPS | Nova Cotacao",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1696,
+            -32
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "lgpd"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, status:$('OPS | Planejar').first().json.brain.lgpd_status || 'pending', source_text:$('OPS | Planejar').first().json.turn.content || $('OPS | Planejar').first().json.turn.text || '' } }}"
+                }
+              ]
+            }
+          },
+          "id": "78b018e4-1e72-4659-8642-489690b627ef",
+          "name": "OPS | LGPD",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1664,
+            256
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 1
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ $('OPS | Planejar').first().json.brain.lgpd_status === 'refused' }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "7a5fecb8-1267-4087-a58d-b59df363df4b",
+          "name": "OPS | LGPD Recusado?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            1856,
+            256
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "={{ $('OPS | Planejar').first().json.use_conversation_v2 === true ? 'apply_v9' : 'apply' }}"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, payload:$('OPS | Planejar').first().json.legacy_payload } }}"
+                }
+              ]
+            }
+          },
+          "id": "1c2ca249-1885-4411-b69a-0a84be96b7b7",
+          "name": "OPS | Aplicar Rota",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            2144,
+            176
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst raw = $input.first()?.json || {};\nconst b = raw.result ?? raw.body ?? raw;\nconst p = $('OPS | Planejar').first().json || {};\n\nlet newQuoteId = null;\ntry { newQuoteId = $('OPS | Nova Cotacao').first().json?.result?.oportunidade_id || null; } catch (e) {}\n\nconst oportunidadeId =\n  b.oportunidade_id ||\n  b.oportunidade?.id ||\n  newQuoteId ||\n  p.oportunidade_id ||\n  null;\n\nconst s = b.vendedor || {};\nconst ready = b.finalizacao?.finalizado === true && !!s.telefone;\nconst summary = b.resumo_confirmacao || null;\nconst effectiveAction = String(b.acao_efetiva || 'continuar');\nconst backendContext = b.contexto_comercial || {};\n\nfunction fmtSummary(r) {\n  if (!r || typeof r !== 'object') return null;\n  const lines = ['Antes de encaminhar, confira se registrei corretamente:'];\n  if (r.produto) lines.push('Produto: ' + r.produto);\n  if (r.segmento) lines.push('Aplicação/segmento: ' + r.segmento);\n  if (r.quantidade) lines.push('Quantidade: ' + r.quantidade);\n  if (r.empresa) lines.push('Empresa: ' + r.empresa);\n  if (r.cnpj) lines.push('CNPJ: ' + r.cnpj);\n  if (r.email) lines.push('E-mail: ' + r.email);\n  const tech = String(r.pre_especificacao || r.especificacao || '').trim();\n  if (tech) lines.push('Pré-especificação: ' + tech);\n  lines.push('Está correto? Se algo estiver diferente, me diga o que devo corrigir.');\n  return lines.join('\\n');\n}\n\nlet responseText = p.response_text || null;\n\n// Operations só executa contratos determinísticos do backend.\n// Ele NÃO cria a próxima pergunta comercial. A pergunta pertence ao Brain.\nif (effectiveAction === 'confirmar_dados') {\n  responseText = fmtSummary(summary) || responseText;\n} else if (effectiveAction === 'aguardar_confirmacao') {\n  responseText = fmtSummary(summary) || responseText || 'Só preciso confirmar se o resumo está correto antes de seguir.';\n}\n\nconst shareAccepted = String(\n  p.brain?.lgpd_share_consent ||\n  p.state?.lgpd?.status ||\n  p.brain?.lgpd_status ||\n  ''\n).toLowerCase() === 'accepted';\n\nconst sellerText = [\n  'NOVA SOLICITAÇÃO LINO',\n  p.product_slug ? 'Produto: ' + p.product_slug : null,\n  'Cliente: ' + String(p.turn?.phone || ''),\n  p.brain?.technical_summary ? 'Detalhes: ' + p.brain.technical_summary : null,\n  shareAccepted && backendContext?.dados_atuais?.empresa ? 'Empresa: ' + backendContext.dados_atuais.empresa : null,\n  shareAccepted && backendContext?.dados_atuais?.cnpj ? 'CNPJ: ' + backendContext.dados_atuais.cnpj : null,\n  shareAccepted && backendContext?.dados_atuais?.email ? 'E-mail: ' + backendContext.dados_atuais.email : null,\n  'Mensagem: ' + String(p.turn?.content || p.turn?.text || '')\n].filter(Boolean).join(String.fromCharCode(10));\n\nreturn [{\n  json: {\n    ...p,\n    oportunidade_id: oportunidadeId,\n    ready,\n    seller_phone: String(s.telefone || '').replace(/\\D/g, ''),\n    seller_name: s.nome || '',\n    seller_id: s.id || null,\n    seller_team: s.equipe || null,\n    route_type: b.rota?.tipo_rota || null,\n    seller_text: sellerText,\n    response_text: responseText,\n    route_result: b,\n    backend_action: effectiveAction,\n    backend_context: backendContext,\n    decision_owner: 'brain',\n    ops_question_generated: false\n  }\n}];\n"
+          },
+          "id": "52581654-e993-44cc-adf2-482b827181f1",
+          "name": "OPS | Preparar Handoff",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2400,
+            64
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 1
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.ready) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "047c2771-816e-467a-9f8d-c06c427325d9",
+          "name": "OPS | Handoff Pronto?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            2624,
+            64
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "begin_notification"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id } }}"
+                }
+              ]
+            }
+          },
+          "id": "351fa390-cff6-44fe-8d8c-f37099bafbe4",
+          "name": "OPS | Reservar Handoff",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            2832,
+            -64
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "send",
+            "phoneNumberId": "1368022049723472",
+            "recipientPhoneNumber": "={{ $('OPS | Preparar Handoff').first().json.seller_phone }}",
+            "textBody": "={{ $('OPS | Preparar Handoff').first().json.seller_text }}",
+            "additionalFields": {}
+          },
+          "id": "145d0d80-857a-4124-bbd2-b98d0a38fa65",
+          "name": "OPS | Enviar Vendedor",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            5040,
+            -144
+          ],
+          "webhookId": "f9bb84c4-7200-4c03-978b-a01c4b0a4892"
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst b=$input.first()?.json||{}, id=b?.messages?.[0]?.id||b?.messageId||b?.id||null, err=b.error||b?.message?.error||null;\nreturn [{json:{ok:!err&&!!id,message_id:id,error:err?String(err?.message||err):null}}];\n"
+          },
+          "id": "7f0b9739-bbaa-4c93-aacc-20f415447b00",
+          "name": "OPS | Avaliar Vendedor",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            5216,
+            0
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 1
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.ok) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "d04f2108-8222-431a-95e2-35387f71cac3",
+          "name": "OPS | Vendedor OK?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            5376,
+            -240
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "complete_notification"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id, message_id:$('OPS | Avaliar Vendedor').first().json.message_id || '' } }}"
+                }
+              ]
+            }
+          },
+          "id": "3dc46437-6565-43ab-992a-ca035aa6107c",
+          "name": "OPS | Confirmar Handoff",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            5680,
+            -336
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "handoff_event"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id, origem:'lino', tipo:'vendedor', destino_nome:$('OPS | Preparar Handoff').first().json.seller_name||null, destino_telefone:$('OPS | Preparar Handoff').first().json.seller_phone||null, vendedor_id:$('OPS | Preparar Handoff').first().json.seller_id||null, setor:$('OPS | Preparar Handoff').first().json.seller_team||null, rota_comercial:$('OPS | Preparar Handoff').first().json.route_type||null, motivo:$('OPS | Planejar').first().json.brain.intent||'roteamento', mensagem_origem:$('OPS | Planejar').first().json.turn.content||'', metadata:{compat_source:'lino_v9_compacto',provider_message_id:$('OPS | Avaliar Vendedor').first().json.message_id||null} } }}"
+                }
+              ]
+            }
+          },
+          "id": "e33b6fd0-fb55-437f-b25f-b31d4e5b7511",
+          "name": "OPS | Registrar Handoff",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            5920,
+            -336
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const p=$('OPS | Preparar Handoff').first().json;\nreturn [{json:{ok:true,silent:false,client_text:'Pronto. Seu atendimento foi encaminhado para '+(p.seller_name||'o vendedor responsável')+'. Ele deve entrar em contato com você pelo WhatsApp em até 30 minutos úteis. Vou manter o acompanhamento registrado por aqui.',oportunidade_id:p.oportunidade_id||null,action:'handoff'}}];"
+          },
+          "id": "6cc63749-1016-4520-8bd0-0665d639463e",
+          "name": "OPS | Handoff Pronto",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            6160,
+            -336
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "fail_notification"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Preparar Handoff').first().json.oportunidade_id, error:$('OPS | Avaliar Vendedor').first().json.error || 'meta_send_failed' } }}"
+                }
+              ]
+            }
+          },
+          "id": "8895d2f4-82db-46d5-9f20-b9c8c01e3de8",
+          "name": "OPS | Falhar Handoff",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            5680,
+            -80
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nreturn [{json:{ok:false,silent:false,client_text:'Seus dados estão registrados, mas não consegui confirmar o envio ao vendedor agora. O atendimento permanece registrado para recuperação.',oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id||null,action:'handoff_failed'}}];\n"
+          },
+          "id": "e6aa2e4f-2b58-4983-956b-4e72d3eb837e",
+          "name": "OPS | Handoff Falhou",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            5920,
+            -80
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const x=$input.first()?.json||{};\nconst p=$('OPS | Planejar').first().json||{};\nconst b=x.route_result||{};\nconst effective=String(x.backend_action||b.acao_efetiva||'continuar');\nconst text=String(x.response_text||p.response_text||'').trim();\nconst opId=x.oportunidade_id||p.oportunidade_id||null;\n\n// Operations nao cria pergunta. Brain e a unica autoridade conversacional.\nif(effective==='confirmar_dados'){\n  return [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'confirm_data',backend_action:effective,decision_owner:'brain'}}];\n}\nif(effective==='aguardar_confirmacao'){\n  return [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'await_confirmation',backend_action:effective,decision_owner:'brain'}}];\n}\nif(effective==='continuar'){\n  return [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'continue',backend_action:effective,decision_owner:'brain',ops_question_generated:false}}];\n}\n// Se o backend ainda nao confirmou handoff, nunca inventar texto de conclusao.\nreturn [{json:{ok:true,silent:!text,client_text:text||null,oportunidade_id:opId,action:'handoff_pending',backend_action:effective,decision_owner:'brain',ops_question_generated:false}}];"
+          },
+          "id": "e933e629-c42d-44c8-820e-9e27726866db",
+          "name": "OPS | Rota Incompleta",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2832,
+            176
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst p=$('OPS | Planejar').first().json; return [{json:{ok:true,silent:false,client_text:p.response_text||null,oportunidade_id:p.oportunidade_id||null,action:p.action||'respond'}}];\n"
+          },
+          "id": "07b32108-98ad-4b62-9664-1d70fd7dd1a0",
+          "name": "OPS | Responder",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2144,
+            592
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "return [{json:{ok:true,silent:true,action:'silent_human'}}];"
+          },
+          "id": "8c36d955-a5e4-40c5-9452-07277e959fe0",
+          "name": "OPS | Silencio Humano",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2144,
+            816
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.test_mode) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "81b6d108-6da3-4bd8-a26a-23524dfd9f9f",
+          "name": "OPS | Test Mode?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            816,
+            96
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const p=$('OPS | Planejar').first().json||{};\nreturn [{json:{ok:true,test_mode:true,no_side_effects:true,silent:p.action==='silent_human'||p.action==='internal_actor',client_text:(p.action==='silent_human'||p.action==='internal_actor')?null:(p.response_text||null),action:p.action,oportunidade_id:p.oportunidade_id||null,product_slug:p.product_slug||null}}];"
+          },
+          "id": "f79fc1cc-0157-4a2c-868d-2cd831f8e835",
+          "name": "OPS | Resultado Teste",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            976,
+            -160
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.state?.vendedor_atual?.nome || $json.state?.vendedor?.nome || $json.state?.oportunidade?.vendedor_id) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "4e554b6c-dc00-4f7b-a53b-ba9afd2f5a82",
+          "name": "OPS | Complemento Tem Vendedor?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            1696,
+            -208
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "={{ $('OPS | Planejar').first().json.use_conversation_v2 === true ? 'apply_v9' : 'apply' }}"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Nova Cotacao').first().json.result?.oportunidade_id, payload:$('OPS | Planejar').first().json.legacy_payload } }}"
+                }
+              ]
+            }
+          },
+          "id": "945dcb1c-caf7-4f30-b1cb-4727fab3fef8",
+          "name": "OPS | Aplicar Nova Cotacao",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            2144,
+            -32
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst raw = $input.first()?.json || {};\nconst r = raw.result ?? raw.body ?? raw;\nconst p = $('OPS | Preparar Handoff').first().json || {};\n\nconst ready = r?.ready === true;\nconst alreadySent = r?.already_sent === true || r?.motivo === 'ja_submetido_meta';\nconst inProgress = r?.motivo === 'notificacao_em_andamento';\n\nlet clientText = null;\nif (alreadySent) {\n  clientText = p.seller_name\n    ? 'Seu atendimento já foi encaminhado para ' + p.seller_name + '. Vou manter o acompanhamento por aqui.'\n    : 'Seu atendimento já foi encaminhado ao responsável comercial. Vou manter o acompanhamento por aqui.';\n} else if (inProgress) {\n  clientText = 'Seu atendimento já está em processo de encaminhamento ao responsável comercial.';\n} else if (!ready) {\n  clientText = p.response_text || 'Seu atendimento está registrado, mas o encaminhamento ainda não foi liberado.';\n}\n\nreturn [{\n  json: {\n    ...p,\n    reservation_ready: ready,\n    reservation_already_sent: alreadySent,\n    reservation_in_progress: inProgress,\n    reservation_reason: r?.motivo || null,\n    client_text: clientText\n  }\n}];\n"
+          },
+          "id": "bef5399b-60db-4d48-950d-e98eb05cdf43",
+          "name": "OPS | Avaliar Reserva",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3072,
+            -64
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.reservation_ready) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "eba44e9f-9036-4859-a5f0-94d65ed39719",
+          "name": "OPS | Reserva Liberada?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            3328,
+            -64
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const x=$input.first().json||{}; return [{json:{ok:true,silent:false,client_text:x.client_text||null,oportunidade_id:x.oportunidade_id||null,action:'handoff_already_handled',reservation_reason:x.reservation_reason||null}}];"
+          },
+          "id": "e132683a-4255-4d11-bc48-737febdc02c1",
+          "name": "OPS | Reserva Nao Envia",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3632,
+            0
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "conditions": [
+                {
+                  "id": "opp",
+                  "leftValue": "={{ String($json.oportunidade_id || '') }}",
+                  "rightValue": "",
+                  "operator": {
+                    "type": "string",
+                    "operation": "notEmpty"
+                  }
+                },
+                {
+                  "id": "safeAction",
+                  "leftValue": "={{ ['internal_actor','silent_human','support','new_quote'].includes(String($json.action||'')) }}",
+                  "rightValue": false,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "029a38db-200c-4dcb-99d4-45f33736aee1",
+          "name": "OPS | Persistir Turno V9?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            1680,
+            1120
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "persist_v9"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { oportunidade_id:$('OPS | Planejar').first().json.oportunidade_id, payload:$('OPS | Planejar').first().json.legacy_payload } }}"
+                }
+              ]
+            }
+          },
+          "id": "17125b67-30b1-4950-aebc-1e561fc8cf67",
+          "name": "OPS | Persistir Turno V9",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1936,
+            1056
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "return [{json:$('OPS | Planejar').first().json}];"
+          },
+          "id": "071ce79e-868a-4348-827c-48f932bf3b23",
+          "name": "OPS | Restaurar Plano V9",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2192,
+            1056
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_operations_claim_requests",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "message_id",
+                  "fieldValue": "={{ String($json.turn?.message_id||'') }}"
+                },
+                {
+                  "fieldId": "phone",
+                  "fieldValue": "={{ String($json.turn?.phone||'').replace(/\\D/g,'') }}"
+                }
+              ]
+            }
+          },
+          "id": "67b4935d-d790-4c47-b81d-ebdc5d537dde",
+          "name": "OPS | Claim Turn",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            496,
+            96
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.result?.claimed===true) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "0742b202-a866-4f80-9b30-dec7c1086614",
+          "name": "OPS | Turn Inedito?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            688,
+            96
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "return [{json:{ok:true,silent:true,duplicate_blocked:true,action:'noop',response_text:null,decision_owner:'idempotency_guard'}}];"
+          },
+          "id": "5624931e-1dab-4e10-a236-bfdcb3780484",
+          "name": "OPS | Duplicate Noop",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            880,
+            224
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "lino_runtime_controls",
+            "limit": 1,
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "key",
+                  "condition": "eq",
+                  "keyValue": "meta_send_enabled"
+                }
+              ]
+            }
+          },
+          "id": "f9f8f3f0-fa86-490c-adab-433f251cf322",
+          "name": "OPS | Responder Ator | Kill Switch",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            2976,
+            -1232
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.enabled===true) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "e22aff55-eeec-425c-8d76-08f6e5458021",
+          "name": "OPS | Responder Ator | Permitido?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            3136,
+            -1104
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "lino_runtime_controls",
+            "limit": 1,
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "key",
+                  "condition": "eq",
+                  "keyValue": "meta_send_enabled"
+                }
+              ]
+            }
+          },
+          "id": "40694f2f-caff-4133-9744-3b18874fdad1",
+          "name": "OPS | Enviar Interno | Kill Switch",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            2576,
+            -736
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.enabled===true) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "1e8ee2bd-a46b-4cd1-a8c0-8865ecd93bc3",
+          "name": "OPS | Enviar Interno | Permitido?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            2800,
+            -784
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "lino_runtime_controls",
+            "limit": 1,
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "key",
+                  "condition": "eq",
+                  "keyValue": "meta_send_enabled"
+                }
+              ]
+            }
+          },
+          "id": "38eecb10-3429-45fe-b5f0-f6898b15d088",
+          "name": "OPS | Enviar Vendedor | Kill Switch",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            3968,
+            -112
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.enabled===true) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "a1b5f05d-0d24-4a60-ae15-64038d58c03e",
+          "name": "OPS | Enviar Vendedor | Permitido?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            4128,
+            -112
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_outbound_claim_requests",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "source_message_id",
+                  "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.message_id||'') }}"
+                },
+                {
+                  "fieldId": "recipient",
+                  "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.phone||'').replace(/\\D/g,'') }}"
+                },
+                {
+                  "fieldId": "action_type",
+                  "fieldValue": "internal_actor_reply"
+                },
+                {
+                  "fieldId": "text_hash",
+                  "fieldValue": "={{ String($('OPS | Interpretar Vendedor').first().json.reply||'') }}"
+                }
+              ]
+            }
+          },
+          "id": "90d8b742-640b-4ada-bbf4-34d7bcd4fb64",
+          "name": "OPS | Responder Ator | Claim Outbound",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            3360,
+            -1120
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.result?.allowed===true) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "80ba6413-e409-4f6b-86ae-4cd43da351a1",
+          "name": "OPS | Responder Ator | Outbound Inedito?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            3568,
+            -1120
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_outbound_claim_requests",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "source_message_id",
+                  "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.message_id||'') }}"
+                },
+                {
+                  "fieldId": "recipient",
+                  "fieldValue": "={{ String($json.internal?.phone||'').replace(/\\D/g,'') }}"
+                },
+                {
+                  "fieldId": "action_type",
+                  "fieldValue": "internal_notification"
+                },
+                {
+                  "fieldId": "text_hash",
+                  "fieldValue": "={{ String($json.internal?.text||'') }}"
+                }
+              ]
+            }
+          },
+          "id": "8d638d4b-d32c-440b-9e1a-279be5bd3626",
+          "name": "OPS | Enviar Interno | Claim Outbound",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            3008,
+            -784
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.result?.allowed===true) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "a74afd06-7816-483a-9344-b94d404c60ea",
+          "name": "OPS | Enviar Interno | Outbound Inedito?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            3472,
+            -752
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_outbound_claim_requests",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "source_message_id",
+                  "fieldValue": "={{ String($('OPS | Planejar').first().json.turn.message_id||'') }}"
+                },
+                {
+                  "fieldId": "recipient",
+                  "fieldValue": "={{ String($('OPS | Preparar Handoff').first().json.seller_phone||'').replace(/\\D/g,'') }}"
+                },
+                {
+                  "fieldId": "action_type",
+                  "fieldValue": "seller_handoff"
+                },
+                {
+                  "fieldId": "text_hash",
+                  "fieldValue": "={{ String($('OPS | Preparar Handoff').first().json.seller_text||'') }}"
+                }
+              ]
+            }
+          },
+          "id": "95d79bf2-172a-4345-9399-685c5f6d0dfc",
+          "name": "OPS | Enviar Vendedor | Claim Outbound",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            4448,
+            -96
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.result?.allowed===true) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "1e76019b-44d8-4fac-b8ae-a683c66db266",
+          "name": "OPS | Enviar Vendedor | Outbound Inedito?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            4768,
+            -48
+          ]
+        }
+      ],
+      "connections": {
+        "OPS | Roteador": {
+          "main": [
+            [
+              {
+                "node": "OPS | Resolver Ator",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Suporte",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Complemento Tem Vendedor?",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Nova Cotacao",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | LGPD",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Aplicar Rota",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Silencio Humano",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Aplicar Rota",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Responder",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Resolver Ator": {
+          "main": [
+            [
+              {
+                "node": "OPS | Caso Vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Caso Vendedor": {
+          "main": [
+            [
+              {
+                "node": "OPS | Interpretar Vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Interpretar Vendedor": {
+          "main": [
+            [
+              {
+                "node": "OPS | Registrar Resposta?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Registrar Resposta?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Salvar Resposta Vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Responder Ator | Kill Switch",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Responder Ator": {
+          "main": [
+            [
+              {
+                "node": "OPS | Interno Pronto",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Suporte": {
+          "main": [
+            [
+              {
+                "node": "OPS | Preparar Suporte",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Preparar Suporte": {
+          "main": [
+            [
+              {
+                "node": "OPS | Notificar Interno?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Notificar Interno?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Interno | Kill Switch",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Suporte Pronto",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Interno": {
+          "main": [
+            [
+              {
+                "node": "OPS | Suporte Pronto",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Complemento": {
+          "main": [
+            [
+              {
+                "node": "OPS | Preparar Suporte",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | LGPD": {
+          "main": [
+            [
+              {
+                "node": "OPS | LGPD Recusado?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | LGPD Recusado?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Aplicar Rota",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Responder",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Aplicar Rota": {
+          "main": [
+            [
+              {
+                "node": "OPS | Preparar Handoff",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Preparar Handoff": {
+          "main": [
+            [
+              {
+                "node": "OPS | Handoff Pronto?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Handoff Pronto?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Reservar Handoff",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Rota Incompleta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Vendedor": {
+          "main": [
+            [
+              {
+                "node": "OPS | Avaliar Vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Avaliar Vendedor": {
+          "main": [
+            [
+              {
+                "node": "OPS | Vendedor OK?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Vendedor OK?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Confirmar Handoff",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Falhar Handoff",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Confirmar Handoff": {
+          "main": [
+            [
+              {
+                "node": "OPS | Registrar Handoff",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Registrar Handoff": {
+          "main": [
+            [
+              {
+                "node": "OPS | Handoff Pronto",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Falhar Handoff": {
+          "main": [
+            [
+              {
+                "node": "OPS | Handoff Falhou",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Planejar": {
+          "main": [
+            [
+              {
+                "node": "OPS | Test Mode?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Test Mode?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Resultado Teste",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Persistir Turno V9?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Complemento Tem Vendedor?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Complemento",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Aplicar Rota",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Nova Cotacao": {
+          "main": [
+            [
+              {
+                "node": "OPS | Aplicar Nova Cotacao",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Aplicar Nova Cotacao": {
+          "main": [
+            [
+              {
+                "node": "OPS | Preparar Handoff",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Reservar Handoff": {
+          "main": [
+            [
+              {
+                "node": "OPS | Avaliar Reserva",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Avaliar Reserva": {
+          "main": [
+            [
+              {
+                "node": "OPS | Reserva Liberada?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Reserva Liberada?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Vendedor | Kill Switch",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Reserva Nao Envia",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Persistir Turno V9?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Persistir Turno V9",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Roteador",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Persistir Turno V9": {
+          "main": [
+            [
+              {
+                "node": "OPS | Restaurar Plano V9",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Restaurar Plano V9": {
+          "main": [
+            [
+              {
+                "node": "OPS | Roteador",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Input": {
+          "main": [
+            [
+              {
+                "node": "OPS | Claim Turn",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Claim Turn": {
+          "main": [
+            [
+              {
+                "node": "OPS | Turn Inedito?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Turn Inedito?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Planejar",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "OPS | Duplicate Noop",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Salvar Resposta Vendedor": {
+          "main": [
+            [
+              {
+                "node": "OPS | Responder Ator | Kill Switch",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Responder Ator | Kill Switch": {
+          "main": [
+            [
+              {
+                "node": "OPS | Responder Ator | Permitido?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Interno | Kill Switch": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Interno | Permitido?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Vendedor | Kill Switch": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Vendedor | Permitido?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Responder Ator | Permitido?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Responder Ator | Claim Outbound",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Responder Ator | Claim Outbound": {
+          "main": [
+            [
+              {
+                "node": "OPS | Responder Ator | Outbound Inedito?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Responder Ator | Outbound Inedito?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Responder Ator",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Interno | Permitido?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Interno | Claim Outbound",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Interno | Claim Outbound": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Interno | Outbound Inedito?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Interno | Outbound Inedito?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Interno",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Vendedor | Permitido?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Vendedor | Claim Outbound",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Vendedor | Claim Outbound": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Vendedor | Outbound Inedito?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "OPS | Enviar Vendedor | Outbound Inedito?": {
+          "main": [
+            [
+              {
+                "node": "OPS | Enviar Vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "tags": [],
+    "meta": {
+      "aiBuilderAssisted": true,
+      "builderVariant": "mcp"
+    },
+    "parentFolderId": null,
+    "description": "Executor operacional compartilhado: vendedor/coordenacao, suporte SLA, notificacoes internas e handoff. Nao e cerebro conversacional; clientes sao decididos pelo V10.",
+    "scopes": [
+      "execution:reveal",
+      "workflow:create",
+      "workflow:delete",
+      "workflow:disableRedaction",
+      "workflow:enableRedaction",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:export",
+      "workflow:import",
+      "workflow:list",
+      "workflow:move",
+      "workflow:publish",
+      "workflow:read",
+      "workflow:share",
+      "workflow:unpublish",
+      "workflow:unshare",
+      "workflow:update"
+    ],
+    "canExecute": true
+  }
+}
