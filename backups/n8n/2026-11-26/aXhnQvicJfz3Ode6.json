@@ -1,0 +1,2631 @@
+{
+  "snapshot_type": "sanitized_n8n_workflow_details",
+  "warning": "This is a sanitized snapshot from get_workflow_details, not a raw n8n workflow export. Secrets are redacted; confirm with n8n native export before editing.",
+  "captured_at": "2026-11-26",
+  "triggerInfo": "This workflow has the following trigger(s):\n\n\nWebhook trigger(s):\n\n\n\t\t\t\t<trigger 1>\n\t\t\t\t\t - Node name: V11 | Webhook Meta GET\n\t\t\t\t\t - Base URL: https://canaldireto.jbads.com.br/\n\t\t\t\t\t - Production path: /webhook/linooficial\n\t\t\t\t\t - Test path: /webhook-test/linooficial\n\t\t\t\t\t - HTTP Method: GET\n\t\t\t\t\t - Response Mode: Webhook is configured to respond using \"Respond to Webhook\" node.\n\t\t\t\t\t - No credentials required for this webhook.\n\t\t\t\t</trigger 1>\n\n\n\t\t\t\t<trigger 2>\n\t\t\t\t\t - Node name: V11 | Webhook Meta POST\n\t\t\t\t\t - Base URL: https://canaldireto.jbads.com.br/\n\t\t\t\t\t - Production path: /webhook/linooficial\n\t\t\t\t\t - Test path: /webhook-test/linooficial\n\t\t\t\t\t - HTTP Method: POST\n\t\t\t\t\t - Response Mode: Webhook is configured to respond immediately with the message \"Workflow got started.\"\n\t\t\t\t\t - No credentials required for this webhook.\n\t\t\t\t</trigger 2>",
+  "workflow": {
+    "id": "aXhnQvicJfz3Ode6",
+    "name": "Lino V11 - WhatsApp Adapter",
+    "active": true,
+    "isArchived": false,
+    "versionId": "6c7d904c-75ee-4ad2-8412-dc18df92b528",
+    "activeVersionId": "6c7d904c-75ee-4ad2-8412-dc18df92b528",
+    "triggerCount": 2,
+    "createdAt": "2026-11-09T18:46:39.793Z",
+    "updatedAt": "2026-11-23T18:34:02.793Z",
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": true,
+      "binaryMode": "separate"
+    },
+    "connections": {
+      "V11 | Webhook Meta GET": {
+        "main": [
+          [
+            {
+              "node": "V11 | Challenge Meta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Challenge Meta": {
+        "main": [
+          [
+            {
+              "node": "V11 | Responder Challenge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Normalizar Entrada": {
+        "main": [
+          [
+            {
+              "node": "V11 | Tipo de Evento",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Tipo de Evento": {
+        "main": [
+          [
+            {
+              "node": "V11 | Registrar Status Meta",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "V11 | Preservar evento Meta",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "V11 | Resolve Actor",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "V11 | Vincular resposta da pesquisa",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "V11 | Preservar evento Meta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Tem Midia?": {
+        "main": [
+          [
+            {
+              "node": "V11 | Obter URL Midia",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "V11 | Preparar Payload V10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Obter URL Midia": {
+        "main": [
+          [
+            {
+              "node": "V11 | Download Midia",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Midia para Base64": {
+        "main": [
+          [
+            {
+              "node": "V11 | Preparar Payload V10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Execute V10 Brain": {
+        "main": [
+          [
+            {
+              "node": "V11 | Tratar Resposta V10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Acoes V10": {
+        "main": [
+          [
+            {
+              "node": "V11 | Enviar Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "V11 | Enviar Interno",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Enviar Cliente": {
+        "main": [
+          [
+            {
+              "node": "V11 | Persistir Saida",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Enviar Interno": {
+        "main": [
+          [
+            {
+              "node": "V11 | Persistir Saida",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Resolve Actor": {
+        "main": [
+          [
+            {
+              "node": "V11 | Ator Interno?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Ator Interno?": {
+        "main": [
+          [
+            {
+              "node": "V11 | Preparar Ator Operations",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "V11 | Preservar evento Meta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Preparar Ator Operations": {
+        "main": [
+          [
+            {
+              "node": "V11 | Execute Actor Operations",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Tratar Resposta V10": {
+        "main": [
+          [
+            {
+              "node": "V11 | Suporte?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Suporte?": {
+        "main": [
+          [
+            {
+              "node": "V11 | Preparar Suporte Operations",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "V11 | Acoes V10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Preparar Suporte Operations": {
+        "main": [
+          [
+            {
+              "node": "V11 | Execute Support Operations",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Execute Support Operations": {
+        "main": [
+          [
+            {
+              "node": "V11 | Tratar Support Operations",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Tratar Support Operations": {
+        "main": [
+          [
+            {
+              "node": "V11 | Acoes V10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Preparar Payload V10": {
+        "main": [
+          [
+            {
+              "node": "V11 | Buffer Rajada Redis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Buffer Rajada Redis": {
+        "main": [
+          [
+            {
+              "node": "V11 | Aguardar Rajada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Aguardar Rajada": {
+        "main": [
+          [
+            {
+              "node": "V11 | Ler Rajada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Ler Rajada": {
+        "main": [
+          [
+            {
+              "node": "V11 | Consolidar Rajada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Consolidar Rajada": {
+        "main": [
+          [
+            {
+              "node": "V11 | Execute V10 Brain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Vincular resposta da pesquisa": {
+        "main": [
+          [
+            {
+              "node": "V11 | Retomar texto sem vínculo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Retomar texto sem vínculo": {
+        "main": [
+          [
+            {
+              "node": "V11 | Resolve Actor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Download Midia": {
+        "main": [
+          [
+            {
+              "node": "V11 | Midia para Base64",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Evento controlado Lino-Codex": {
+        "main": [
+          [
+            {
+              "node": "V11 | Preservar evento Meta",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "V11 | Normalizar Entrada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Preservar evento Meta": {
+        "main": [
+          [
+            {
+              "node": "V11 | Processar transporte Lino-Codex",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "V11 | Webhook Meta POST": {
+        "main": [
+          [
+            {
+              "node": "V11 | Normalizar Entrada",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodes": [
+      {
+        "parameters": {
+          "path": "linooficial",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "2984bfb5-b352-4813-8cd2-083ab42adc1f",
+        "name": "V11 | Webhook Meta GET",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "c54b4aa1-b09f-4c7f-a1e2-29488ce537e7",
+        "disabled": false
+      },
+      {
+        "parameters": {
+          "jsCode": "const q=$input.first()?.json?.query||{};const mode=String(q['hub.mode']||'');const token=String(q['hub.verify_token']||'');const challenge=String(q['hub.challenge']||'');if(mode!=='subscribe'||token!=='linooficial'||!challenge)throw new Error('META_WEBHOOK_VERIFICATION_FAILED');return [{json:{challenge}}];"
+        },
+        "id": "6e3ccb35-ff25-476b-8d5e-05c1f65cb0f1",
+        "name": "V11 | Challenge Meta",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "={{ $json.challenge }}",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "id": "f22a5b65-a80c-4e83-950f-e53157d99f8e",
+        "name": "V11 | Responder Challenge",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          448,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "linooficial",
+          "options": {
+            "noResponseBody": false,
+            "responseData": "{\"ok\":true,\"adapter\":\"v11\"}"
+          }
+        },
+        "id": "10384f5c-b651-4e3e-ad94-f472fff6274e",
+        "name": "V11 | Webhook Meta POST",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          320
+        ],
+        "webhookId": "f1ebe324-b455-42aa-a724-6d87579ea563"
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst root=$input.first()?.json||{};const body=root.body??root;const value=body?.entry?.[0]?.changes?.[0]?.value||{};const status=value?.statuses?.[0]||null;const msg=value?.messages?.[0]||null;\nif(status){const err=Array.isArray(status.errors)?status.errors[0]:null;return [{json:{event_type:'status',phone:String(status.recipient_id||'').replace(/\\D/g,''),message_id:String(status.id||''),delivery_status:String(status.status||'').toLowerCase(),timestamp:Number(status.timestamp||Date.now()/1000),error_code:err?.code!=null?String(err.code):null,error_message:String(err?.message||err?.title||err?.error_data?.details||'').trim()||null,raw_status:status}}];}\nif(!msg)return [{json:{event_type:'ignore',invalid:true}}];\nconst type=String(msg.type||'text').toLowerCase();const payload=msg[type]||{};const phone=String(msg.from||'').replace(/\\D/g,'');const text=String(msg.text?.body||payload?.caption||'').trim();\nconst button=type==='button'?payload:type==='interactive'?payload.button_reply:null;\nconst answer=String(button?.payload||button?.id||'');\nconst survey=String(msg.context?.id||'');\nconst normalized=text.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[.!?]+$/g,'').trim();\nconst yes=/^(sim[, ]*)?(ja )?(fui atendid[oa]|me atenderam)$/.test(normalized);\nconst no=/^(nao[, ]*)?(ainda )?(nao fui atendid[oa]|nao me atenderam|nao recebi retorno)$/.test(normalized);\nconst known=answer==='lino_sla_atendido_sim'||answer==='lino_sla_atendido_nao';\nconst utc=Number(msg.timestamp||0);\nconst callback=survey && /^wamid\\./.test(survey) && /^[1-9][0-9]{9,14}$/.test(phone)\n  && /^wamid\\./.test(String(msg.id||'')) && Number.isFinite(utc) && utc>0\n  && (known||(type==='text'&&(yes||no)));\nreturn [{json:{event_type:callback?'survey_reply':'message',phone,message_id:String(msg.id||''),message_type:type,text,survey_reply:callback?{pesquisa_meta_id:survey,atendido:known?answer==='lino_sla_atendido_sim':yes,recebido_em:new Date(utc*1000).toISOString()}:null,media_id:payload?.id||null,mime_type:payload?.mime_type||null,filename:payload?.filename||null,timestamp:Number(msg.timestamp||Date.now()/1000),push_name:String(value?.contacts?.[0]?.profile?.name||''),phone_number_id:String(value?.metadata?.phone_number_id||'1368022049723472'),remote_jid:phone?phone+'@s.whatsapp.net':null}}];\n"
+        },
+        "id": "2a2869a8-dfb5-454f-b4e0-7d6ab5c852f9",
+        "name": "V11 | Normalizar Entrada",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.event_type }}",
+                      "rightValue": "status",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.event_type }}",
+                      "rightValue": "message",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.event_type }}",
+                      "rightValue": "survey_reply",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "ignore"
+          }
+        },
+        "id": "3aba5bf2-11c7-46e1-9779-2c549c7d4ed2",
+        "name": "V11 | Tipo de Evento",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          448,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "message_status"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { message_id:$json.message_id, status:$json.delivery_status, recipient_id:$json.phone||null, event_at:$json.timestamp ? new Date(Number($json.timestamp)*1000).toISOString() : null, error_code:$json.error_code||null, error_message:$json.error_message||null, raw:$json.raw_status||{} } }}"
+              }
+            ]
+          }
+        },
+        "id": "6bb672cd-c741-46d8-99a4-798feb4da4f1",
+        "name": "V11 | Registrar Status Meta",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          672,
+          224
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($('V11 | Normalizar Entrada').first().json.media_id && ['audio','image','document'].includes(String($('V11 | Normalizar Entrada').first().json.message_type||''))) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "5fa35c49-67b1-4e1b-bcb1-b4c9ae4ef098",
+        "name": "V11 | Tem Midia?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1120,
+          480
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "media",
+          "operation": "mediaUrlGet",
+          "mediaGetId": "={{ $('V11 | Normalizar Entrada').first().json.media_id }}"
+        },
+        "id": "65090f50-9e1f-4604-a9cc-6f7265f62996",
+        "name": "V11 | Obter URL Midia",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          896,
+          352
+        ],
+        "webhookId": "34d648ef-8cef-44f4-98fb-a5fc9240aef1"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.url }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "whatsAppApi",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "id": "4fb2b9dc-bff1-4d06-8f46-9bf756f08599",
+        "name": "V11 | Download Midia",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1120,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "binaryToPropery",
+          "destinationKey": "media_base64",
+          "options": {
+            "keepSource": "json"
+          }
+        },
+        "id": "08be79ef-956d-4aa1-8bfc-e888ce5e1cab",
+        "name": "V11 | Midia para Base64",
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          1344,
+          352
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst base=$('V11 | Normalizar Entrada').first()?.json||{};const current=$input.first()?.json||{};const digits=v=>String(v||'').replace(/\\D/g,'');let phone=digits(base.phone);if(phone.length===10||phone.length===11)phone='55'+phone;if(!phone)throw new Error('V11_PHONE_MISSING');if(!base.message_id)throw new Error('V11_MESSAGE_ID_MISSING');\nlet attachment=null;if(base.media_id){const b64=String(current.media_base64||'').trim();attachment={name:base.filename||('whatsapp_'+base.message_id),type:base.mime_type||null,mimeType:base.mime_type||null,data:b64||null,media_id:base.media_id,source:'meta_cloud'};}\nconst mediaLabel=base.message_type==='audio'?'Cliente enviou um áudio.':base.message_type==='image'?'Cliente enviou uma imagem técnica.':base.message_type==='document'?'Cliente enviou um documento técnico.':'';\nconst text=String(base.text||mediaLabel||'').trim();\nreturn [{json:{channel:'whatsapp',phone,message_id:String(base.message_id),session_id:null,text,message_type:String(base.message_type||'text'),raw:{push_name:base.push_name||null,provider:'meta_cloud',source:'v11_whatsapp_adapter',remote_jid:base.remote_jid||null,timestamp:base.timestamp||null,attachment}}}];\n"
+        },
+        "id": "d8dc3734-c72f-438b-b408-418aa968e59a",
+        "name": "V11 | Preparar Payload V10",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          416
+        ]
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "38O4BaqXBlwYEKYk",
+            "cachedResultName": "Lino LAB - Brain Compacto - NAO PUBLICAR"
+          },
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        },
+        "id": "2db38e7b-e0b1-494e-8ec8-fb79a3e8b4f0",
+        "name": "V11 | Execute V10 Brain",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1792,
+          416
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst r0=$input.first()?.json||{};const r=r0.result&&typeof r0.result==='object'?r0.result:r0;const transport=$('V11 | Preparar Payload V10').first()?.json||{};const clientText=String((r.lino_oficial===true && r.sla_managed===true && r.entrega_confirmada===false ? 'Recebi sua solicitação. O encaminhamento ao responsável está em andamento.' : null)||r.reply||r.client_text||'').trim();\nlet action=String(r.action||'').trim().toLowerCase();if(r.silent===true||!clientText)action='silent';else if(action==='internal_notification')action='internal_notification';else action='respond';\nconst internal=r.internal_notification||r.internal||null;\nreturn [{json:{ok:r.ok!==false,action,silent:action==='silent',phone:transport.phone||null,source_message_id:transport.message_id||null,client_text:clientText||null,internal_phone:String(internal?.phone||internal?.telefone||'').replace(/\\D/g,'')||null,internal_text:String(internal?.text||internal?.message||'').trim()||null,opportunity_id:r.opportunity_id||r.oportunidade_id||null,handoff_pending:r.handoff_pending===true,mode:r.mode||null,stage:r.stage||null,v10_result:r}}];\n"
+        },
+        "id": "c4bab0ca-d7b7-4f0f-afad-dcb46786861f",
+        "name": "V11 | Tratar Resposta V10",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2016,
+          416
+        ]
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "respond",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "internal_notification",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 1
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "silent",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "silent_fallback"
+          }
+        },
+        "id": "8a1dfaee-810b-4228-930e-411209698b63",
+        "name": "V11 | Acoes V10",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          3136,
+          416
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "={{ '1368022049723472' }}",
+          "recipientPhoneNumber": "={{ $json.phone }}",
+          "textBody": "={{ $json.client_text }}",
+          "additionalFields": {}
+        },
+        "id": "36fcad29-d6a6-494f-8e85-6bacc49304c4",
+        "name": "V11 | Enviar Cliente",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          3360,
+          320
+        ],
+        "webhookId": "be8dbc4b-1550-4b3a-947a-4a19a1b50122",
+        "disabled": false
+      },
+      {
+        "parameters": {
+          "tableId": "lino_v9_bridge",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "message_status"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { message_id:String($json.messages?.[0]?.id||''), status:'sent', recipient_id:String($json.contacts?.[0]?.wa_id||$json.contacts?.[0]?.input||''), event_at:new Date().toISOString(), raw:{source:'v11_whatsapp_adapter'} } }}"
+              }
+            ]
+          }
+        },
+        "id": "54853f95-c1e7-4186-ba16-3c590170a5f0",
+        "name": "V11 | Persistir Saida",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          3584,
+          416
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "={{ '1368022049723472' }}",
+          "recipientPhoneNumber": "={{ $json.internal_phone }}",
+          "textBody": "={{ $json.internal_text }}",
+          "additionalFields": {}
+        },
+        "id": "240a72b7-9146-4c07-9868-4bd7827c729a",
+        "name": "V11 | Enviar Interno",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          3360,
+          512
+        ],
+        "webhookId": "09c7c45f-1b9a-4e76-91e0-2df409ecdebf",
+        "disabled": false
+      },
+      {
+        "id": "b22f9d48-1383-40f8-a824-4459200d4bf1",
+        "name": "V11 | Resolve Actor",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          672,
+          416
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "create",
+          "tableId": "lino_v9_bridge",
+          "dataToSend": "defineBelow",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "operation",
+                "fieldValue": "resolve_actor"
+              },
+              {
+                "fieldId": "payload",
+                "fieldValue": "={{ { phone:$('V11 | Normalizar Entrada').first().json.phone } }}"
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "acdae73b-1444-4883-90fc-97544c2af9e8",
+        "name": "V11 | Ator Interno?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          896,
+          416
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ ['vendedor','coordenacao'].includes(String($json.result?.actor_type||'')) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "0feef19c-6b22-440e-8e40-7532c07a95ed",
+        "name": "V11 | Preparar Ator Operations",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          240
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const m=$('V11 | Normalizar Entrada').first()?.json||{};\nconst rr=$('V11 | Resolve Actor').first()?.json?.result||{};\nconst actorType=String(rr.actor_type||'cliente');\nconst actor=rr.actor||{};\nconst tracking=(String(m.text||'').match(/LINO\\.[A-Z0-9]+/i)||[])[0]||null;\n\nreturn [{json:{\n  turn:{\n    source:'meta',\n    instance:'linooficial',\n    phone:m.phone,\n    remote_jid:m.remote_jid||null,\n    message_id:m.message_id,\n    timestamp:m.timestamp,\n    message_type:m.message_type,\n    text:m.text||'',\n    content:m.text||'',\n    push_name:m.push_name||null,\n    phone_number_id:m.phone_number_id||'1368022049723472',\n    actor_type:actorType,\n    actor,\n    tracking_code:tracking?tracking.toUpperCase():null\n  },\n  state:{},\n  brain:{action:'respond',intent:'internal_contact'},\n  feature_flags:{conversation_v2:true}\n}}];"
+        }
+      },
+      {
+        "id": "692705ea-22dc-4e76-9ae4-37746d048195",
+        "name": "V11 | Execute Actor Operations",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1344,
+          240
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "8MNeCYGn2YfUoeIy",
+            "cachedResultName": "Lino Operations - Meta/SLA"
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "206b4d8e-4872-4aa9-b981-57e680f0d53c",
+        "name": "V11 | Suporte?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2240,
+          416
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean(!$json.v10_result?.sla_managed && ($json.mode==='support' || $json.stage==='support' || $json.action==='support')) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "0f19c52d-4485-479d-9948-ad3f4305f413",
+        "name": "V11 | Preparar Suporte Operations",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2464,
+          560
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const m=$('V11 | Normalizar Entrada').first()?.json||{};\nconst v=$('V11 | Tratar Resposta V10').first()?.json||{};\nreturn [{json:{\n  turn:{\n    source:'meta',\n    instance:'linooficial',\n    phone:v.phone||m.phone,\n    remote_jid:m.remote_jid||null,\n    message_id:m.message_id,\n    timestamp:m.timestamp,\n    message_type:m.message_type,\n    text:m.text||'',\n    content:m.text||'',\n    push_name:m.push_name||null,\n    phone_number_id:m.phone_number_id||'1368022049723472',\n    actor_type:'cliente'\n  },\n  state:{\n    oportunidade_id:v.opportunity_id||null,\n    oportunidade:{id:v.opportunity_id||null}\n  },\n  brain:{\n    action:'support',\n    intent:'support_status',\n    answer:v.client_text||null,\n    question:null,\n    technical_open:false\n  },\n  feature_flags:{conversation_v2:true}\n}}];"
+        }
+      },
+      {
+        "id": "11a5f1a3-60ae-4e2c-a989-7f0a59c7e00f",
+        "name": "V11 | Execute Support Operations",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          2688,
+          560
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "8MNeCYGn2YfUoeIy",
+            "cachedResultName": "Lino Operations - Meta/SLA"
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "030dcc0e-84a3-4f34-8029-e3de9ee699d9",
+        "name": "V11 | Tratar Support Operations",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2912,
+          560
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const o=$input.first()?.json||{};\nconst v=$('V11 | Tratar Resposta V10').first()?.json||{};\nconst text=String(o.client_text||v.client_text||'').trim();\nreturn [{json:{\n  ...v,\n  action:o.silent===true?'silent':'respond',\n  silent:o.silent===true || !text,\n  client_text:text||null,\n  support_case_id:o.support_case_id||null,\n  support_action:o.action||'support',\n  support_operations_ok:o.ok!==false\n}}];"
+        }
+      },
+      {
+        "id": "eede73d8-5473-4032-aa60-52ad2a6c38c7",
+        "name": "V11 | Buffer Rajada Redis",
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          2000,
+          720
+        ],
+        "parameters": {
+          "operation": "set",
+          "key": "={{ 'lino:v11:burst:item:'+$json.phone+':'+$json.message_id }}",
+          "value": "={{ JSON.stringify($json) }}",
+          "expire": true,
+          "ttl": 30
+        }
+      },
+      {
+        "id": "2dce4d1c-e11a-4563-8ea0-729c7f48cc77",
+        "name": "V11 | Aguardar Rajada",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2448,
+          720
+        ],
+        "parameters": {
+          "resume": "timeInterval",
+          "amount": 7,
+          "unit": "seconds"
+        },
+        "webhookId": "ef727d61-f017-4194-8dd6-f1189e6429fd"
+      },
+      {
+        "id": "8f82edee-92f5-4ca8-9f69-ae4e11451215",
+        "name": "V11 | Ler Rajada",
+        "type": "n8n-nodes-base.redis",
+        "typeVersion": 1,
+        "position": [
+          3120,
+          720
+        ],
+        "parameters": {
+          "operation": "keys",
+          "keyPattern": "={{ 'lino:v11:burst:item:'+$('V11 | Preparar Payload V10').first().json.phone+':*' }}",
+          "getValues": true
+        }
+      },
+      {
+        "id": "74e45be8-101c-4b19-9779-d35356789171",
+        "name": "V11 | Consolidar Rajada",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3344,
+          720
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const current=$('V11 | Preparar Payload V10').first()?.json||{};\nconst found=[];\nfunction visit(v){\n  if(typeof v==='string'){\n    const s=v.trim();\n    if(s.startsWith('{')&&s.endsWith('}')){\n      try{\n        const o=JSON.parse(s);\n        if(o&&o.channel==='whatsapp'&&o.phone&&o.message_id) found.push(o);\n      }catch{}\n    }\n    return;\n  }\n  if(Array.isArray(v)){ for(const x of v) visit(x); return; }\n  if(v&&typeof v==='object'){ for(const x of Object.values(v)) visit(x); }\n}\nfor(const item of $input.all()) visit(item.json);\n\nconst byId=new Map();\nfor(const o of found) byId.set(String(o.message_id),o);\nconst arr=[...byId.values()].sort((a,b)=>{\n  const ta=Number(a?.raw?.timestamp||0);\n  const tb=Number(b?.raw?.timestamp||0);\n  if(ta!==tb) return ta-tb;\n  return String(a.message_id).localeCompare(String(b.message_id));\n});\n\nif(!arr.length) return [{json:current}];\n\nconst latest=arr[arr.length-1];\nif(String(latest.message_id)!==String(current.message_id)){\n  return [];\n}\n\nconst texts=[];\nconst attachments=[];\nconst ids=[];\nfor(const x of arr){\n  ids.push(String(x.message_id));\n  const t=String(x.text||'').trim();\n  const hasAttachment=Boolean(x.raw?.attachment);\n  if(t && !(hasAttachment && /^Cliente enviou um (áudio|imagem técnica|documento técnico)\\.?$/i.test(t))){\n    texts.push(t);\n  }\n  if(hasAttachment) attachments.push(x.raw.attachment);\n}\n\nconst uniqueAttachments=[];\nconst seen=new Set();\nfor(const a of attachments){\n  const k=String(a?.media_id||a?.name||'')+'|'+String(a?.mimeType||a?.type||'');\n  if(!k || seen.has(k)) continue;\n  seen.add(k);\n  uniqueAttachments.push(a);\n}\n\nlet combinedText=texts.join('\\n').trim();\nif(!combinedText){\n  if(uniqueAttachments.length===1) combinedText='Cliente enviou um anexo técnico.';\n  else if(uniqueAttachments.length>1) combinedText='Cliente enviou '+uniqueAttachments.length+' anexos técnicos.';\n  else combinedText=String(latest.text||'').trim();\n}\n\nreturn [{json:{\n  ...latest,\n  text:combinedText,\n  message_type:uniqueAttachments.length ? 'multimodal' : 'text',\n  raw:{\n    ...(latest.raw||{}),\n    attachment:uniqueAttachments.length===1 ? uniqueAttachments[0] : null,\n    attachments:uniqueAttachments,\n    burst_consolidated:true,\n    burst_count:arr.length,\n    burst_message_ids:ids\n  }\n}}];"
+        }
+      },
+      {
+        "id": "558bc225-998a-4117-ad31-8c1647d614d1",
+        "name": "V11 | Salvar Midia no Storage",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1230,
+          110
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "={{ 'https://jbrqjhyndfawzubdrdgm.supabase.co/storage/v1/object/lino-anexos-privados/whatsapp/' + encodeURIComponent(String($('V11 | Normalizar Entrada').first().json.media_id || '').replace(/\\D/g, '')) }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "={{ $binary.data.mimeType || 'application/octet-stream' }}"
+              },
+              {
+                "name": "x-upsert",
+                "value": "true"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "binaryData",
+          "inputDataFieldName": "data",
+          "options": {
+            "timeout": 7000,
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "disabled": true
+      },
+      {
+        "id": "2750bffa-af24-4770-b7b9-240b06bdea94",
+        "name": "V11 | Restaurar Midia para Analise",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1450,
+          110
+        ],
+        "parameters": {
+          "jsCode": "const uploaded = $input.first()?.json || {};\nconst media = $('V11 | Download Midia').first();\nconst id = String($('V11 | Normalizar Entrada').first().json.media_id || '');\nconst status = Number(uploaded.statusCode);\nconst stored = /^\\d+$/.test(id) && status >= 200 && status < 300;\nreturn [{ json: {\n  storageStatus: stored ? 'stored' : 'failed',\n  ...(stored ? { storageBucket: 'lino-anexos-privados', storagePath: 'whatsapp/' + id } : {})\n}, binary: media.binary }];"
+        },
+        "disabled": true
+      },
+      {
+        "id": "ec47d2de-35c6-49f8-bf1e-c807235dfa3e",
+        "name": "V11 | Vincular resposta da pesquisa",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          700,
+          -420
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "create",
+          "tableId": "lino_pesquisa_entrada_n8n_v1",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "resposta_meta_id",
+                "fieldValue": "={{ $json.message_id }}"
+              },
+              {
+                "fieldId": "pesquisa_meta_id",
+                "fieldValue": "={{ $json.survey_reply.pesquisa_meta_id }}"
+              },
+              {
+                "fieldId": "remetente",
+                "fieldValue": "={{ $json.phone }}"
+              },
+              {
+                "fieldId": "atendido",
+                "fieldValue": "={{ $json.survey_reply.atendido }}"
+              },
+              {
+                "fieldId": "recebido_em",
+                "fieldValue": "={{ $json.survey_reply.recebido_em }}"
+              }
+            ]
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 1000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "c4da50ea-73ca-4be6-b672-15b0022cdfde",
+        "name": "V11 | Retomar texto sem vínculo",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          900,
+          -420
+        ],
+        "parameters": {
+          "jsCode": "const r=$input.first()?.json||{};\nconst original=$('V11 | Normalizar Entrada').first()?.json||{};\nif(r.vinculado===true || original.message_type!=='text') return [];\nreturn [{json:{...original,event_type:'message'}}];"
+        }
+      },
+      {
+        "id": "ea5aec15-9f2f-4f57-ac62-750c526cf904",
+        "name": "V11 | Evento controlado Lino-Codex",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -350,
+          -600
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ (() => {\nconst envelope=$json.body || {};\nif (envelope.object !== 'whatsapp_business_account' || envelope.entry?.length !== 1 || envelope.entry[0]?.changes?.length !== 1) return false;\nconst event=envelope.entry[0].changes[0].value;\nif (String(event?.metadata?.phone_number_id) !== \"1368022049723472\") return false;\nconst msgs=event.messages || [], statuses=event.statuses || [];\nif(msgs.length===1 && statuses.length===0) {\n  const message=msgs[0];\n  return message.from === \"5516991415319\" && message.type === 'text' && /\\b32197F\\b/i.test(String(message.text?.body || ''));\n}\nreturn Boolean(\"wamid.HBgNNTUxNjk5MTQxNTMxORUCABEYEjJGQzg4NzBCRkYwQjQ3RkE4RAA=\") && !msgs.length && statuses.length>0 && statuses.every(s=>s.recipient_id===\"5516991415319\" && s.id===\"wamid.HBgNNTUxNjk5MTQxNTMxORUCABEYEjJGQzg4NzBCRkYwQjQ3RkE4RAA=\");\n})() }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "b6c31761-0509-416a-810c-9efa496036aa",
+        "name": "V11 | Preservar evento Meta",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -80,
+          -720
+        ],
+        "parameters": {
+          "jsCode": "const root = $('V11 | Webhook Meta POST').first().json || {};\nconst body = root.body ?? root;\nconst values = (body.entry || []).flatMap(e => (e.changes || []).map(c => c.value).filter(Boolean));\nreturn values.map(v => ({ json: v }));"
+        }
+      },
+      {
+        "id": "e2e97c23-e56a-4680-b144-7f91f925955b",
+        "name": "V11 | Processar transporte Lino-Codex",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          190,
+          -720
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "6RMT6jpjIObbUoc6"
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      }
+    ],
+    "activeVersion": {
+      "nodes": [
+        {
+          "parameters": {
+            "path": "linooficial",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "2984bfb5-b352-4813-8cd2-083ab42adc1f",
+          "name": "V11 | Webhook Meta GET",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            0
+          ],
+          "webhookId": "c54b4aa1-b09f-4c7f-a1e2-29488ce537e7",
+          "disabled": false
+        },
+        {
+          "parameters": {
+            "jsCode": "const q=$input.first()?.json?.query||{};const mode=String(q['hub.mode']||'');const token=String(q['hub.verify_token']||'');const challenge=String(q['hub.challenge']||'');if(mode!=='subscribe'||token!=='linooficial'||!challenge)throw new Error('META_WEBHOOK_VERIFICATION_FAILED');return [{json:{challenge}}];"
+          },
+          "id": "6e3ccb35-ff25-476b-8d5e-05c1f65cb0f1",
+          "name": "V11 | Challenge Meta",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            224,
+            0
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "text",
+            "responseBody": "={{ $json.challenge }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "f22a5b65-a80c-4e83-950f-e53157d99f8e",
+          "name": "V11 | Responder Challenge",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.4,
+          "position": [
+            448,
+            0
+          ]
+        },
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "linooficial",
+            "options": {
+              "noResponseBody": false,
+              "responseData": "{\"ok\":true,\"adapter\":\"v11\"}"
+            }
+          },
+          "id": "10384f5c-b651-4e3e-ad94-f472fff6274e",
+          "name": "V11 | Webhook Meta POST",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            320
+          ],
+          "webhookId": "f1ebe324-b455-42aa-a724-6d87579ea563"
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst root=$input.first()?.json||{};const body=root.body??root;const value=body?.entry?.[0]?.changes?.[0]?.value||{};const status=value?.statuses?.[0]||null;const msg=value?.messages?.[0]||null;\nif(status){const err=Array.isArray(status.errors)?status.errors[0]:null;return [{json:{event_type:'status',phone:String(status.recipient_id||'').replace(/\\D/g,''),message_id:String(status.id||''),delivery_status:String(status.status||'').toLowerCase(),timestamp:Number(status.timestamp||Date.now()/1000),error_code:err?.code!=null?String(err.code):null,error_message:String(err?.message||err?.title||err?.error_data?.details||'').trim()||null,raw_status:status}}];}\nif(!msg)return [{json:{event_type:'ignore',invalid:true}}];\nconst type=String(msg.type||'text').toLowerCase();const payload=msg[type]||{};const phone=String(msg.from||'').replace(/\\D/g,'');const text=String(msg.text?.body||payload?.caption||'').trim();\nconst button=type==='button'?payload:type==='interactive'?payload.button_reply:null;\nconst answer=String(button?.payload||button?.id||'');\nconst survey=String(msg.context?.id||'');\nconst normalized=text.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[.!?]+$/g,'').trim();\nconst yes=/^(sim[, ]*)?(ja )?(fui atendid[oa]|me atenderam)$/.test(normalized);\nconst no=/^(nao[, ]*)?(ainda )?(nao fui atendid[oa]|nao me atenderam|nao recebi retorno)$/.test(normalized);\nconst known=answer==='lino_sla_atendido_sim'||answer==='lino_sla_atendido_nao';\nconst utc=Number(msg.timestamp||0);\nconst callback=survey && /^wamid\\./.test(survey) && /^[1-9][0-9]{9,14}$/.test(phone)\n  && /^wamid\\./.test(String(msg.id||'')) && Number.isFinite(utc) && utc>0\n  && (known||(type==='text'&&(yes||no)));\nreturn [{json:{event_type:callback?'survey_reply':'message',phone,message_id:String(msg.id||''),message_type:type,text,survey_reply:callback?{pesquisa_meta_id:survey,atendido:known?answer==='lino_sla_atendido_sim':yes,recebido_em:new Date(utc*1000).toISOString()}:null,media_id:payload?.id||null,mime_type:payload?.mime_type||null,filename:payload?.filename||null,timestamp:Number(msg.timestamp||Date.now()/1000),push_name:String(value?.contacts?.[0]?.profile?.name||''),phone_number_id:String(value?.metadata?.phone_number_id||'1368022049723472'),remote_jid:phone?phone+'@s.whatsapp.net':null}}];\n"
+          },
+          "id": "2a2869a8-dfb5-454f-b4e0-7d6ab5c852f9",
+          "name": "V11 | Normalizar Entrada",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            224,
+            320
+          ]
+        },
+        {
+          "parameters": {
+            "rules": {
+              "values": [
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.event_type }}",
+                        "rightValue": "status",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.event_type }}",
+                        "rightValue": "message",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.event_type }}",
+                        "rightValue": "survey_reply",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                }
+              ]
+            },
+            "options": {
+              "fallbackOutput": "extra",
+              "renameFallbackOutput": "ignore"
+            }
+          },
+          "id": "3aba5bf2-11c7-46e1-9779-2c549c7d4ed2",
+          "name": "V11 | Tipo de Evento",
+          "type": "n8n-nodes-base.switch",
+          "typeVersion": 3.4,
+          "position": [
+            448,
+            320
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "message_status"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { message_id:$json.message_id, status:$json.delivery_status, recipient_id:$json.phone||null, event_at:$json.timestamp ? new Date(Number($json.timestamp)*1000).toISOString() : null, error_code:$json.error_code||null, error_message:$json.error_message||null, raw:$json.raw_status||{} } }}"
+                }
+              ]
+            }
+          },
+          "id": "6bb672cd-c741-46d8-99a4-798feb4da4f1",
+          "name": "V11 | Registrar Status Meta",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            672,
+            224
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($('V11 | Normalizar Entrada').first().json.media_id && ['audio','image','document'].includes(String($('V11 | Normalizar Entrada').first().json.message_type||''))) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "5fa35c49-67b1-4e1b-bcb1-b4c9ae4ef098",
+          "name": "V11 | Tem Midia?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            1120,
+            480
+          ]
+        },
+        {
+          "parameters": {
+            "resource": "media",
+            "operation": "mediaUrlGet",
+            "mediaGetId": "={{ $('V11 | Normalizar Entrada').first().json.media_id }}"
+          },
+          "id": "65090f50-9e1f-4604-a9cc-6f7265f62996",
+          "name": "V11 | Obter URL Midia",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            896,
+            352
+          ],
+          "webhookId": "34d648ef-8cef-44f4-98fb-a5fc9240aef1"
+        },
+        {
+          "parameters": {
+            "url": "={{ $json.url }}",
+            "authentication": "predefinedCredentialType",
+            "nodeCredentialType": "whatsAppApi",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "file"
+                }
+              }
+            }
+          },
+          "id": "4fb2b9dc-bff1-4d06-8f46-9bf756f08599",
+          "name": "V11 | Download Midia",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            1120,
+            304
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "binaryToPropery",
+            "destinationKey": "media_base64",
+            "options": {
+              "keepSource": "json"
+            }
+          },
+          "id": "08be79ef-956d-4aa1-8bfc-e888ce5e1cab",
+          "name": "V11 | Midia para Base64",
+          "type": "n8n-nodes-base.extractFromFile",
+          "typeVersion": 1.1,
+          "position": [
+            1344,
+            352
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst base=$('V11 | Normalizar Entrada').first()?.json||{};const current=$input.first()?.json||{};const digits=v=>String(v||'').replace(/\\D/g,'');let phone=digits(base.phone);if(phone.length===10||phone.length===11)phone='55'+phone;if(!phone)throw new Error('V11_PHONE_MISSING');if(!base.message_id)throw new Error('V11_MESSAGE_ID_MISSING');\nlet attachment=null;if(base.media_id){const b64=String(current.media_base64||'').trim();attachment={name:base.filename||('whatsapp_'+base.message_id),type:base.mime_type||null,mimeType:base.mime_type||null,data:b64||null,media_id:base.media_id,source:'meta_cloud'};}\nconst mediaLabel=base.message_type==='audio'?'Cliente enviou um áudio.':base.message_type==='image'?'Cliente enviou uma imagem técnica.':base.message_type==='document'?'Cliente enviou um documento técnico.':'';\nconst text=String(base.text||mediaLabel||'').trim();\nreturn [{json:{channel:'whatsapp',phone,message_id:String(base.message_id),session_id:null,text,message_type:String(base.message_type||'text'),raw:{push_name:base.push_name||null,provider:'meta_cloud',source:'v11_whatsapp_adapter',remote_jid:base.remote_jid||null,timestamp:base.timestamp||null,attachment}}}];\n"
+          },
+          "id": "d8dc3734-c72f-438b-b408-418aa968e59a",
+          "name": "V11 | Preparar Payload V10",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1568,
+            416
+          ]
+        },
+        {
+          "parameters": {
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "38O4BaqXBlwYEKYk",
+              "cachedResultName": "Lino LAB - Brain Compacto - NAO PUBLICAR"
+            },
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          },
+          "id": "2db38e7b-e0b1-494e-8ec8-fb79a3e8b4f0",
+          "name": "V11 | Execute V10 Brain",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.3,
+          "position": [
+            1792,
+            416
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "\nconst r0=$input.first()?.json||{};const r=r0.result&&typeof r0.result==='object'?r0.result:r0;const transport=$('V11 | Preparar Payload V10').first()?.json||{};const clientText=String((r.lino_oficial===true && r.sla_managed===true && r.entrega_confirmada===false ? 'Recebi sua solicitação. O encaminhamento ao responsável está em andamento.' : null)||r.reply||r.client_text||'').trim();\nlet action=String(r.action||'').trim().toLowerCase();if(r.silent===true||!clientText)action='silent';else if(action==='internal_notification')action='internal_notification';else action='respond';\nconst internal=r.internal_notification||r.internal||null;\nreturn [{json:{ok:r.ok!==false,action,silent:action==='silent',phone:transport.phone||null,source_message_id:transport.message_id||null,client_text:clientText||null,internal_phone:String(internal?.phone||internal?.telefone||'').replace(/\\D/g,'')||null,internal_text:String(internal?.text||internal?.message||'').trim()||null,opportunity_id:r.opportunity_id||r.oportunidade_id||null,handoff_pending:r.handoff_pending===true,mode:r.mode||null,stage:r.stage||null,v10_result:r}}];\n"
+          },
+          "id": "c4bab0ca-d7b7-4f0f-afad-dcb46786861f",
+          "name": "V11 | Tratar Resposta V10",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2016,
+            416
+          ]
+        },
+        {
+          "parameters": {
+            "rules": {
+              "values": [
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "respond",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "internal_notification",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 1
+                    },
+                    "conditions": [
+                      {
+                        "leftValue": "={{ $json.action }}",
+                        "rightValue": "silent",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  }
+                }
+              ]
+            },
+            "options": {
+              "fallbackOutput": "extra",
+              "renameFallbackOutput": "silent_fallback"
+            }
+          },
+          "id": "8a1dfaee-810b-4228-930e-411209698b63",
+          "name": "V11 | Acoes V10",
+          "type": "n8n-nodes-base.switch",
+          "typeVersion": 3.4,
+          "position": [
+            3136,
+            416
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "send",
+            "phoneNumberId": "={{ '1368022049723472' }}",
+            "recipientPhoneNumber": "={{ $json.phone }}",
+            "textBody": "={{ $json.client_text }}",
+            "additionalFields": {}
+          },
+          "id": "36fcad29-d6a6-494f-8e85-6bacc49304c4",
+          "name": "V11 | Enviar Cliente",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            3360,
+            320
+          ],
+          "webhookId": "be8dbc4b-1550-4b3a-947a-4a19a1b50122",
+          "disabled": false
+        },
+        {
+          "parameters": {
+            "tableId": "lino_v9_bridge",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "message_status"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { message_id:String($json.messages?.[0]?.id||''), status:'sent', recipient_id:String($json.contacts?.[0]?.wa_id||$json.contacts?.[0]?.input||''), event_at:new Date().toISOString(), raw:{source:'v11_whatsapp_adapter'} } }}"
+                }
+              ]
+            }
+          },
+          "id": "54853f95-c1e7-4186-ba16-3c590170a5f0",
+          "name": "V11 | Persistir Saida",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            3584,
+            416
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "send",
+            "phoneNumberId": "={{ '1368022049723472' }}",
+            "recipientPhoneNumber": "={{ $json.internal_phone }}",
+            "textBody": "={{ $json.internal_text }}",
+            "additionalFields": {}
+          },
+          "id": "240a72b7-9146-4c07-9868-4bd7827c729a",
+          "name": "V11 | Enviar Interno",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            3360,
+            512
+          ],
+          "webhookId": "09c7c45f-1b9a-4e76-91e0-2df409ecdebf",
+          "disabled": false
+        },
+        {
+          "id": "b22f9d48-1383-40f8-a824-4459200d4bf1",
+          "name": "V11 | Resolve Actor",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            672,
+            416
+          ],
+          "parameters": {
+            "resource": "row",
+            "operation": "create",
+            "tableId": "lino_v9_bridge",
+            "dataToSend": "defineBelow",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "operation",
+                  "fieldValue": "resolve_actor"
+                },
+                {
+                  "fieldId": "payload",
+                  "fieldValue": "={{ { phone:$('V11 | Normalizar Entrada').first().json.phone } }}"
+                }
+              ]
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "id": "acdae73b-1444-4883-90fc-97544c2af9e8",
+          "name": "V11 | Ator Interno?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            896,
+            416
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ ['vendedor','coordenacao'].includes(String($json.result?.actor_type||'')) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          }
+        },
+        {
+          "id": "0feef19c-6b22-440e-8e40-7532c07a95ed",
+          "name": "V11 | Preparar Ator Operations",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1120,
+            240
+          ],
+          "parameters": {
+            "mode": "runOnceForAllItems",
+            "language": "javaScript",
+            "jsCode": "const m=$('V11 | Normalizar Entrada').first()?.json||{};\nconst rr=$('V11 | Resolve Actor').first()?.json?.result||{};\nconst actorType=String(rr.actor_type||'cliente');\nconst actor=rr.actor||{};\nconst tracking=(String(m.text||'').match(/LINO\\.[A-Z0-9]+/i)||[])[0]||null;\n\nreturn [{json:{\n  turn:{\n    source:'meta',\n    instance:'linooficial',\n    phone:m.phone,\n    remote_jid:m.remote_jid||null,\n    message_id:m.message_id,\n    timestamp:m.timestamp,\n    message_type:m.message_type,\n    text:m.text||'',\n    content:m.text||'',\n    push_name:m.push_name||null,\n    phone_number_id:m.phone_number_id||'1368022049723472',\n    actor_type:actorType,\n    actor,\n    tracking_code:tracking?tracking.toUpperCase():null\n  },\n  state:{},\n  brain:{action:'respond',intent:'internal_contact'},\n  feature_flags:{conversation_v2:true}\n}}];"
+          }
+        },
+        {
+          "id": "692705ea-22dc-4e76-9ae4-37746d048195",
+          "name": "V11 | Execute Actor Operations",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.3,
+          "position": [
+            1344,
+            240
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "8MNeCYGn2YfUoeIy",
+              "cachedResultName": "Lino Operations - Meta/SLA"
+            },
+            "mode": "once",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        },
+        {
+          "id": "206b4d8e-4872-4aa9-b981-57e680f0d53c",
+          "name": "V11 | Suporte?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            2240,
+            416
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 3
+              },
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean(!$json.v10_result?.sla_managed && ($json.mode==='support' || $json.stage==='support' || $json.action==='support')) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          }
+        },
+        {
+          "id": "0f19c52d-4485-479d-9948-ad3f4305f413",
+          "name": "V11 | Preparar Suporte Operations",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2464,
+            560
+          ],
+          "parameters": {
+            "mode": "runOnceForAllItems",
+            "language": "javaScript",
+            "jsCode": "const m=$('V11 | Normalizar Entrada').first()?.json||{};\nconst v=$('V11 | Tratar Resposta V10').first()?.json||{};\nreturn [{json:{\n  turn:{\n    source:'meta',\n    instance:'linooficial',\n    phone:v.phone||m.phone,\n    remote_jid:m.remote_jid||null,\n    message_id:m.message_id,\n    timestamp:m.timestamp,\n    message_type:m.message_type,\n    text:m.text||'',\n    content:m.text||'',\n    push_name:m.push_name||null,\n    phone_number_id:m.phone_number_id||'1368022049723472',\n    actor_type:'cliente'\n  },\n  state:{\n    oportunidade_id:v.opportunity_id||null,\n    oportunidade:{id:v.opportunity_id||null}\n  },\n  brain:{\n    action:'support',\n    intent:'support_status',\n    answer:v.client_text||null,\n    question:null,\n    technical_open:false\n  },\n  feature_flags:{conversation_v2:true}\n}}];"
+          }
+        },
+        {
+          "id": "11a5f1a3-60ae-4e2c-a989-7f0a59c7e00f",
+          "name": "V11 | Execute Support Operations",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.3,
+          "position": [
+            2688,
+            560
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "8MNeCYGn2YfUoeIy",
+              "cachedResultName": "Lino Operations - Meta/SLA"
+            },
+            "mode": "once",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        },
+        {
+          "id": "030dcc0e-84a3-4f34-8029-e3de9ee699d9",
+          "name": "V11 | Tratar Support Operations",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2912,
+            560
+          ],
+          "parameters": {
+            "mode": "runOnceForAllItems",
+            "language": "javaScript",
+            "jsCode": "const o=$input.first()?.json||{};\nconst v=$('V11 | Tratar Resposta V10').first()?.json||{};\nconst text=String(o.client_text||v.client_text||'').trim();\nreturn [{json:{\n  ...v,\n  action:o.silent===true?'silent':'respond',\n  silent:o.silent===true || !text,\n  client_text:text||null,\n  support_case_id:o.support_case_id||null,\n  support_action:o.action||'support',\n  support_operations_ok:o.ok!==false\n}}];"
+          }
+        },
+        {
+          "id": "eede73d8-5473-4032-aa60-52ad2a6c38c7",
+          "name": "V11 | Buffer Rajada Redis",
+          "type": "n8n-nodes-base.redis",
+          "typeVersion": 1,
+          "position": [
+            2000,
+            720
+          ],
+          "parameters": {
+            "operation": "set",
+            "key": "={{ 'lino:v11:burst:item:'+$json.phone+':'+$json.message_id }}",
+            "value": "={{ JSON.stringify($json) }}",
+            "expire": true,
+            "ttl": 30
+          }
+        },
+        {
+          "id": "2dce4d1c-e11a-4563-8ea0-729c7f48cc77",
+          "name": "V11 | Aguardar Rajada",
+          "type": "n8n-nodes-base.wait",
+          "typeVersion": 1.1,
+          "position": [
+            2448,
+            720
+          ],
+          "parameters": {
+            "resume": "timeInterval",
+            "amount": 7,
+            "unit": "seconds"
+          },
+          "webhookId": "ef727d61-f017-4194-8dd6-f1189e6429fd"
+        },
+        {
+          "id": "8f82edee-92f5-4ca8-9f69-ae4e11451215",
+          "name": "V11 | Ler Rajada",
+          "type": "n8n-nodes-base.redis",
+          "typeVersion": 1,
+          "position": [
+            3120,
+            720
+          ],
+          "parameters": {
+            "operation": "keys",
+            "keyPattern": "={{ 'lino:v11:burst:item:'+$('V11 | Preparar Payload V10').first().json.phone+':*' }}",
+            "getValues": true
+          }
+        },
+        {
+          "id": "74e45be8-101c-4b19-9779-d35356789171",
+          "name": "V11 | Consolidar Rajada",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3344,
+            720
+          ],
+          "parameters": {
+            "mode": "runOnceForAllItems",
+            "language": "javaScript",
+            "jsCode": "const current=$('V11 | Preparar Payload V10').first()?.json||{};\nconst found=[];\nfunction visit(v){\n  if(typeof v==='string'){\n    const s=v.trim();\n    if(s.startsWith('{')&&s.endsWith('}')){\n      try{\n        const o=JSON.parse(s);\n        if(o&&o.channel==='whatsapp'&&o.phone&&o.message_id) found.push(o);\n      }catch{}\n    }\n    return;\n  }\n  if(Array.isArray(v)){ for(const x of v) visit(x); return; }\n  if(v&&typeof v==='object'){ for(const x of Object.values(v)) visit(x); }\n}\nfor(const item of $input.all()) visit(item.json);\n\nconst byId=new Map();\nfor(const o of found) byId.set(String(o.message_id),o);\nconst arr=[...byId.values()].sort((a,b)=>{\n  const ta=Number(a?.raw?.timestamp||0);\n  const tb=Number(b?.raw?.timestamp||0);\n  if(ta!==tb) return ta-tb;\n  return String(a.message_id).localeCompare(String(b.message_id));\n});\n\nif(!arr.length) return [{json:current}];\n\nconst latest=arr[arr.length-1];\nif(String(latest.message_id)!==String(current.message_id)){\n  return [];\n}\n\nconst texts=[];\nconst attachments=[];\nconst ids=[];\nfor(const x of arr){\n  ids.push(String(x.message_id));\n  const t=String(x.text||'').trim();\n  const hasAttachment=Boolean(x.raw?.attachment);\n  if(t && !(hasAttachment && /^Cliente enviou um (áudio|imagem técnica|documento técnico)\\.?$/i.test(t))){\n    texts.push(t);\n  }\n  if(hasAttachment) attachments.push(x.raw.attachment);\n}\n\nconst uniqueAttachments=[];\nconst seen=new Set();\nfor(const a of attachments){\n  const k=String(a?.media_id||a?.name||'')+'|'+String(a?.mimeType||a?.type||'');\n  if(!k || seen.has(k)) continue;\n  seen.add(k);\n  uniqueAttachments.push(a);\n}\n\nlet combinedText=texts.join('\\n').trim();\nif(!combinedText){\n  if(uniqueAttachments.length===1) combinedText='Cliente enviou um anexo técnico.';\n  else if(uniqueAttachments.length>1) combinedText='Cliente enviou '+uniqueAttachments.length+' anexos técnicos.';\n  else combinedText=String(latest.text||'').trim();\n}\n\nreturn [{json:{\n  ...latest,\n  text:combinedText,\n  message_type:uniqueAttachments.length ? 'multimodal' : 'text',\n  raw:{\n    ...(latest.raw||{}),\n    attachment:uniqueAttachments.length===1 ? uniqueAttachments[0] : null,\n    attachments:uniqueAttachments,\n    burst_consolidated:true,\n    burst_count:arr.length,\n    burst_message_ids:ids\n  }\n}}];"
+          }
+        },
+        {
+          "id": "558bc225-998a-4117-ad31-8c1647d614d1",
+          "name": "V11 | Salvar Midia no Storage",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            1230,
+            110
+          ],
+          "parameters": {
+            "method": "POST",
+            "url": "={{ 'https://jbrqjhyndfawzubdrdgm.supabase.co/storage/v1/object/lino-anexos-privados/whatsapp/' + encodeURIComponent(String($('V11 | Normalizar Entrada').first().json.media_id || '').replace(/\\D/g, '')) }}",
+            "authentication": "predefinedCredentialType",
+            "nodeCredentialType": "supabaseApi",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "={{ $binary.data.mimeType || 'application/octet-stream' }}"
+                },
+                {
+                  "name": "x-upsert",
+                  "value": "true"
+                }
+              ]
+            },
+            "sendBody": true,
+            "contentType": "binaryData",
+            "inputDataFieldName": "data",
+            "options": {
+              "timeout": 7000,
+              "response": {
+                "response": {
+                  "fullResponse": true,
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "onError": "continueRegularOutput",
+          "retryOnFail": true,
+          "maxTries": 2,
+          "waitBetweenTries": 1000,
+          "disabled": true
+        },
+        {
+          "id": "2750bffa-af24-4770-b7b9-240b06bdea94",
+          "name": "V11 | Restaurar Midia para Analise",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1450,
+            110
+          ],
+          "parameters": {
+            "jsCode": "const uploaded = $input.first()?.json || {};\nconst media = $('V11 | Download Midia').first();\nconst id = String($('V11 | Normalizar Entrada').first().json.media_id || '');\nconst status = Number(uploaded.statusCode);\nconst stored = /^\\d+$/.test(id) && status >= 200 && status < 300;\nreturn [{ json: {\n  storageStatus: stored ? 'stored' : 'failed',\n  ...(stored ? { storageBucket: 'lino-anexos-privados', storagePath: 'whatsapp/' + id } : {})\n}, binary: media.binary }];"
+          },
+          "disabled": true
+        },
+        {
+          "id": "ec47d2de-35c6-49f8-bf1e-c807235dfa3e",
+          "name": "V11 | Vincular resposta da pesquisa",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            700,
+            -420
+          ],
+          "parameters": {
+            "resource": "row",
+            "operation": "create",
+            "tableId": "lino_pesquisa_entrada_n8n_v1",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "resposta_meta_id",
+                  "fieldValue": "={{ $json.message_id }}"
+                },
+                {
+                  "fieldId": "pesquisa_meta_id",
+                  "fieldValue": "={{ $json.survey_reply.pesquisa_meta_id }}"
+                },
+                {
+                  "fieldId": "remetente",
+                  "fieldValue": "={{ $json.phone }}"
+                },
+                {
+                  "fieldId": "atendido",
+                  "fieldValue": "={{ $json.survey_reply.atendido }}"
+                },
+                {
+                  "fieldId": "recebido_em",
+                  "fieldValue": "={{ $json.survey_reply.recebido_em }}"
+                }
+              ]
+            }
+          },
+          "retryOnFail": true,
+          "maxTries": 3,
+          "waitBetweenTries": 1000,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "id": "c4da50ea-73ca-4be6-b672-15b0022cdfde",
+          "name": "V11 | Retomar texto sem vínculo",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            -420
+          ],
+          "parameters": {
+            "jsCode": "const r=$input.first()?.json||{};\nconst original=$('V11 | Normalizar Entrada').first()?.json||{};\nif(r.vinculado===true || original.message_type!=='text') return [];\nreturn [{json:{...original,event_type:'message'}}];"
+          }
+        },
+        {
+          "id": "ea5aec15-9f2f-4f57-ac62-750c526cf904",
+          "name": "V11 | Evento controlado Lino-Codex",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            -350,
+            -600
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "leftValue": "={{ (() => {\nconst envelope=$json.body || {};\nif (envelope.object !== 'whatsapp_business_account' || envelope.entry?.length !== 1 || envelope.entry[0]?.changes?.length !== 1) return false;\nconst event=envelope.entry[0].changes[0].value;\nif (String(event?.metadata?.phone_number_id) !== \"1368022049723472\") return false;\nconst msgs=event.messages || [], statuses=event.statuses || [];\nif(msgs.length===1 && statuses.length===0) {\n  const message=msgs[0];\n  return message.from === \"5516991415319\" && message.type === 'text' && /\\b32197F\\b/i.test(String(message.text?.body || ''));\n}\nreturn Boolean(\"wamid.HBgNNTUxNjk5MTQxNTMxORUCABEYEjJGQzg4NzBCRkYwQjQ3RkE4RAA=\") && !msgs.length && statuses.length>0 && statuses.every(s=>s.recipient_id===\"5516991415319\" && s.id===\"wamid.HBgNNTUxNjk5MTQxNTMxORUCABEYEjJGQzg4NzBCRkYwQjQ3RkE4RAA=\");\n})() }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "b6c31761-0509-416a-810c-9efa496036aa",
+          "name": "V11 | Preservar evento Meta",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            -80,
+            -720
+          ],
+          "parameters": {
+            "jsCode": "const root = $('V11 | Webhook Meta POST').first().json || {};\nconst body = root.body ?? root;\nconst values = (body.entry || []).flatMap(e => (e.changes || []).map(c => c.value).filter(Boolean));\nreturn values.map(v => ({ json: v }));"
+          }
+        },
+        {
+          "id": "e2e97c23-e56a-4680-b144-7f91f925955b",
+          "name": "V11 | Processar transporte Lino-Codex",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.2,
+          "position": [
+            190,
+            -720
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "6RMT6jpjIObbUoc6"
+            },
+            "mode": "once",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        }
+      ],
+      "connections": {
+        "V11 | Webhook Meta GET": {
+          "main": [
+            [
+              {
+                "node": "V11 | Challenge Meta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Challenge Meta": {
+          "main": [
+            [
+              {
+                "node": "V11 | Responder Challenge",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Normalizar Entrada": {
+          "main": [
+            [
+              {
+                "node": "V11 | Tipo de Evento",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Tipo de Evento": {
+          "main": [
+            [
+              {
+                "node": "V11 | Registrar Status Meta",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "V11 | Preservar evento Meta",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "V11 | Resolve Actor",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "V11 | Vincular resposta da pesquisa",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "V11 | Preservar evento Meta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Tem Midia?": {
+          "main": [
+            [
+              {
+                "node": "V11 | Obter URL Midia",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "V11 | Preparar Payload V10",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Obter URL Midia": {
+          "main": [
+            [
+              {
+                "node": "V11 | Download Midia",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Midia para Base64": {
+          "main": [
+            [
+              {
+                "node": "V11 | Preparar Payload V10",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Execute V10 Brain": {
+          "main": [
+            [
+              {
+                "node": "V11 | Tratar Resposta V10",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Acoes V10": {
+          "main": [
+            [
+              {
+                "node": "V11 | Enviar Cliente",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "V11 | Enviar Interno",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Enviar Cliente": {
+          "main": [
+            [
+              {
+                "node": "V11 | Persistir Saida",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Enviar Interno": {
+          "main": [
+            [
+              {
+                "node": "V11 | Persistir Saida",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Resolve Actor": {
+          "main": [
+            [
+              {
+                "node": "V11 | Ator Interno?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Ator Interno?": {
+          "main": [
+            [
+              {
+                "node": "V11 | Preparar Ator Operations",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "V11 | Preservar evento Meta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Preparar Ator Operations": {
+          "main": [
+            [
+              {
+                "node": "V11 | Execute Actor Operations",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Tratar Resposta V10": {
+          "main": [
+            [
+              {
+                "node": "V11 | Suporte?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Suporte?": {
+          "main": [
+            [
+              {
+                "node": "V11 | Preparar Suporte Operations",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "V11 | Acoes V10",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Preparar Suporte Operations": {
+          "main": [
+            [
+              {
+                "node": "V11 | Execute Support Operations",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Execute Support Operations": {
+          "main": [
+            [
+              {
+                "node": "V11 | Tratar Support Operations",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Tratar Support Operations": {
+          "main": [
+            [
+              {
+                "node": "V11 | Acoes V10",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Preparar Payload V10": {
+          "main": [
+            [
+              {
+                "node": "V11 | Buffer Rajada Redis",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Buffer Rajada Redis": {
+          "main": [
+            [
+              {
+                "node": "V11 | Aguardar Rajada",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Aguardar Rajada": {
+          "main": [
+            [
+              {
+                "node": "V11 | Ler Rajada",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Ler Rajada": {
+          "main": [
+            [
+              {
+                "node": "V11 | Consolidar Rajada",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Consolidar Rajada": {
+          "main": [
+            [
+              {
+                "node": "V11 | Execute V10 Brain",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Vincular resposta da pesquisa": {
+          "main": [
+            [
+              {
+                "node": "V11 | Retomar texto sem vínculo",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Retomar texto sem vínculo": {
+          "main": [
+            [
+              {
+                "node": "V11 | Resolve Actor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Download Midia": {
+          "main": [
+            [
+              {
+                "node": "V11 | Midia para Base64",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Evento controlado Lino-Codex": {
+          "main": [
+            [
+              {
+                "node": "V11 | Preservar evento Meta",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "V11 | Normalizar Entrada",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Preservar evento Meta": {
+          "main": [
+            [
+              {
+                "node": "V11 | Processar transporte Lino-Codex",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "V11 | Webhook Meta POST": {
+          "main": [
+            [
+              {
+                "node": "V11 | Normalizar Entrada",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "tags": [],
+    "meta": {
+      "aiBuilderAssisted": true,
+      "builderVariant": "mcp"
+    },
+    "parentFolderId": null,
+    "description": "Adapter oficial Meta Cloud -> V10 Brain. Actor interno e suporte sao encaminhados ao Lino Operations - Meta/SLA. V9 descomissionado.",
+    "scopes": [
+      "execution:reveal",
+      "workflow:create",
+      "workflow:delete",
+      "workflow:disableRedaction",
+      "workflow:enableRedaction",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:export",
+      "workflow:import",
+      "workflow:list",
+      "workflow:move",
+      "workflow:publish",
+      "workflow:read",
+      "workflow:share",
+      "workflow:unpublish",
+      "workflow:unshare",
+      "workflow:update"
+    ],
+    "canExecute": true
+  }
+}
