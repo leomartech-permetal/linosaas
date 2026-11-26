@@ -1,0 +1,856 @@
+{
+  "snapshot_type": "sanitized_n8n_workflow_details",
+  "warning": "This is a sanitized snapshot from get_workflow_details, not a raw n8n workflow export. Secrets are redacted; confirm with n8n native export before editing.",
+  "captured_at": "2026-11-26",
+  "triggerInfo": "This workflow has no production triggers (Schedule, Webhook, Form, or Chat). It can only be executed in manual mode.",
+  "workflow": {
+    "id": "6RMT6jpjIObbUoc6",
+    "name": "Lino-Codex - Entrada WhatsApp Meta",
+    "active": true,
+    "isArchived": false,
+    "versionId": "49347ef9-e53b-43fa-90d5-304e58b3232d",
+    "activeVersionId": "49347ef9-e53b-43fa-90d5-304e58b3232d",
+    "triggerCount": 0,
+    "createdAt": "2026-11-23T14:52:11.318Z",
+    "updatedAt": "2026-11-26T12:53:12.144Z",
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": true
+    },
+    "connections": {
+      "Evento assinado da Meta": {
+        "main": [
+          [
+            {
+              "node": "Conciliar eventos de entrega",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Extrair mensagens do número oficial",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrair mensagens do número oficial": {
+        "main": [
+          [
+            {
+              "node": "Mensagem com mídia?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ensaio interno de evento": {
+        "main": [
+          [
+            {
+              "node": "Conciliar eventos de entrega",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Extrair mensagens do número oficial",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mensagem com mídia?": {
+        "main": [
+          [
+            {
+              "node": "Resolver mídia na Meta",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Preparar turno e anexos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Resolver mídia na Meta": {
+        "main": [
+          [
+            {
+              "node": "Baixar binário da Meta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Baixar binário da Meta": {
+        "main": [
+          [
+            {
+              "node": "Converter binário para o leitor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Converter binário para o leitor": {
+        "main": [
+          [
+            {
+              "node": "Preparar turno e anexos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Preparar turno e anexos": {
+        "main": [
+          [
+            {
+              "node": "Processar WhatsApp no Lino-Codex",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Processar WhatsApp no Lino-Codex": {
+        "main": [
+          [
+            {
+              "node": "Entregar resposta WhatsApp",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Há aviso comercial?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Há aviso comercial?": {
+        "main": [
+          [
+            {
+              "node": "Despachar aviso novo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodes": [
+      {
+        "id": "b57020af-286c-4b46-abbb-549a79acf03b",
+        "name": "Evento assinado da Meta",
+        "type": "n8n-nodes-base.whatsAppTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "updates": [
+            "messages"
+          ],
+          "options": {
+            "messageStatusUpdates": [
+              "all"
+            ]
+          }
+        },
+        "webhookId": "ea506dde-2fa4-476a-b1db-26b748dd2bc5",
+        "disabled": true
+      },
+      {
+        "id": "4d2ef3e8-329a-488a-8246-69b5425efc0d",
+        "name": "Conciliar eventos de entrega",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          224,
+          48
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "J3348QmbddQH3Xxi"
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "fa4db341-ff47-4b62-b2dd-4452610ad96a",
+        "name": "Extrair mensagens do número oficial",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          240
+        ],
+        "parameters": {
+          "jsCode": "const allowed = new Set(['text','audio','image','document','interactive','button']);\nreturn $input.all().flatMap(({ json: event }, index) => {\n  if (String(event.metadata?.phone_number_id) !== \"1368022049723472\"\n      || !Array.isArray(event.messages)) return [];\n  return event.messages.flatMap(message => {\n    if (!message || !allowed.has(message.type) || !/^\\d{10,15}$/.test(message.from ?? '')\n        || !/^wamid\\.[\\w+=/-]{1,490}$/.test(message.id ?? '')) return [];\n    const media = ['audio','image','document'].includes(message.type) ? message[message.type] : null;\n    const text = message.text?.body ?? message.interactive?.button_reply?.title\n      ?? message.interactive?.list_reply?.title ?? message.button?.text ?? media?.caption ?? '';\n    if (!text.trim() && !media?.id) return [];\n    return [{ json: {\n      sender: message.from, message_id: message.id, message: text,\n      meta_reply_to: typeof message.context?.id === 'string' ? message.context.id : null,\n      meta_button_id: message.interactive?.button_reply?.id ?? message.button?.payload ?? null,\n      media_id: media?.id ?? null, media_type: media?.mime_type ?? '',\n      filename: media?.filename ?? 'anexo-' + message.type,\n    }, pairedItem: { item: index } }];\n  });\n});"
+        }
+      },
+      {
+        "id": "3593f480-736b-43ab-9de8-8ee076f0617b",
+        "name": "Ensaio interno de evento",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          288
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        }
+      },
+      {
+        "id": "36b64a31-e83f-4249-a0c8-21e3da3c8d6a",
+        "name": "Mensagem com mídia?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          448,
+          240
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.media_id) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "8e813415-2ce4-403a-822d-880bb5c71f51",
+        "name": "Resolver mídia na Meta",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          672,
+          176
+        ],
+        "parameters": {
+          "resource": "media",
+          "operation": "mediaUrlGet",
+          "mediaGetId": "={{ $json.media_id }}"
+        },
+        "webhookId": "7cd9561b-f620-4742-a838-9c197b5ea667"
+      },
+      {
+        "id": "cc9c5dc0-4bea-4c17-8407-5f48a1428eac",
+        "name": "Baixar binário da Meta",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          896,
+          176
+        ],
+        "parameters": {
+          "url": "={{ $json.url }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "whatsAppApi",
+          "options": {
+            "timeout": 15000,
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "89d9b3ef-e78f-47ac-8020-688509326efb",
+        "name": "Converter binário para o leitor",
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          1120,
+          176
+        ],
+        "parameters": {
+          "operation": "binaryToPropery",
+          "destinationKey": "attachment_base64",
+          "options": {
+            "keepSource": "json"
+          }
+        }
+      },
+      {
+        "id": "b14bac2a-390c-4906-87b3-dbc6e414bc80",
+        "name": "Preparar turno e anexos",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          240
+        ],
+        "parameters": {
+          "jsCode": "return $input.all().map((item, index) => {\n  const source = $('Extrair mensagens do número oficial').itemMatching(index).json;\n  const data = item.json.attachment_base64;\n  if (source.media_id && typeof data !== 'string') throw new Error('Mídia Meta sem conteúdo');\n  return {json: {\n    sender: source.sender, message_id: source.message_id, message: source.message,\n    meta_reply_to: source.meta_reply_to, meta_button_id: source.meta_button_id,\n    attachments: source.media_id ? [{ id: source.media_id, name: source.filename, type: source.media_type, data }] : [],\n  }, pairedItem: { item: index }};\n});"
+        }
+      },
+      {
+        "id": "a0d60c58-acf6-4606-ab2f-db6e76b1ee58",
+        "name": "Processar WhatsApp no Lino-Codex",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          1568,
+          240
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "05QfDhDa58cWAa4F"
+          },
+          "mode": "each",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "a8798127-91b9-474f-9044-d88e3e587e53",
+        "name": "Entregar resposta WhatsApp",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          1792,
+          144
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "SvTNawF2mht05L6C"
+          },
+          "mode": "each",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "debc9a97-af74-447f-94c0-3b5b385398e2",
+        "name": "Há aviso comercial?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1792,
+          336
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.notification_id) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "449ca92e-b7f6-4255-a505-21b8852b6568",
+        "name": "Despachar aviso novo",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          2016,
+          336
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "cxHYDYodI7VMot58"
+          },
+          "mode": "each",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      }
+    ],
+    "activeVersion": {
+      "nodes": [
+        {
+          "id": "b57020af-286c-4b46-abbb-549a79acf03b",
+          "name": "Evento assinado da Meta",
+          "type": "n8n-nodes-base.whatsAppTrigger",
+          "typeVersion": 1,
+          "position": [
+            0,
+            0
+          ],
+          "parameters": {
+            "updates": [
+              "messages"
+            ],
+            "options": {
+              "messageStatusUpdates": [
+                "all"
+              ]
+            }
+          },
+          "webhookId": "ea506dde-2fa4-476a-b1db-26b748dd2bc5",
+          "disabled": true
+        },
+        {
+          "id": "4d2ef3e8-329a-488a-8246-69b5425efc0d",
+          "name": "Conciliar eventos de entrega",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.2,
+          "position": [
+            224,
+            48
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "J3348QmbddQH3Xxi"
+            },
+            "mode": "once",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        },
+        {
+          "id": "fa4db341-ff47-4b62-b2dd-4452610ad96a",
+          "name": "Extrair mensagens do número oficial",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            224,
+            240
+          ],
+          "parameters": {
+            "jsCode": "const allowed = new Set(['text','audio','image','document','interactive','button']);\nreturn $input.all().flatMap(({ json: event }, index) => {\n  if (String(event.metadata?.phone_number_id) !== \"1368022049723472\"\n      || !Array.isArray(event.messages)) return [];\n  return event.messages.flatMap(message => {\n    if (!message || !allowed.has(message.type) || !/^\\d{10,15}$/.test(message.from ?? '')\n        || !/^wamid\\.[\\w+=/-]{1,490}$/.test(message.id ?? '')) return [];\n    const media = ['audio','image','document'].includes(message.type) ? message[message.type] : null;\n    const text = message.text?.body ?? message.interactive?.button_reply?.title\n      ?? message.interactive?.list_reply?.title ?? message.button?.text ?? media?.caption ?? '';\n    if (!text.trim() && !media?.id) return [];\n    return [{ json: {\n      sender: message.from, message_id: message.id, message: text,\n      meta_reply_to: typeof message.context?.id === 'string' ? message.context.id : null,\n      meta_button_id: message.interactive?.button_reply?.id ?? message.button?.payload ?? null,\n      media_id: media?.id ?? null, media_type: media?.mime_type ?? '',\n      filename: media?.filename ?? 'anexo-' + message.type,\n    }, pairedItem: { item: index } }];\n  });\n});"
+          }
+        },
+        {
+          "id": "3593f480-736b-43ab-9de8-8ee076f0617b",
+          "name": "Ensaio interno de evento",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "typeVersion": 1.1,
+          "position": [
+            0,
+            288
+          ],
+          "parameters": {
+            "inputSource": "passthrough"
+          }
+        },
+        {
+          "id": "36b64a31-e83f-4249-a0c8-21e3da3c8d6a",
+          "name": "Mensagem com mídia?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            448,
+            240
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.media_id) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "8e813415-2ce4-403a-822d-880bb5c71f51",
+          "name": "Resolver mídia na Meta",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            672,
+            176
+          ],
+          "parameters": {
+            "resource": "media",
+            "operation": "mediaUrlGet",
+            "mediaGetId": "={{ $json.media_id }}"
+          },
+          "webhookId": "7cd9561b-f620-4742-a838-9c197b5ea667"
+        },
+        {
+          "id": "cc9c5dc0-4bea-4c17-8407-5f48a1428eac",
+          "name": "Baixar binário da Meta",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            896,
+            176
+          ],
+          "parameters": {
+            "url": "={{ $json.url }}",
+            "authentication": "predefinedCredentialType",
+            "nodeCredentialType": "whatsAppApi",
+            "options": {
+              "timeout": 15000,
+              "response": {
+                "response": {
+                  "responseFormat": "file"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "89d9b3ef-e78f-47ac-8020-688509326efb",
+          "name": "Converter binário para o leitor",
+          "type": "n8n-nodes-base.extractFromFile",
+          "typeVersion": 1.1,
+          "position": [
+            1120,
+            176
+          ],
+          "parameters": {
+            "operation": "binaryToPropery",
+            "destinationKey": "attachment_base64",
+            "options": {
+              "keepSource": "json"
+            }
+          }
+        },
+        {
+          "id": "b14bac2a-390c-4906-87b3-dbc6e414bc80",
+          "name": "Preparar turno e anexos",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1344,
+            240
+          ],
+          "parameters": {
+            "jsCode": "return $input.all().map((item, index) => {\n  const source = $('Extrair mensagens do número oficial').itemMatching(index).json;\n  const data = item.json.attachment_base64;\n  if (source.media_id && typeof data !== 'string') throw new Error('Mídia Meta sem conteúdo');\n  return {json: {\n    sender: source.sender, message_id: source.message_id, message: source.message,\n    meta_reply_to: source.meta_reply_to, meta_button_id: source.meta_button_id,\n    attachments: source.media_id ? [{ id: source.media_id, name: source.filename, type: source.media_type, data }] : [],\n  }, pairedItem: { item: index }};\n});"
+          }
+        },
+        {
+          "id": "a0d60c58-acf6-4606-ab2f-db6e76b1ee58",
+          "name": "Processar WhatsApp no Lino-Codex",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.2,
+          "position": [
+            1568,
+            240
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "05QfDhDa58cWAa4F"
+            },
+            "mode": "each",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        },
+        {
+          "id": "a8798127-91b9-474f-9044-d88e3e587e53",
+          "name": "Entregar resposta WhatsApp",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.2,
+          "position": [
+            1792,
+            144
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "SvTNawF2mht05L6C"
+            },
+            "mode": "each",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        },
+        {
+          "id": "debc9a97-af74-447f-94c0-3b5b385398e2",
+          "name": "Há aviso comercial?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            1792,
+            336
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.notification_id) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "449ca92e-b7f6-4255-a505-21b8852b6568",
+          "name": "Despachar aviso novo",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.2,
+          "position": [
+            2016,
+            336
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "cxHYDYodI7VMot58"
+            },
+            "mode": "each",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Evento assinado da Meta": {
+          "main": [
+            [
+              {
+                "node": "Conciliar eventos de entrega",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Extrair mensagens do número oficial",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extrair mensagens do número oficial": {
+          "main": [
+            [
+              {
+                "node": "Mensagem com mídia?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Ensaio interno de evento": {
+          "main": [
+            [
+              {
+                "node": "Conciliar eventos de entrega",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Extrair mensagens do número oficial",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Mensagem com mídia?": {
+          "main": [
+            [
+              {
+                "node": "Resolver mídia na Meta",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Preparar turno e anexos",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Resolver mídia na Meta": {
+          "main": [
+            [
+              {
+                "node": "Baixar binário da Meta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Baixar binário da Meta": {
+          "main": [
+            [
+              {
+                "node": "Converter binário para o leitor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Converter binário para o leitor": {
+          "main": [
+            [
+              {
+                "node": "Preparar turno e anexos",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Preparar turno e anexos": {
+          "main": [
+            [
+              {
+                "node": "Processar WhatsApp no Lino-Codex",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Processar WhatsApp no Lino-Codex": {
+          "main": [
+            [
+              {
+                "node": "Entregar resposta WhatsApp",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Há aviso comercial?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Há aviso comercial?": {
+          "main": [
+            [
+              {
+                "node": "Despachar aviso novo",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "tags": [],
+    "meta": {
+      "aiBuilderAssisted": true,
+      "builderVariant": "mcp"
+    },
+    "parentFolderId": null,
+    "description": "Durante a verificação, recebe apenas eventos encaminhados pelo transporte Meta já registrado. O gatilho de registro de callback fica desativado.",
+    "scopes": [
+      "execution:reveal",
+      "workflow:create",
+      "workflow:delete",
+      "workflow:disableRedaction",
+      "workflow:enableRedaction",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:export",
+      "workflow:import",
+      "workflow:list",
+      "workflow:move",
+      "workflow:publish",
+      "workflow:read",
+      "workflow:share",
+      "workflow:unpublish",
+      "workflow:unshare",
+      "workflow:update"
+    ],
+    "canExecute": true
+  }
+}
