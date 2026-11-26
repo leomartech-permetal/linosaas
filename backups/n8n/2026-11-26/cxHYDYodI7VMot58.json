@@ -1,0 +1,586 @@
+{
+  "snapshot_type": "sanitized_n8n_workflow_details",
+  "warning": "This is a sanitized snapshot from get_workflow_details, not a raw n8n workflow export. Secrets are redacted; confirm with n8n native export before editing.",
+  "captured_at": "2026-11-26",
+  "triggerInfo": "This workflow has no production triggers (Schedule, Webhook, Form, or Chat). It can only be executed in manual mode.",
+  "workflow": {
+    "id": "cxHYDYodI7VMot58",
+    "name": "Lino-Codex - Despachar aviso ao vendedor",
+    "active": true,
+    "isArchived": false,
+    "versionId": "a73fc356-a13f-499e-be74-f2a236c856d1",
+    "activeVersionId": "a73fc356-a13f-499e-be74-f2a236c856d1",
+    "triggerCount": 0,
+    "createdAt": "2026-11-23T14:44:43.304Z",
+    "updatedAt": "2026-11-25T11:53:09.624Z",
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": true
+    },
+    "connections": {
+      "Aviso reservado?": {
+        "main": [
+          [
+            {
+              "node": "Montar template do vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Manter estado do aviso",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Montar template do vendedor": {
+        "main": [
+          [
+            {
+              "node": "Enviar aviso ao vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Receber ID da notificação": {
+        "main": [
+          [
+            {
+              "node": "Reservar aviso ao vendedor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reservar aviso ao vendedor": {
+        "main": [
+          [
+            {
+              "node": "Aviso reservado?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar aviso ao vendedor": {
+        "main": [
+          [
+            {
+              "node": "Registrar resultado do envio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodes": [
+      {
+        "id": "8eefc5f3-d1ac-4f0d-8e06-97c4a785fb3f",
+        "name": "Receber ID da notificação",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          96
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        }
+      },
+      {
+        "id": "40d8bb3d-19f7-49df-8929-0768577ab1fe",
+        "name": "Aviso reservado?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          448,
+          96
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $json.claimed === true }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fb53c836-b8e3-49f3-b827-25d09a025aa0",
+        "name": "Montar template do vendedor",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const notice = $input.first().json;\nconst facts = notice.snapshot?.state?.facts ?? {};\nconst clean = (value, fallback = 'Não informado') => {\n  if (typeof value !== 'string' && typeof value !== 'number') return fallback;\n  return String(value).replace(/\\s+/g, ' ').trim().slice(0, 450) || fallback;\n};\nconst fact = key => facts[key]?.value;\nconst contact = clean(fact('whatsapp'));\nconst normShort = String(notice.snapshot?.customer_message || '').normalize('NFD').replace(/\\p{M}/gu, '').toLowerCase().replace(/\\s+/g, ' ').trim();\nconst isShortAccept = /^(?:sim|ok|confirmo|esta correto|esta tudo certo|tudo certo|pode enviar|pode encaminhar|fechado|beleza|isso mesmo|de acordo)[.!\\s]*$/.test(normShort);\nconst rawMsg = typeof notice.snapshot?.customer_message === 'string' ? notice.snapshot.customer_message.replace(/\\s+/g, ' ').trim() : '';\nconst quoted = rawMsg && !isShortAccept ? rawMsg : '';\n\nconst obsParts = ['WhatsApp do cliente: ' + contact];\nconst atividade = clean(fact('atividade') || fact('segmento'), '');\nif (atividade) obsParts.push('Atividade/Segmento: ' + atividade);\nconst aplicacao = clean(fact('aplicacao'), '');\nif (aplicacao) obsParts.push('Aplicação: ' + aplicacao);\nconst particularidades = clean(fact('particularidades'), '');\nif (particularidades) obsParts.push('Particularidades: ' + particularidades);\nconst rawPend = fact('pendencias');\nconst pendList = Array.isArray(rawPend) ? rawPend : (rawPend ? [rawPend] : []);\nconst pendText = pendList.map(p => clean(p, '')).filter(Boolean).join('; ');\nif (pendText) obsParts.push('Pendências: ' + pendText);\nconst atts = Array.isArray(notice.snapshot?.attachments) ? notice.snapshot.attachments : [];\nconst attNames = atts.map(a => clean(a?.name || a?.filename || a?.type, '')).filter(Boolean).join(', ');\nif (attNames) obsParts.push('Anexos: ' + attNames);\nif (quoted) obsParts.push('Solicitação: ' + quoted);\nconst observation = clean(obsParts.join(' | '));\n\nconst product = fact('produto') ?? fact('produto_familia');\nconst spec = fact('especificacao') ?? [fact('dimensoes'), fact('material'), fact('espessura')]\n  .filter(value => typeof value === 'string' || typeof value === 'number').join(' | ');\nlet quantity = fact('quantidade');\nif (!quantity && typeof fact('area_m2_validada') === 'number') {\n  quantity = String(fact('area_m2_validada')) + ' m²';\n}\nif (!quantity && typeof fact('dimensoes') === 'string') {\n  const m2 = fact('dimensoes').match(/(\\d+(?:[.,]\\d+)*\\s*(?:m²|m2|metros?\\s+quadrados?))(?![a-z0-9])/i);\n  if (m2) quantity = m2[1];\n}\nconst cidadeSede = clean(fact('cidade_sede'), '');\nconst ufSede = clean(fact('uf_sede'), '');\nconst regiao = clean(fact('regiao'), '');\nconst cityOrRegion = (cidadeSede && ufSede)\n  ? (cidadeSede + '/' + ufSede.toUpperCase())\n  : (cidadeSede || ufSede || (regiao ? 'Região ' + regiao : ''));\n\nconst fields = [\n  notice.seller_name, fact('nome'), fact('empresa'), fact('cnpj'), fact('email'),\n  product, spec, quantity, cityOrRegion, observation, notice.opportunity_id,\n];\nreturn [{ json: {\n  recipient: notice.recipient,\n  components: { component: [{ bodyParameters: { parameter: fields.map(value => ({ text: clean(value) })) } }] },\n} }];"
+        }
+      },
+      {
+        "id": "50422623-a847-4029-9440-c8fb4b9b7ac0",
+        "name": "Enviar aviso ao vendedor",
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          896,
+          0
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendTemplate",
+          "phoneNumberId": "1368022049723472",
+          "recipientPhoneNumber": "={{ $json.recipient }}",
+          "template": "lino_monitor_nova_solicitacao_vendedor|pt_BR",
+          "components": {
+            "component": [
+              {
+                "bodyParameters": {
+                  "parameter": [
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[0].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[1].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[2].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[3].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[4].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[5].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[6].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[7].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[8].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[9].text }}"
+                    },
+                    {
+                      "text": "={{ $json.components.component[0].bodyParameters.parameter[10].text }}"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput",
+        "webhookId": "3126f4ea-8431-4204-8fc2-883daecc0417"
+      },
+      {
+        "id": "c5c5408b-9986-4a74-b4bd-3e36902c39ed",
+        "name": "Manter estado do aviso",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          192
+        ],
+        "parameters": {
+          "jsCode": "return $input.all();"
+        }
+      },
+      {
+        "id": "9ac407d0-f376-432a-a64c-ab33c70ce18f",
+        "name": "Reservar aviso ao vendedor",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          224,
+          96
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://phxvjfvlbdmabcawuvux.supabase.co/rest/v1/rpc/lino_codex_claim_seller_notice",
+          "authentication": "none",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { p_notification_id: $json.notification_id } }}",
+          "options": {
+            "timeout": 15000
+          },
+          "sendHeaders": true,
+          "specifyHeaders": "keypair",
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "[REDACTED_SUPABASE_SECRET]"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer [REDACTED_SUPABASE_SECRET]"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "765c2aa6-3f47-4785-9f86-b60cf25c5783",
+        "name": "Registrar resultado do envio",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1120,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://phxvjfvlbdmabcawuvux.supabase.co/rest/v1/rpc/lino_codex_record_send",
+          "authentication": "none",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { p_notification_id: $('Reservar aviso ao vendedor').first().json.notification_id, p_attempt_token: $('Reservar aviso ao vendedor').first().json.attempt_token, p_meta_message_id: $json.messages?.[0]?.id || null, p_outcome: $json.messages?.[0]?.id ? 'accepted' : 'uncertain' } }}",
+          "options": {
+            "timeout": 15000
+          },
+          "sendHeaders": true,
+          "specifyHeaders": "keypair",
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "[REDACTED_SUPABASE_SECRET]"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer [REDACTED_SUPABASE_SECRET]"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "activeVersion": {
+      "nodes": [
+        {
+          "id": "8eefc5f3-d1ac-4f0d-8e06-97c4a785fb3f",
+          "name": "Receber ID da notificação",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "typeVersion": 1.1,
+          "position": [
+            0,
+            96
+          ],
+          "parameters": {
+            "inputSource": "passthrough"
+          }
+        },
+        {
+          "id": "40d8bb3d-19f7-49df-8929-0768577ab1fe",
+          "name": "Aviso reservado?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            448,
+            96
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "leftValue": "={{ $json.claimed === true }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "fb53c836-b8e3-49f3-b827-25d09a025aa0",
+          "name": "Montar template do vendedor",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            672,
+            0
+          ],
+          "parameters": {
+            "jsCode": "const notice = $input.first().json;\nconst facts = notice.snapshot?.state?.facts ?? {};\nconst clean = (value, fallback = 'Não informado') => {\n  if (typeof value !== 'string' && typeof value !== 'number') return fallback;\n  return String(value).replace(/\\s+/g, ' ').trim().slice(0, 450) || fallback;\n};\nconst fact = key => facts[key]?.value;\nconst contact = clean(fact('whatsapp'));\nconst normShort = String(notice.snapshot?.customer_message || '').normalize('NFD').replace(/\\p{M}/gu, '').toLowerCase().replace(/\\s+/g, ' ').trim();\nconst isShortAccept = /^(?:sim|ok|confirmo|esta correto|esta tudo certo|tudo certo|pode enviar|pode encaminhar|fechado|beleza|isso mesmo|de acordo)[.!\\s]*$/.test(normShort);\nconst rawMsg = typeof notice.snapshot?.customer_message === 'string' ? notice.snapshot.customer_message.replace(/\\s+/g, ' ').trim() : '';\nconst quoted = rawMsg && !isShortAccept ? rawMsg : '';\n\nconst obsParts = ['WhatsApp do cliente: ' + contact];\nconst atividade = clean(fact('atividade') || fact('segmento'), '');\nif (atividade) obsParts.push('Atividade/Segmento: ' + atividade);\nconst aplicacao = clean(fact('aplicacao'), '');\nif (aplicacao) obsParts.push('Aplicação: ' + aplicacao);\nconst particularidades = clean(fact('particularidades'), '');\nif (particularidades) obsParts.push('Particularidades: ' + particularidades);\nconst rawPend = fact('pendencias');\nconst pendList = Array.isArray(rawPend) ? rawPend : (rawPend ? [rawPend] : []);\nconst pendText = pendList.map(p => clean(p, '')).filter(Boolean).join('; ');\nif (pendText) obsParts.push('Pendências: ' + pendText);\nconst atts = Array.isArray(notice.snapshot?.attachments) ? notice.snapshot.attachments : [];\nconst attNames = atts.map(a => clean(a?.name || a?.filename || a?.type, '')).filter(Boolean).join(', ');\nif (attNames) obsParts.push('Anexos: ' + attNames);\nif (quoted) obsParts.push('Solicitação: ' + quoted);\nconst observation = clean(obsParts.join(' | '));\n\nconst product = fact('produto') ?? fact('produto_familia');\nconst spec = fact('especificacao') ?? [fact('dimensoes'), fact('material'), fact('espessura')]\n  .filter(value => typeof value === 'string' || typeof value === 'number').join(' | ');\nlet quantity = fact('quantidade');\nif (!quantity && typeof fact('area_m2_validada') === 'number') {\n  quantity = String(fact('area_m2_validada')) + ' m²';\n}\nif (!quantity && typeof fact('dimensoes') === 'string') {\n  const m2 = fact('dimensoes').match(/(\\d+(?:[.,]\\d+)*\\s*(?:m²|m2|metros?\\s+quadrados?))(?![a-z0-9])/i);\n  if (m2) quantity = m2[1];\n}\nconst cidadeSede = clean(fact('cidade_sede'), '');\nconst ufSede = clean(fact('uf_sede'), '');\nconst regiao = clean(fact('regiao'), '');\nconst cityOrRegion = (cidadeSede && ufSede)\n  ? (cidadeSede + '/' + ufSede.toUpperCase())\n  : (cidadeSede || ufSede || (regiao ? 'Região ' + regiao : ''));\n\nconst fields = [\n  notice.seller_name, fact('nome'), fact('empresa'), fact('cnpj'), fact('email'),\n  product, spec, quantity, cityOrRegion, observation, notice.opportunity_id,\n];\nreturn [{ json: {\n  recipient: notice.recipient,\n  components: { component: [{ bodyParameters: { parameter: fields.map(value => ({ text: clean(value) })) } }] },\n} }];"
+          }
+        },
+        {
+          "id": "50422623-a847-4029-9440-c8fb4b9b7ac0",
+          "name": "Enviar aviso ao vendedor",
+          "type": "n8n-nodes-base.whatsApp",
+          "typeVersion": 1.1,
+          "position": [
+            896,
+            0
+          ],
+          "parameters": {
+            "resource": "message",
+            "operation": "sendTemplate",
+            "phoneNumberId": "1368022049723472",
+            "recipientPhoneNumber": "={{ $json.recipient }}",
+            "template": "lino_monitor_nova_solicitacao_vendedor|pt_BR",
+            "components": {
+              "component": [
+                {
+                  "bodyParameters": {
+                    "parameter": [
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[0].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[1].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[2].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[3].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[4].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[5].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[6].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[7].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[8].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[9].text }}"
+                      },
+                      {
+                        "text": "={{ $json.components.component[0].bodyParameters.parameter[10].text }}"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "onError": "continueRegularOutput",
+          "webhookId": "3126f4ea-8431-4204-8fc2-883daecc0417"
+        },
+        {
+          "id": "c5c5408b-9986-4a74-b4bd-3e36902c39ed",
+          "name": "Manter estado do aviso",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            672,
+            192
+          ],
+          "parameters": {
+            "jsCode": "return $input.all();"
+          }
+        },
+        {
+          "id": "9ac407d0-f376-432a-a64c-ab33c70ce18f",
+          "name": "Reservar aviso ao vendedor",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            224,
+            96
+          ],
+          "parameters": {
+            "method": "POST",
+            "url": "https://phxvjfvlbdmabcawuvux.supabase.co/rest/v1/rpc/lino_codex_claim_seller_notice",
+            "authentication": "none",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ { p_notification_id: $json.notification_id } }}",
+            "options": {
+              "timeout": 15000
+            },
+            "sendHeaders": true,
+            "specifyHeaders": "keypair",
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "[REDACTED_SUPABASE_SECRET]"
+                },
+                {
+                  "name": "Authorization",
+                  "value": "Bearer [REDACTED_SUPABASE_SECRET]"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "765c2aa6-3f47-4785-9f86-b60cf25c5783",
+          "name": "Registrar resultado do envio",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            1120,
+            0
+          ],
+          "parameters": {
+            "method": "POST",
+            "url": "https://phxvjfvlbdmabcawuvux.supabase.co/rest/v1/rpc/lino_codex_record_send",
+            "authentication": "none",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ { p_notification_id: $('Reservar aviso ao vendedor').first().json.notification_id, p_attempt_token: $('Reservar aviso ao vendedor').first().json.attempt_token, p_meta_message_id: $json.messages?.[0]?.id || null, p_outcome: $json.messages?.[0]?.id ? 'accepted' : 'uncertain' } }}",
+            "options": {
+              "timeout": 15000
+            },
+            "sendHeaders": true,
+            "specifyHeaders": "keypair",
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "[REDACTED_SUPABASE_SECRET]"
+                },
+                {
+                  "name": "Authorization",
+                  "value": "Bearer [REDACTED_SUPABASE_SECRET]"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Aviso reservado?": {
+          "main": [
+            [
+              {
+                "node": "Montar template do vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Manter estado do aviso",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Montar template do vendedor": {
+          "main": [
+            [
+              {
+                "node": "Enviar aviso ao vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Receber ID da notificação": {
+          "main": [
+            [
+              {
+                "node": "Reservar aviso ao vendedor",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Reservar aviso ao vendedor": {
+          "main": [
+            [
+              {
+                "node": "Aviso reservado?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Enviar aviso ao vendedor": {
+          "main": [
+            [
+              {
+                "node": "Registrar resultado do envio",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "tags": [],
+    "meta": {
+      "aiBuilderAssisted": true,
+      "builderVariant": "mcp"
+    },
+    "parentFolderId": null,
+    "description": "Reserva uma notificação no schema novo, envia o primeiro modelo do vendedor e registra o resultado do transporte.",
+    "scopes": [
+      "execution:reveal",
+      "workflow:create",
+      "workflow:delete",
+      "workflow:disableRedaction",
+      "workflow:enableRedaction",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:export",
+      "workflow:import",
+      "workflow:list",
+      "workflow:move",
+      "workflow:publish",
+      "workflow:read",
+      "workflow:share",
+      "workflow:unpublish",
+      "workflow:unshare",
+      "workflow:update"
+    ],
+    "canExecute": true
+  }
+}
