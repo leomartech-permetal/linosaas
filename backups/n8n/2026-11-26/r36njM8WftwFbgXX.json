@@ -1,0 +1,710 @@
+{
+  "snapshot_type": "sanitized_n8n_workflow_details",
+  "warning": "This is a sanitized snapshot from get_workflow_details, not a raw n8n workflow export. Secrets are redacted; confirm with n8n native export before editing.",
+  "captured_at": "2026-11-26",
+  "triggerInfo": "This workflow has the following trigger(s):\n\n\nWebhook trigger(s):\n\n\n\t\t\t\t<trigger 1>\n\t\t\t\t\t - Node name: Receber SiteChat oficial\n\t\t\t\t\t - Base URL: https://canaldireto.jbads.com.br/\n\t\t\t\t\t - Production path: /webhook/lino-codex-sitechat\n\t\t\t\t\t - Test path: /webhook-test/lino-codex-sitechat\n\t\t\t\t\t - HTTP Method: POST\n\t\t\t\t\t - Response Mode: Webhook is configured to respond using \"Respond to Webhook\" node.\n\t\t\t\t\t - No credentials required for this webhook.\n\t\t\t\t</trigger 1>",
+  "workflow": {
+    "id": "r36njM8WftwFbgXX",
+    "name": "Lino-Codex - Entrada SiteChat oficial",
+    "active": true,
+    "isArchived": false,
+    "versionId": "12d6d52e-894b-4601-a9d5-90b3424718fd",
+    "activeVersionId": "12d6d52e-894b-4601-a9d5-90b3424718fd",
+    "triggerCount": 1,
+    "createdAt": "2026-11-23T14:53:57.100Z",
+    "updatedAt": "2026-11-24T18:03:35.458Z",
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": true
+    },
+    "connections": {
+      "Normalizar entrada do LinoChat": {
+        "main": [
+          [
+            {
+              "node": "Executar motor Lino-Codex",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Executar motor Lino-Codex": {
+        "main": [
+          [
+            {
+              "node": "Há aviso comercial?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Há aviso comercial?": {
+        "main": [
+          [
+            {
+              "node": "Despachar aviso novo",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Responder no contrato do LinoChat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Despachar aviso novo": {
+        "main": [
+          [
+            {
+              "node": "Responder no contrato do LinoChat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Receber SiteChat oficial": {
+        "main": [
+          [
+            {
+              "node": "Verificar chave do proxy",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verificar chave do proxy": {
+        "main": [
+          [
+            {
+              "node": "Proxy autorizado?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Proxy autorizado?": {
+        "main": [
+          [
+            {
+              "node": "Encaminhar somente o corpo",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Rejeitar chamadas sem chave",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Encaminhar somente o corpo": {
+        "main": [
+          [
+            {
+              "node": "Normalizar entrada do LinoChat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Responder no contrato do LinoChat": {
+        "main": [
+          [
+            {
+              "node": "Devolver resposta do SiteChat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodes": [
+      {
+        "id": "7bc1b5f4-681e-4d3c-9835-b853cfd884ff",
+        "name": "Receber SiteChat oficial",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          80
+        ],
+        "parameters": {
+          "path": "lino-codex-sitechat",
+          "httpMethod": "POST",
+          "responseMode": "responseNode"
+        },
+        "webhookId": "5d144921-1158-48ae-ab7f-8ea1841cb932"
+      },
+      {
+        "id": "1f29ca75-a304-46aa-af61-77b78ac8c5a5",
+        "name": "Normalizar entrada do LinoChat",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          80
+        ],
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\nconst body = input.body ?? input;\nconst session = String(body.session_id ?? body.sessionId ?? '').trim();\nconst messageKey = String(body.message_id ?? body.messageId ?? '').trim();\nconst message = String(body.message ?? body.text ?? '').trim();\nconst rawList = Array.isArray(body.attachments) ? body.attachments : (body.attachment ? [body.attachment] : []);\nconst attachments = rawList.filter(a => a && typeof a === 'object').map(a => {\n  let data = typeof a.data === 'string' && a.data.trim() ? a.data.trim()\n    : (typeof a.base64 === 'string' && a.base64.trim() ? a.base64.trim() : '');\n  if (!data && typeof a.text_content === 'string' && a.text_content.trim()) {\n    data = Buffer.from(a.text_content, 'utf8').toString('base64');\n  }\n  return {\n    name: String(a.name || a.filename || 'anexo'),\n    type: String(a.type || a.mime_type || a.mimeType || 'application/octet-stream'),\n    data,\n  };\n}).filter(a => a.data.length > 0);\n\nif (!session || session.length > 200 || !messageKey || messageKey.length > 200) {\n  throw new Error('Identificação da mensagem ou da sessão inválida');\n}\nif (!message && !attachments.length) throw new Error('Mensagem vazia');\n\nreturn [{ json: {\n  channel: 'sitechat',\n  conversation_key: session,\n  message_key: messageKey,\n  message,\n  attachments,\n} }];"
+        }
+      },
+      {
+        "id": "2ef0cefd-71b7-460e-a9c9-78ca5261358a",
+        "name": "Executar motor Lino-Codex",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          448,
+          80
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "KpjmWFrfxodasttO"
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "76491fbe-1e16-45ec-9105-e11055e24f88",
+        "name": "Há aviso comercial?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          672,
+          80
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.notification_id) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "eecbce03-59c9-4f4c-b6c5-5a96eaecddbd",
+        "name": "Despachar aviso novo",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          896,
+          0
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "cxHYDYodI7VMot58"
+          },
+          "mode": "once",
+          "options": {
+            "waitForSubWorkflow": false
+          }
+        },
+        "onError": "continueRegularOutput",
+        "disabled": true
+      },
+      {
+        "id": "6257401b-d791-4912-9e1d-76fd4463bfeb",
+        "name": "Responder no contrato do LinoChat",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          80
+        ],
+        "parameters": {
+          "jsCode": "const result = $('Executar motor Lino-Codex').first().json;\nconst input = $('Normalizar entrada do LinoChat').first().json;\nconst identity = { session_id: input.conversation_key, message_id: input.message_key };\nconst answer = result.answer ?? {};\nif (answer.silent === true) return [{json:{...identity,ok:true,silent:true,status:'operator_active',message:''}}];\nconst parts = [...new Set([answer.text, answer.commercial_text]\n  .filter(text => typeof text === 'string' && text.trim())\n  .map(text => text.trim()))];\n\nif (!parts.length) {\n  return [{ json: {\n    ...identity,\n    ok: false,\n    status: result.status || 'unavailable',\n    retryable: result.retryable === true || result.status === 'waiting',\n  } }];\n}\nreturn [{ json: {\n  ...identity,\n  ok: true,\n  message: parts.join('\\n\\n'),\n  opportunity_id: result.opportunity_id ?? null,\n  handoff_pending: Boolean(result.opportunity_id),\n} }];"
+        }
+      },
+      {
+        "id": "ee7e0e02-c466-4ec8-bd18-5247aadecff8",
+        "name": "Verificar chave do proxy",
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 2,
+        "position": [
+          -200,
+          -320
+        ],
+        "parameters": {
+          "action": "hash",
+          "type": "SHA256",
+          "value": "={{ String($json.headers?.['x-lino-codex-key'] ?? '') }}",
+          "dataPropertyName": "proxy_key_hash",
+          "encoding": "hex"
+        }
+      },
+      {
+        "id": "d900e305-9303-476d-8098-4333c07f6788",
+        "name": "Proxy autorizado?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          35,
+          -320
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $json.proxy_key_hash }}",
+                "rightValue": "63c59cbe63113e93a04b0ba52ad4df4b644f4e4a82b8f2965402f34d6a811753",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "b0149ce0-c52c-42b0-942c-d7e6e2cb70fc",
+        "name": "Encaminhar somente o corpo",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          200,
+          -320
+        ],
+        "parameters": {
+          "jsCode": "const body=$('Receber SiteChat oficial').first().json.body;return [{json:{body}}];"
+        }
+      },
+      {
+        "id": "5ba69c77-4769-449c-8f2c-420d976da663",
+        "name": "Rejeitar chamadas sem chave",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          190,
+          -145
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\"ok\":false}",
+          "options": {
+            "responseCode": 401
+          }
+        }
+      },
+      {
+        "id": "dbc5cc9f-db88-4bb9-b495-6e17fdced194",
+        "name": "Devolver resposta do SiteChat",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          860,
+          -320
+        ],
+        "parameters": {
+          "respondWith": "firstIncomingItem",
+          "options": {
+            "responseCode": 200
+          }
+        }
+      }
+    ],
+    "activeVersion": {
+      "nodes": [
+        {
+          "id": "7bc1b5f4-681e-4d3c-9835-b853cfd884ff",
+          "name": "Receber SiteChat oficial",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            80
+          ],
+          "parameters": {
+            "path": "lino-codex-sitechat",
+            "httpMethod": "POST",
+            "responseMode": "responseNode"
+          },
+          "webhookId": "5d144921-1158-48ae-ab7f-8ea1841cb932"
+        },
+        {
+          "id": "1f29ca75-a304-46aa-af61-77b78ac8c5a5",
+          "name": "Normalizar entrada do LinoChat",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            224,
+            80
+          ],
+          "parameters": {
+            "jsCode": "const input = $input.first().json;\nconst body = input.body ?? input;\nconst session = String(body.session_id ?? body.sessionId ?? '').trim();\nconst messageKey = String(body.message_id ?? body.messageId ?? '').trim();\nconst message = String(body.message ?? body.text ?? '').trim();\nconst rawList = Array.isArray(body.attachments) ? body.attachments : (body.attachment ? [body.attachment] : []);\nconst attachments = rawList.filter(a => a && typeof a === 'object').map(a => {\n  let data = typeof a.data === 'string' && a.data.trim() ? a.data.trim()\n    : (typeof a.base64 === 'string' && a.base64.trim() ? a.base64.trim() : '');\n  if (!data && typeof a.text_content === 'string' && a.text_content.trim()) {\n    data = Buffer.from(a.text_content, 'utf8').toString('base64');\n  }\n  return {\n    name: String(a.name || a.filename || 'anexo'),\n    type: String(a.type || a.mime_type || a.mimeType || 'application/octet-stream'),\n    data,\n  };\n}).filter(a => a.data.length > 0);\n\nif (!session || session.length > 200 || !messageKey || messageKey.length > 200) {\n  throw new Error('Identificação da mensagem ou da sessão inválida');\n}\nif (!message && !attachments.length) throw new Error('Mensagem vazia');\n\nreturn [{ json: {\n  channel: 'sitechat',\n  conversation_key: session,\n  message_key: messageKey,\n  message,\n  attachments,\n} }];"
+          }
+        },
+        {
+          "id": "2ef0cefd-71b7-460e-a9c9-78ca5261358a",
+          "name": "Executar motor Lino-Codex",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.2,
+          "position": [
+            448,
+            80
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "KpjmWFrfxodasttO"
+            },
+            "mode": "once",
+            "options": {
+              "waitForSubWorkflow": true
+            }
+          }
+        },
+        {
+          "id": "76491fbe-1e16-45ec-9105-e11055e24f88",
+          "name": "Há aviso comercial?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            672,
+            80
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "leftValue": "={{ Boolean($json.notification_id) }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "eecbce03-59c9-4f4c-b6c5-5a96eaecddbd",
+          "name": "Despachar aviso novo",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "typeVersion": 1.2,
+          "position": [
+            896,
+            0
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": {
+              "__rl": true,
+              "mode": "id",
+              "value": "cxHYDYodI7VMot58"
+            },
+            "mode": "once",
+            "options": {
+              "waitForSubWorkflow": false
+            }
+          },
+          "onError": "continueRegularOutput",
+          "disabled": true
+        },
+        {
+          "id": "6257401b-d791-4912-9e1d-76fd4463bfeb",
+          "name": "Responder no contrato do LinoChat",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1120,
+            80
+          ],
+          "parameters": {
+            "jsCode": "const result = $('Executar motor Lino-Codex').first().json;\nconst input = $('Normalizar entrada do LinoChat').first().json;\nconst identity = { session_id: input.conversation_key, message_id: input.message_key };\nconst answer = result.answer ?? {};\nif (answer.silent === true) return [{json:{...identity,ok:true,silent:true,status:'operator_active',message:''}}];\nconst parts = [...new Set([answer.text, answer.commercial_text]\n  .filter(text => typeof text === 'string' && text.trim())\n  .map(text => text.trim()))];\n\nif (!parts.length) {\n  return [{ json: {\n    ...identity,\n    ok: false,\n    status: result.status || 'unavailable',\n    retryable: result.retryable === true || result.status === 'waiting',\n  } }];\n}\nreturn [{ json: {\n  ...identity,\n  ok: true,\n  message: parts.join('\\n\\n'),\n  opportunity_id: result.opportunity_id ?? null,\n  handoff_pending: Boolean(result.opportunity_id),\n} }];"
+          }
+        },
+        {
+          "id": "ee7e0e02-c466-4ec8-bd18-5247aadecff8",
+          "name": "Verificar chave do proxy",
+          "type": "n8n-nodes-base.crypto",
+          "typeVersion": 2,
+          "position": [
+            -200,
+            -320
+          ],
+          "parameters": {
+            "action": "hash",
+            "type": "SHA256",
+            "value": "={{ String($json.headers?.['x-lino-codex-key'] ?? '') }}",
+            "dataPropertyName": "proxy_key_hash",
+            "encoding": "hex"
+          }
+        },
+        {
+          "id": "d900e305-9303-476d-8098-4333c07f6788",
+          "name": "Proxy autorizado?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            35,
+            -320
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "leftValue": "={{ $json.proxy_key_hash }}",
+                  "rightValue": "63c59cbe63113e93a04b0ba52ad4df4b644f4e4a82b8f2965402f34d6a811753",
+                  "operator": {
+                    "type": "string",
+                    "operation": "equals"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "b0149ce0-c52c-42b0-942c-d7e6e2cb70fc",
+          "name": "Encaminhar somente o corpo",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            200,
+            -320
+          ],
+          "parameters": {
+            "jsCode": "const body=$('Receber SiteChat oficial').first().json.body;return [{json:{body}}];"
+          }
+        },
+        {
+          "id": "5ba69c77-4769-449c-8f2c-420d976da663",
+          "name": "Rejeitar chamadas sem chave",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            190,
+            -145
+          ],
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={\"ok\":false}",
+            "options": {
+              "responseCode": 401
+            }
+          }
+        },
+        {
+          "id": "dbc5cc9f-db88-4bb9-b495-6e17fdced194",
+          "name": "Devolver resposta do SiteChat",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            860,
+            -320
+          ],
+          "parameters": {
+            "respondWith": "firstIncomingItem",
+            "options": {
+              "responseCode": 200
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Normalizar entrada do LinoChat": {
+          "main": [
+            [
+              {
+                "node": "Executar motor Lino-Codex",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Executar motor Lino-Codex": {
+          "main": [
+            [
+              {
+                "node": "Há aviso comercial?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Há aviso comercial?": {
+          "main": [
+            [
+              {
+                "node": "Despachar aviso novo",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Responder no contrato do LinoChat",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Despachar aviso novo": {
+          "main": [
+            [
+              {
+                "node": "Responder no contrato do LinoChat",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Receber SiteChat oficial": {
+          "main": [
+            [
+              {
+                "node": "Verificar chave do proxy",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Verificar chave do proxy": {
+          "main": [
+            [
+              {
+                "node": "Proxy autorizado?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Proxy autorizado?": {
+          "main": [
+            [
+              {
+                "node": "Encaminhar somente o corpo",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Rejeitar chamadas sem chave",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Encaminhar somente o corpo": {
+          "main": [
+            [
+              {
+                "node": "Normalizar entrada do LinoChat",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Responder no contrato do LinoChat": {
+          "main": [
+            [
+              {
+                "node": "Devolver resposta do SiteChat",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "tags": [],
+    "meta": {
+      "aiBuilderAssisted": true,
+      "builderVariant": "mcp"
+    },
+    "parentFolderId": null,
+    "description": "Adaptador novo compatível com a rota pública atual do SiteChat. Ativar somente na troca coordenada de webhooks.",
+    "scopes": [
+      "execution:reveal",
+      "workflow:create",
+      "workflow:delete",
+      "workflow:disableRedaction",
+      "workflow:enableRedaction",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:export",
+      "workflow:import",
+      "workflow:list",
+      "workflow:move",
+      "workflow:publish",
+      "workflow:read",
+      "workflow:share",
+      "workflow:unpublish",
+      "workflow:unshare",
+      "workflow:update"
+    ],
+    "canExecute": true
+  }
+}
